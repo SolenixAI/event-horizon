@@ -14,7 +14,7 @@ import ServiceManagement
 /// minimized registers the HELPER, which relaunches the main app suppressed;
 /// otherwise the main app itself opens at login.
 enum LoginItemManager {
-    static let helperBundleID = "io.ugfugl.Glimmer.LoginHelper"
+    static let helperBundleID = "dev.solenix.citadel.LoginHelper"
     /// The app build (path + CFBundleVersion) the last successful register ran from.
     private static let registeredBuildKey = "loginItemRegisteredBuild"
 

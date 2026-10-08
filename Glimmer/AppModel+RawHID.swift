@@ -21,11 +21,11 @@ extension AppModel {
     /// Shared up-front explanation shown before macOS's Input Monitoring prompt
     /// (both the auto-offer on DualSense connect and the Settings toggle).
     static let rawHIDExplanation =
-        "Glimmer will read your DualSense's raw input to access the Options, "
+        "Citadel will read your DualSense's raw input to access the Options, "
         + "Create and Mute buttons.\n\nmacOS will then ask for "
         + "\u{201C}Input Monitoring\u{201D} permission. Its dialog says "
         + "\u{201C}keystrokes\u{201D} because that's the same system permission, "
-        + "but Glimmer only reads the controller, never your keyboard."
+        + "but Citadel only reads the controller, never your keyboard."
 
     /// Offer the raw-HID feature if a DualSense is connected and the user
     /// hasn't enabled it or been asked. Never interrupts a live stream.
@@ -80,10 +80,10 @@ extension AppModel {
     }
 
     static let hidPermissionExplanation =
-        "macOS doesn't recognise this controller on its own, so Glimmer reads it "
+        "macOS doesn't recognise this controller on its own, so Citadel reads it "
         + "directly.\n\nmacOS will ask for \u{201C}Input Monitoring\u{201D} "
         + "permission. Its dialog says \u{201C}keystrokes\u{201D} because that's "
-        + "the same system permission, but Glimmer only reads the controller, "
+        + "the same system permission, but Citadel only reads the controller, "
         + "never your keyboard."
 
     /// Answers to the generic-pad offer; process lifetime is "until relaunch".

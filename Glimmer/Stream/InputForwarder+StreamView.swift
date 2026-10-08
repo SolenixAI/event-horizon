@@ -107,6 +107,11 @@ extension InputForwarder: StreamInputViewDelegate {
         // latency. Only a ~1s hold releases; see InputForwarder+EscapeHold.
         noteEscapeKeyDown(event)
 
+        // The PC's Desktop turns a Mac shortcut into its Ctrl twin. The key
+        // equivalent path normally claims it first; this is the backstop for a
+        // chord that arrives as a plain key down.
+        if sendTranslatedCommand(event) { return }
+
         // Unless ⌘ goes to the game (opted in and the pointer held) a ⌘ chord
         // is the Mac's and never forwarded. Repeats are dropped: the PC makes its own.
         if mods.contains(.command), !forwardsCommand { return }
@@ -164,7 +169,7 @@ extension InputForwarder: StreamInputViewDelegate {
     /// Send the modifier sides that changed since the host was last told, so
     /// a Shift held through a reconnect, sleep or screen lock reaches the PC.
     /// Each SIDE is its own entry; ⌘ only counts while `forwardsCommand`.
-    private func syncModifiers(to flags: NSEvent.ModifierFlags) {
+    func syncModifiers(to flags: NSEvent.ModifierFlags) {
         let downNow = ModifierSides.held(in: flags, includeCommand: forwardsCommand)
         let modByte = Int8(bitPattern: modifierByte(from: flags))
         for vk in heldModifierVKs.subtracting(downNow).sorted() { sendModifier(vk, down: false, modByte: modByte) }
@@ -372,7 +377,7 @@ extension InputForwarder: StreamInputViewDelegate {
         // been told about. `releasePointer` raises held buttons first, so a
         // button held through a capture release would otherwise double-release
         // when the physical up arrives.
-        if isWindowMode, !heldMouseButtons.contains(hostButton) { return }
+        if isWindowMode || usesAbsolutePointer, !heldMouseButtons.contains(hostButton) { return }
         // Land the release where the pointer actually ended up - a drag that
         // moved between down and up must not release at the down position.
         sendAbsolutePointer(for: event, in: view)

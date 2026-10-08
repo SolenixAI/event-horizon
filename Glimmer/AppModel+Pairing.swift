@@ -24,7 +24,6 @@ extension AppModel {
 
     func afterStreamEnd() {
         WiFiRoamWatch.shared.stop()
-        maybeOfferHIDPermission()
     }
 
     // MARK: Pairing

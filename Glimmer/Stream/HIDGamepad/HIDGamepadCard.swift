@@ -19,7 +19,7 @@ struct HIDGamepadCard: View {
             Text("Triggers: L \(analog.leftTrigger)  R \(analog.rightTrigger) · Reports: \(pad.reportCount)")
             if let percentage = pad.batteryPercentage { Text("Battery: \(percentage)%") }
             if pad.reportCount == 0 && !HIDGamepadManager.accessGranted {
-                Text("Waiting for Input Monitoring. Turn on Glimmer in System Settings › Privacy & Security › "
+                Text("Waiting for Input Monitoring. Turn on Citadel in System Settings › Privacy & Security › "
                     + "Input Monitoring, then choose Quit & Reopen when macOS asks.")
                     .foregroundStyle(.orange)
             }

@@ -10,7 +10,7 @@ import os.log
 
 enum HelperConstants {
     /// The launchd plist filename in Contents/Library/LaunchDaemons/.
-    static let daemonPlistName = "io.ugfugl.glimmer.helper.plist"
+    static let daemonPlistName = "dev.solenix.citadel.helper.plist"
 }
 
 // MARK: - Single-resume continuation guard
@@ -196,7 +196,7 @@ final class AWDLHelperManager: ObservableObject {
     /// but direct users to Apple's Login Items guide instead of a root command.
     private static let wedgedRegistrationMessage =
         "macOS left a stuck background-item record (a known glitch after an app "
-        + "update), so it won't register the helper. You can manage Glimmer's "
+        + "update), so it won't register the helper. You can manage Citadel's "
         + "background items in System Settings › General › Login Items & Extensions."
 
     /// Apple's official Login Items & Extensions guide - a credible reference for
@@ -520,7 +520,7 @@ struct AWDLEnablePrompt: View {
                 }
             }
             Text("AirDrop and Continuity share your Mac's Wi-Fi radio. While you stream they "
-                + "can grab the channel and cause multi-second freezes. Glimmer can park that "
+                + "can grab the channel and cause multi-second freezes. Citadel can park that "
                 + "radio for the length of each stream and restore it the instant you stop.")
                 .fixedSize(horizontal: false, vertical: true)
             Text("Installs a small helper that needs a one-time approval in System Settings.")

@@ -229,7 +229,7 @@ extension StreamSession {
         powerAssertionHidden = false
         powerAssertion = ProcessInfo.processInfo.beginActivity(
             options: Self.sessionActivityOptions(hidden: false),
-            reason: "Glimmer is streaming")
+            reason: "Citadel is streaming")
     }
 
     /// Step 1 of start(): fetch /serverinfo, stamp its launch sub-leg, log the handshake line, and

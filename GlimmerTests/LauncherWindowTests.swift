@@ -123,22 +123,12 @@ struct ReadinessChipRunningLabelTests {
 }
 
 @MainActor
-struct TakeoverDialogCopyTests {
+struct OccupantTests {
 
-    @Test func keepsARealAppNameAsTyped() {
-        #expect(TakeoverDialogCopy.title(occupantApp: "Helldivers 2", hostName: "Tower")
-            == "Helldivers 2 is running on Tower.")
-        #expect(TakeoverDialogCopy.title(occupantApp: "iRacing", hostName: "Tower")
-            == "iRacing is running on Tower.")
-        #expect(TakeoverDialogCopy.title(occupantApp: "eFootball", hostName: "Tower")
-            == "eFootball is running on Tower.")
-    }
-
-    @Test func anAppThePCDidntNameReadsAsAnotherApp() throws {
+    @Test func anAppThePCDidntNameReadsAsUnnamed() throws {
         let unnamed = try #require(AppModel.occupant(of: .streamingUnknownApp(id: 9)))
         #expect(unnamed == nil)
-        #expect(TakeoverDialogCopy.title(occupantApp: unnamed, hostName: "Tower")
-            == "Another app is running on Tower.")
+        #expect(AppModel.occupant(of: .streamingApp(name: "iRacing")) == .some("iRacing"))
         #expect(AppModel.occupant(of: .idle) == nil)
     }
 }

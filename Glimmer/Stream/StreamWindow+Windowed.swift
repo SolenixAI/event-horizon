@@ -34,21 +34,27 @@ extension StreamWindow {
     /// opening size only applies until the user has moved or resized it once.
     static let frameAutosaveName = "GlimmerStreamWindow"
 
-    /// The window-mode bring-up. Mirrors Path A's shape (activate, order
-    /// front, install input next runloop, 1.5s key backstop) without the
-    /// cover, the cursor hide, or the presentation options.
+    /// Order the stream window front, and make it key only while this app is
+    /// already active. Citadel never pulls the Mac's focus away from another
+    /// app: a stream opened from the CLI or Shortcuts appears quietly.
+    func orderFrontWithoutStealingFocus() {
+        if NSApp.isActive { window.makeKeyAndOrderFront(nil) } else { window.orderFront(nil) }
+    }
+
+    /// The window-mode bring-up. Mirrors Path A's shape (order front,
+    /// install input next runloop, 1.5s key backstop) without the cover,
+    /// the cursor hide, the presentation options, or any app activation.
     func showWindowed() {
         // The Space the green button can enter keeps AppKit's safe-area
         // framing; "Fill the notch" is a full-screen-only choice.
         streamDelegate.coversNotch = false
         streamDelegate.displayMode = .window
-        NSApp.activate()
         configureWindowedChrome()
         // Same first-frame fade-in as full screen: an empty display layer
         // renders black, so the window stays invisible until video exists.
         window.alphaValue = 0.0
         awaitingFirstFrameFadeIn = true
-        window.makeKeyAndOrderFront(nil)
+        orderFrontWithoutStealingFocus()
         installWindowedLifecycleObservers()
         let size = window.contentRect(forFrameRect: window.frame).size
         log.info(
@@ -61,10 +67,11 @@ extension StreamWindow {
         }
         // Key backstop - same reasoning as Path A's: a window can be on screen
         // and still not key if the app wasn't active at makeKeyAndOrderFront.
+        // Never activates: an inactive app simply leaves the window unkeyed
+        // until the user brings Citadel forward.
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
-            guard let self, !self.didClose, !self.window.isKeyWindow else { return }
-            self.log.error("Window not key 1.5s after show(); retrying activate + makeKeyAndOrderFront + first-responder install")
-            NSApp.activate()
+            guard let self, !self.didClose, !self.window.isKeyWindow, NSApp.isActive else { return }
+            self.log.error("Window not key 1.5s after show(); retrying makeKeyAndOrderFront + first-responder install")
             self.window.makeKeyAndOrderFront(nil)
             self.onDidBecomeReadyForInput?()
         }

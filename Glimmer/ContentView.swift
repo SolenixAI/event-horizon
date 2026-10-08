@@ -3,21 +3,9 @@ import AppKit
 
 // MARK: - Main Window
 
-/// The takeover question, in the launcher's dialog and the menu bar's alert.
-/// App names show exactly as typed ("iRacing"); nil is an app the PC didn't name.
-enum TakeoverDialogCopy {
-    static func title(occupantApp: String?, hostName: String) -> String {
-        "\(occupantApp ?? "Another app") is running on \(hostName)."
-    }
-
-    static let message = "It will quit and your stream will start."
-}
-
 struct MainWindow: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openSettings) private var openSettings
-    @State private var showAWDLPrompt = false
-    @State private var awdlPromptChecked = false
     /// Lifted out of EmptyPairingState so the sheet survives the swap to
     /// ConnectSurface the instant pairing fills `model.hosts` - the sheet used
     /// to hang off the empty state itself and vanish mid-handshake success.
@@ -52,7 +40,7 @@ struct MainWindow: View {
             Text(AppModel.rawHIDExplanation)
         }
         // Same explanation and answers for a pad macOS doesn't recognise (generic HID).
-        .alert("Use \(model.hidPermissionPadName ?? "this controller") with Glimmer?",
+        .alert("Use \(model.hidPermissionPadName ?? "this controller") with Citadel?",
                isPresented: $model.showHIDPermissionPrompt) {
             Button("Continue") { model.continueHIDPermission() }
             Button("Not Now", role: .cancel) { model.dismissHIDPermission() }
@@ -60,31 +48,10 @@ struct MainWindow: View {
         } message: {
             Text(AppModel.hidPermissionExplanation)
         }
-        // Wi-Fi stutter protection is offered at first open on every Mac, whatever the
-        // route: awdl0 wrecks streams, and a MacBook first opened on Ethernet goes to the
-        // couch. It returns each launch until enabled or "Don't ask again".
-        .sheet(isPresented: $showAWDLPrompt) {
-            AWDLEnablePrompt(manager: AWDLHelperManager.shared)
-        }
         // Pair a PC… from the menu bar, and Pair Again… from the menu bar, the
         // Stream button, the banner and the Trust needed chip land here.
         .sheet(isPresented: $model.pairSheetShown) {
             PairSheet(repairing: model.pairSheetHost).environment(model)
-        }
-        .task {
-            guard !awdlPromptChecked else { return }
-            awdlPromptChecked = true
-            // Let the window settle, then wait out a controller alert or the pair sheet:
-            // one sheet at a time, so the offer follows them instead of being skipped.
-            do {
-                try await Task.sleep(for: .seconds(1.0))
-                while model.showRawHIDPrompt || model.showHIDPermissionPrompt || model.pairSheetShown {
-                    try await Task.sleep(for: .milliseconds(250))
-                }
-            } catch { return }
-            AWDLHelperManager.shared.refresh()
-            guard AWDLHelperManager.shared.shouldPromptToEnable else { return }
-            showAWDLPrompt = true
         }
         // No .frame: forcing either axis to .infinity gives the window an
         // unbounded box to fill, and the only thing available to fill it with is
@@ -94,25 +61,6 @@ struct MainWindow: View {
             // stream ends instead of the launcher just snapping back.
             StreamEndedToast()
                 .padding(.top, 16)
-        }
-        // Takeover confirmation: launching while an app is already running on
-        // the PC quits it (unsaved progress included), so confirm first. The
-        // title carries the specifics; the message states the consequence.
-        .confirmationDialog(
-            model.pendingTakeover.map {
-                TakeoverDialogCopy.title(occupantApp: $0.occupantApp, hostName: $0.host.displayName)
-            } ?? "",
-            isPresented: Binding(
-                get: { model.pendingTakeover != nil },
-                set: { if !$0 { model.pendingTakeover = nil } }
-            ),
-            titleVisibility: .visible,
-            presenting: model.pendingTakeover
-        ) { _ in
-            Button("Quit and Stream", role: .destructive) { model.confirmPendingTakeover() }
-            Button("Cancel", role: .cancel) { model.pendingTakeover = nil }
-        } message: { _ in
-            Text(TakeoverDialogCopy.message)
         }
         .toolbar {
             // The PC switcher is the header's name; the toolbar keeps only Settings,
@@ -129,7 +77,7 @@ struct MainWindow: View {
                 .help("Settings")
             }
         }
-        .navigationTitle("Glimmer")
+        .navigationTitle("Citadel")
     }
 }
 

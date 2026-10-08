@@ -30,7 +30,7 @@ extension StreamSession {
         ProcessInfo.processInfo.endActivity(token)
         powerAssertion = ProcessInfo.processInfo.beginActivity(
             options: Self.sessionActivityOptions(hidden: hidden),
-            reason: "Glimmer is streaming")
+            reason: "Citadel is streaming")
         powerAssertionHidden = hidden
     }
 
@@ -110,6 +110,7 @@ extension StreamSession {
         let win = StreamWindow(displayMode: config.displayMode)
         win.coversNotch = config.coversNotch
         win.windowTitle = config.windowTitle
+        win.pointerPolicy = config.pointerPolicy
         win.streamPixelSize = CGSize(width: config.width, height: config.height)
         let dec = VideoDecoder()
         dec.attach(to: win.displayLayer)
@@ -218,6 +219,7 @@ extension StreamSession {
         // exit lands the session in a window mid-stream
         // (StreamWindow+Windowed.swift).
         inp.isWindowMode = config.displayMode == .window
+        inp.pointerPolicy = config.pointerPolicy
         // The reference frame absolute positions are measured against.
         inp.streamPixelSize = CGSize(width: config.width, height: config.height)
         Self.wireWindowPointerModel(win: win, inp: inp, onMiniPlayerChanged: onMiniPlayerChanged)

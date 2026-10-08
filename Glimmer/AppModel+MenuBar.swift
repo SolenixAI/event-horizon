@@ -119,24 +119,6 @@ extension AppModel {
         return MenuBarPresentation.controllers(gameController: pads, rawHID: raw)
     }
 
-    /// The takeover question has to reach the user even with the launcher
-    /// closed (a launch from the menu bar); the launcher's own dialog handles
-    /// the visible case.
-    func presentTakeoverAlertIfNeeded() {
-        guard let pending = pendingTakeover, !mainWindowVisible else { return }
-        let alert = NSAlert()
-        alert.messageText = TakeoverDialogCopy.title(occupantApp: pending.occupantApp, hostName: pending.host.displayName)
-        alert.informativeText = TakeoverDialogCopy.message
-        alert.addButton(withTitle: "Quit and Stream").hasDestructiveAction = true
-        alert.addButton(withTitle: "Cancel")
-        NSApp.activate()
-        if alert.runModal() == .alertFirstButtonReturn {
-            confirmPendingTakeover()
-        } else {
-            pendingTakeover = nil
-        }
-    }
-
     var mainWindowVisible: Bool {
         NSApp.windows.contains { $0.identifier?.rawValue == "main" && $0.isVisible }
     }

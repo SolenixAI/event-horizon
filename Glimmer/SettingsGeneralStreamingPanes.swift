@@ -72,7 +72,7 @@ struct GeneralPane: View {
         Form {
             Section {
                 Toggle("Open at login", isOn: $launchAtLogin)
-                    .help("Adds Glimmer to System Settings › General › Login Items.")
+                    .help("Adds Citadel to System Settings › General › Login Items.")
                     .onChange(of: launchAtLogin) { _, on in
                         scheduleLoginItemRegistration(launchAtLogin: on, minimized: launchMinimized)
                     }
@@ -81,7 +81,7 @@ struct GeneralPane: View {
                     Toggle(isOn: $launchMinimized) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Open in the menu bar only")
-                            Text("Starts in the menu bar at login. Opening Glimmer from the Dock or Spotlight "
+                            Text("Starts in the menu bar at login. Opening Citadel from the Dock or Spotlight "
                                 + "shows the window.")
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)
@@ -93,7 +93,7 @@ struct GeneralPane: View {
                 }
                 if loginItemNeedsApproval {
                     HStack(spacing: 8) {
-                        Label("macOS needs you to approve Glimmer in Login Items, "
+                        Label("macOS needs you to approve Citadel in Login Items, "
                             + "or it won't start at the next reboot.",
                               systemImage: "exclamationmark.triangle.fill")
                             .font(.footnote).foregroundStyle(.orange)
@@ -284,7 +284,7 @@ struct QualityPane: View {
                 .help("Installs a small helper that pauses AirDrop's radio for each stream.")
                 if case .requiresApproval = awdl.state {
                     HStack(spacing: 8) {
-                        Label("macOS needs you to approve the Glimmer network helper in Login Items.",
+                        Label("macOS needs you to approve the Citadel network helper in Login Items.",
                               systemImage: "exclamationmark.triangle.fill")
                             .font(.footnote).foregroundStyle(.orange)
                         Spacer()

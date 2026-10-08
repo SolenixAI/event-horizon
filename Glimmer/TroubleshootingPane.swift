@@ -71,7 +71,7 @@ struct RawHIDControl: View {
                 .font(.title3).foregroundStyle(.tint)
             VStack(alignment: .leading, spacing: 2) {
                 Text("Turn on Input Monitoring").fontWeight(.medium)
-                Text("Turn on Glimmer in System Settings › Privacy & Security › Input Monitoring, "
+                Text("Turn on Citadel in System Settings › Privacy & Security › Input Monitoring, "
                     + "then choose Quit & Reopen when macOS asks.")
                     .font(.caption).foregroundStyle(.secondary)
             }

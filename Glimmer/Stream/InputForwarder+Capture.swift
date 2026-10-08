@@ -83,6 +83,17 @@ extension InputForwarder {
                 self?.resyncControllers()
             }
         }
+        // Lock mode: swiping to another Space leaves the stream window behind
+        // without a guaranteed resign-key, so the pointer is freed here, and
+        // taken again only if the window comes back key under the pointer.
+        if pointerPolicy == .lock {
+            activeSpaceObserver = NSWorkspace.shared.notificationCenter.addObserver(
+                forName: NSWorkspace.activeSpaceDidChangeNotification,
+                object: nil, queue: .main
+            ) { [weak self] _ in
+                MainActor.assumeIsolated { self?.activeSpaceDidChange() }
+            }
+        }
         didResignKeyObserver = nc.addObserver(
             forName: NSWindow.didResignKeyNotification,
             object: window, queue: .main
@@ -90,6 +101,19 @@ extension InputForwarder {
             MainActor.assumeIsolated {
                 self?.windowResignedKey()
             }
+        }
+    }
+
+    /// The active Space changed. A captured pointer is released the moment the
+    /// stream window is no longer on the active Space (the same release as
+    /// resign-key); coming back, a key window under the pointer grabs again.
+    func activeSpaceDidChange() {
+        guard pointerPolicy == .lock, let window else { return }
+        if window.isOnActiveSpace {
+            captureIfPointerIsOverTheStreamView(reason: "returned to the stream's Space")
+        } else if isMouseCaptured {
+            log.info("Active Space changed - freeing the pointer")
+            windowResignedKey()
         }
     }
 
@@ -108,6 +132,10 @@ extension InputForwarder {
         let nc = NotificationCenter.default
         if let observer = didBecomeKeyObserver { nc.removeObserver(observer); didBecomeKeyObserver = nil }
         if let observer = didResignKeyObserver { nc.removeObserver(observer); didResignKeyObserver = nil }
+        if let observer = activeSpaceObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(observer)
+            activeSpaceObserver = nil
+        }
     }
 
     /// Engage relative-aim mode (SDL_SetRelativeMouseMode(true) on macOS).
@@ -125,7 +153,7 @@ extension InputForwarder {
     func enterCapturedMode() {
         // A window still passing clicks through (waiting for its first frame)
         // cannot hold the pointer either; the fade-in engages it.
-        guard !isMouseCaptured, window?.ignoresMouseEvents != true else { return }
+        guard pointerPolicy == .lock, !isMouseCaptured, window?.ignoresMouseEvents != true else { return }
         mouseResidualX = 0
         mouseResidualY = 0
         // Reset the Cruise inter-batch clock AND the windowed-velocity accums

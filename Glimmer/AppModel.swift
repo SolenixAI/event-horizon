@@ -179,9 +179,9 @@ final class AppModel {
     /// safe read accessor used by the UI.
     var hostLiveStatus: HostLiveStatus?
 
-    /// Set when a launch would TAKE OVER a session already running on the host
-    /// (someone else streaming, not ours). The launcher binds a confirmation
-    /// dialog to this; confirming calls `stream(app:on:)`, cancelling clears it.
+    /// Set when a launch from the command line would TAKE OVER a session already
+    /// running on the host (someone else streaming, not ours). Only the CLI reply
+    /// reads it ("run again with --force"); the app itself never asks.
     /// nil = no takeover pending (the common case streams straight through).
     var pendingTakeover: PendingTakeover?
     struct PendingTakeover: Equatable {
@@ -275,7 +275,7 @@ final class AppModel {
     var captureSysKeys: Bool = false {
         didSet { UserDefaults.standard.set(captureSysKeys, forKey: "captureSysKeys") }
     }
-    var streamCoversNotch: Bool = true {
+    var streamCoversNotch: Bool = false {
         didSet { UserDefaults.standard.set(streamCoversNotch, forKey: "streamCoversNotch") }
     }
     /// The Custom preset's "Show the stream in a window" choice: full screen
@@ -499,14 +499,21 @@ final class AppModel {
         // stays under the complexity bar). The persisted-key set is unchanged.
         muteMacWhileStreaming = UserDefaults.standard.bool(forKey: "muteMacWhileStreaming")
         defaultLaunchApp = UserDefaults.standard.string(forKey: "defaultLaunchApp") ?? defaultLaunchApp
+        // Read the saved Custom size BEFORE restoring the preset: restoring
+        // `.custom` runs qualityPreset's willSet, which seeds (and persists)
+        // the custom fields from the previous preset and would otherwise
+        // overwrite the user's saved size on every launch.
+        let savedWidth = Self.persistedPositiveInt("customWidth")
+        let savedHeight = Self.persistedPositiveInt("customHeight")
+        let savedFPS = Self.persistedPositiveInt("customFPS")
         qualityPreset = Self.persistedQualityPreset() ?? qualityPreset
         // Width/height/fps are clamped on read: builds whose Quality pane
         // clamped on Return only could persist out-of-range values via a
         // focus-loss commit (0 self-heals via persistedPositiveInt; 1000 Hz
         // did not). Bounds mirror QualityPane's clamp helpers.
-        customWidth = min(max(Self.persistedPositiveInt("customWidth") ?? customWidth, 640), 7680)
-        customHeight = min(max(Self.persistedPositiveInt("customHeight") ?? customHeight, 480), 4320)
-        customFPS = min(max(Self.persistedPositiveInt("customFPS") ?? customFPS, 30), 240)
+        customWidth = min(max(savedWidth ?? customWidth, 640), 7680)
+        customHeight = min(max(savedHeight ?? customHeight, 480), 4320)
+        customFPS = min(max(savedFPS ?? customFPS, 30), 240)
         streamHDR = Self.persistedBool("streamHDR") ?? streamHDR
         captureSysKeys = Self.persistedBool("captureSysKeys") ?? captureSysKeys
         streamCoversNotch = Self.persistedBool("streamCoversNotch") ?? streamCoversNotch

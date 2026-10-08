@@ -265,12 +265,10 @@ extension AppModel {
         return (NSScreen.main?.safeAreaInsets.top ?? 0) > 0
     }
 
-    /// The notch choice the session actually gets: the user's persisted toggle
-    /// on a notched panel, always "cover" (Path A) elsewhere. The persisted
-    /// value is kept untouched for when a notched panel is present again.
-    var effectiveStreamCoversNotch: Bool {
-        currentDisplayHasNotch ? streamCoversNotch : true
-    }
+    /// The notch choice the session actually gets. Citadel never covers the
+    /// notch (Path A is retired: always a window), so this is always false.
+    /// The persisted toggle is kept untouched.
+    var effectiveStreamCoversNotch: Bool { false }
 
     /// The panel's CURRENT refresh (`NSScreen.maximumFramesPerSecond` reflects
     /// the System Settings choice, not the capability), 60 when it can't say.
@@ -281,8 +279,7 @@ extension AppModel {
         return hz > 0 ? hz : StreamDisplayMode.fallbackDisplayMaxHz
     }
 
-    /// The mode a session actually gets: the window choice under Custom, full
-    /// screen under the panel-native presets (StreamDisplayMode.effective).
+    /// The mode a session actually gets: always `.window` (StreamDisplayMode.effective).
     var effectiveDisplayMode: StreamDisplayMode {
         StreamDisplayMode.effective(chosen: streamDisplayMode, preset: qualityPreset)
     }

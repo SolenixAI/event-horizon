@@ -8,91 +8,88 @@ ios
 
 ## Users
 
-People with a Mac and a gaming PC running Sunshine who want to play their PC
-games on the Mac. They use it in two scenes:
+Mac owners with a gaming PC at home. They use the PC's whole desktop for
+anything, and they play its games. Two scenes:
 
-- at a desk on Ethernet, with the Mac as the PC's screen;
-- away from the desk, usually on the couch with a MacBook on Wi-Fi.
+- on the couch with a MacBook on Wi-Fi (the main and harder scene);
+- at a desk, with the Mac as the PC's screen.
 
-Both matter. The couch on Wi-Fi is the harder case and gets design and tuning
-attention first.
+Desktop work and games both matter. The first customer is the founder (one
+MacBook Air M5, one Linux gaming PC running Sunshine).
 
 ## Product Purpose
 
-Glimmer streams games from the user's own PC to their Mac, so a gaming PC in the
-other room feels plugged into the Mac. Success is a player forgetting it is a
-stream, and someone using Glimmer mistaking it for something Apple shipped.
+Citadel makes a gaming PC feel like an app on the Mac: open Citadel, pick the PC
+or a game, and the PC is there, sharp and immediate, inside a real Mac window.
+Success is the user forgetting it is a stream while the Mac stays fully theirs.
 
 ## Positioning
 
-Native leads. Socket, decoder, display, audio and input all run in one Swift
-process, with no external player and no C engine, and the app lives where Mac
-apps live: Liquid Glass windows, the menu bar, Shortcuts, Siri, Spotlight and a
-command line in the app binary.
+**It never takes over your Mac.** Game-first clients (Moonlight, Glimmer, Steam
+Remote Play) lock the pointer, cover the desktop and raise popups that trap the
+user. Citadel is a Mac app around the PC: the cursor, gestures, Spaces, Stage
+Manager and Mac shortcuts stay the user's, while the PC feels local.
 
-Two claims back it up:
-
-- **Fidelity first.** Pacing, bitrate, buffering and decode defaults are tuned
-  against real-stream telemetry. Safeguards back off under stress and recover
-  when it passes, and never give up for good.
-- **The Mac side is handled.** Wake on LAN, the Wi-Fi stutter helper, the notch,
-  the login item and updates are taken care of without the user learning how.
-
-Sunshine is the server application on the PC. Moonlight is a separate client
-that inspired Glimmer; it is not the protocol's name.
+- Desktop: a free cursor that is the PC's cursor; Mac shortcuts (⌘C ⌘V ⌘Z …)
+  become Ctrl on the PC; ⌘Tab, ⌘Space, ⌘Q and gestures stay with the Mac.
+- Games: the pointer locks only while the game is in front and frees itself when
+  the user leaves.
+- Engine: Glimmer's native Swift stream engine (decode, pacing, audio, input),
+  which Citadel builds on. Solenix builds only the experience layer.
 
 ## Operating Context
 
-- Pair a PC with a PIN, found by mDNS or entered by address (Tailscale works).
-- Start a stream from the launcher, the menu bar, Shortcuts, Siri, Spotlight or
-  the `glimmer` command; wake a sleeping PC first when Wake on LAN is set up.
-- Play full screen, in a window, or in the mini player, with a controller or
-  mouse and keyboard.
-- Install from the Homebrew cask or the notarized DMG; the app updates itself
-  with Sparkle.
+- Open Citadel → Home with the paired PC(s) and their apps (Desktop + games).
+- Pick one → the PC opens in Citadel's window; the green button gives Citadel
+  its own full-screen Space; ⌘W returns Home while the PC keeps running; Quit
+  disconnects.
+- Home network or Tailscale from anywhere; Sunshine on the PC with a virtual
+  display at the Mac's size.
+- Setup for new users (later): a one-link PC companion that installs Sunshine
+  underneath and pairs by itself.
 
 ## Capabilities and Constraints
 
-- macOS 26 or later, Apple Silicon only. The platform value above is `ios`
-  because the schema has no macOS value; it selects Apple HIG native guidance.
-  Glimmer is a Mac app, so the macOS HIG applies and the iPhone-specific
-  guidance (touch targets, tab bars, safe areas, edge swipes) does not.
-- Works against a current, unmodified Sunshine. No feature may require a patched
-  PC.
-- No analytics, tracking or third-party network calls. Glimmer talks only to the
-  user's PC, the local network for discovery and Wake on LAN, and its update
-  feed.
-- The renderer is AVSampleBufferDisplayLayer, not Metal. Glimmer does not use or
-  recommend macOS Game Mode.
-- UI copy follows the "UI and copy" rules in AGENTS.md, which are binding for
-  every contributor.
+- macOS 26 or later, Apple Silicon. The platform value above is `ios` because
+  the schema has no macOS value; it selects Apple HIG guidance. Citadel is a Mac
+  app: the macOS HIG applies, iPhone-specific guidance does not.
+- Never an attention hijack: no popups over or before the stream, no forced
+  activation, no cursor hidden or trapped outside an explicit game lock, never
+  covering the user's desktop Space.
+- Works against a current, unmodified Sunshine.
+- No analytics, tracking or third-party network calls.
+- Built on Glimmer (GPL-3): Citadel's source must be open when distributed; it
+  is unsandboxed, so the Mac App Store is not an option as-is.
+- Unsigned local builds cannot use the Wi-Fi (AWDL) helper; signed builds need
+  the Apple Developer Program (undecided).
+- Undecided: business model; public use of the name.
 
 ## Brand Commitments
 
-- The name is Glimmer. The app icon (`docs/assets/icon-512.png`) is final.
-- The purple accent is part of the identity; design works inside it.
-- System controls only: SwiftUI and AppKit with Liquid Glass. A custom look is a
-  style on a real control, never a drawn widget, and keeps native focus,
-  keyboard and VoiceOver behaviour.
+- The name is Citadel (pending a public-name check).
+- The icon is the three-body figure-eight orbit (`brand/`, `Glimmer/AppIcon.icon`).
+- Accent: the logo's gold and blue, replacing Glimmer's purple.
+- Credit Glimmer as the open-source engine.
+- System controls only: SwiftUI and AppKit with Liquid Glass; a custom look is a
+  style on a real control and keeps native focus, keyboard and VoiceOver.
 
 ## Evidence on Hand
 
-- `README.md`: features and install; `docs/assets/launcher.png`: the launcher.
-- `CHANGELOG.md`: every release as plain-language bullets.
-- `docs/PROFILING.md` and per-session telemetry under `~/Library/Logs/Glimmer`
-  back the tuning claims.
-- There are no published benchmarks against Moonlight, no user counts and no
-  testimonials. Future work must not invent them.
+- Founder test, 2026-10-08: "audio is working great, video quality is great,
+  latency and input feel really good, already far surpassed the Remote Play and
+  Glimmer experience".
+- Measured: Mac↔PC Wi-Fi spread ±16–20 ms; host encode 4–6 ms; first frame
+  0.9 s from launch.
+- No customers, benchmarks or testimonials beyond the founder. Do not invent them.
 
 ## Product Principles
 
-1. Native first: when macOS has the control or behaviour, use it, and make any
-   custom look a style on the real thing.
-2. Design for the couch on Wi-Fi; the desk on Ethernet is the easy case.
-3. Fidelity before convenience, and safeguards that recover rather than give up.
-4. Handle the Mac side quietly, and say what happened in plain words when
-   something needs the user.
-5. The icon and the purple are the brand; everything else belongs to macOS.
+1. The Mac stays the user's: nothing in Citadel may take the cursor, the
+   keyboard, the screen or attention without the user asking.
+2. The PC should feel local: fidelity and latency come before features.
+3. One app, one window, one journey: Home → PC → Home, no detours.
+4. Native first: use the macOS control or behaviour, style it, never redraw it.
+5. Build only the experience; reuse the engine and the OS for everything else.
 
 ## Accessibility & Inclusion
 

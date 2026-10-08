@@ -71,7 +71,7 @@ enum CommandChannel {
         case notMine
     }
 
-    static let alreadyStreaming = "Glimmer is already streaming. Stop Streaming, then try again."
+    static let alreadyStreaming = "Citadel is already streaming. Stop Streaming, then try again."
 
     static func post(_ name: Notification.Name, _ info: [String: String]) {
         DistributedNotificationCenter.default().postNotificationName(
@@ -93,7 +93,7 @@ enum CommandChannel {
             let appID = info[Key.app].flatMap { Int($0) }
             guard let host = hosts.first(where: { $0.id == hostID }),
                   let app = host.apps.first(where: { $0.id == appID }) else {
-                return .rejected("Glimmer doesn't know that PC or app.")
+                return .rejected("Citadel doesn't know that PC or app.")
             }
             return .stream(app, on: host, takeover: info[Key.takeover] == "1")
         case "quit":
@@ -236,7 +236,7 @@ extension AppModel {
 
     fileprivate func commandSessionDetail() -> String? {
         let busy = pendingTakeover.map {
-            "\($0.host.displayName) is busy. Choose Quit and Stream in Glimmer, or run again with --force."
+            "\($0.host.displayName) is busy. Run again with --force."
         }
         return nativeStreamError ?? busy
     }

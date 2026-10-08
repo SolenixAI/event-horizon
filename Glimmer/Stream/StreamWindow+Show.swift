@@ -61,7 +61,7 @@ extension StreamWindow {
         // 4b. The first show parks the cursor at the fade-in. A return from the
         //     mini player re-centres it only if it sits off this screen, where the
         //     frozen cursor would take clicks outside the cover.
-        if !firstShow, let screen, !StreamCursor.isOnScreen(NSEvent.mouseLocation, frame: screen.frame) {
+        if pointerPolicy == .lock, !firstShow, let screen, !StreamCursor.isOnScreen(NSEvent.mouseLocation, frame: screen.frame) {
             warpCursorToCentre(of: screen)
         }
 
@@ -163,7 +163,7 @@ extension StreamWindow {
         installLifecycleObservers()
         // The first show leaves the cursor and the menu bar to the fade-in.
         if !firstShow {
-            setCursorHidden(true)
+            if pointerPolicy == .lock { setCursorHidden(true) }
             applyPresentationOptions(coversNotch: coversNotch)
         }
 

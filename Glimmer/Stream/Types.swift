@@ -94,6 +94,10 @@ public struct StreamConfig: Sendable {
     /// screen (a borderless cover has no title bar).
     public var windowTitle: String = ""
 
+    /// Who owns the Mac pointer: free for the PC's Desktop, locked for a game.
+    /// Snapshotted at session start like `displayMode`; see `PointerPolicy`.
+    public var pointerPolicy: PointerPolicy = .lock
+
     /// Moonlight's "play audio on host PC": the PC keeps its own sound and
     /// this Mac silences the stream (not the system volume).
     public var playAudioOnHost: Bool = false

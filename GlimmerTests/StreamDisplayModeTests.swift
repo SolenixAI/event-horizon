@@ -31,15 +31,15 @@ struct StreamDisplayModeTests {
         #expect(StreamDisplayMode.persisted(rawValue: "") == .fullScreen)
     }
 
-    // MARK: Which preset the choice applies to
+    // MARK: Always a window
 
-    @Test func windowOnlyAppliesUnderCustom() {
-        #expect(StreamDisplayMode.effective(chosen: .window, preset: .custom) == .window)
-        #expect(StreamDisplayMode.effective(chosen: .fullScreen, preset: .custom) == .fullScreen)
-        // The panel-native presets are full screen by definition, whatever
-        // the persisted choice says - and the choice itself is left alone.
-        #expect(StreamDisplayMode.effective(chosen: .window, preset: .matchDisplay) == .fullScreen)
-        #expect(StreamDisplayMode.effective(chosen: .window, preset: .hidpi) == .fullScreen)
+    /// Citadel never covers the user's desktop: every preset streams in a
+    /// window, whatever the persisted choice says. Full screen is the green button.
+    @Test func everyPresetStreamsInAWindow() {
+        for preset in QualityPreset.allCases {
+            #expect(StreamDisplayMode.effective(chosen: .window, preset: preset) == .window)
+            #expect(StreamDisplayMode.effective(chosen: .fullScreen, preset: preset) == .window)
+        }
     }
 
     // MARK: Windowed refresh

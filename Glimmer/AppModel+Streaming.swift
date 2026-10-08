@@ -18,34 +18,20 @@ import os.log
 
 extension AppModel {
 
-    /// Prompt at once when the launcher already knows the host is taken; the
-    /// launch flow re-checks fresh server-info and prompts if that disagrees.
+    /// Citadel never asks. Whatever runs on the PC gives way: the engine cancels
+    /// it and launches the chosen app, so the same app or another one is one tap.
     func requestStream(app: LibraryApp, on host: Host) {
-        if !isStreaming, let live = hostLiveStatus, live.hostID == host.id,
-           Date().timeIntervalSince(live.capturedAt) <= HostLiveStatus.stale,
-           let occupant = Self.occupant(of: live.state) {
-            pendingTakeover = PendingTakeover(app: app, host: host, occupantApp: occupant)
-            presentTakeoverAlertIfNeeded()
-            return
-        }
-        stream(app: app, on: host)
+        stream(app: app, on: host, takeoverAuthorized: true)
     }
 
     /// The app a launch would quit: nil when the PC is free, and `.some(nil)`
-    /// when it runs an app it didn't name.
+    /// when it runs an app it didn't name. The CLI asks before taking over.
     static func occupant(of state: HostLiveStatus.State) -> String?? {
         switch state {
         case .streamingApp(let name): name
         case .streamingUnknownApp: .some(nil)
         default: nil
         }
-    }
-
-    /// Confirm the armed takeover and launch over the host's current session.
-    func confirmPendingTakeover() {
-        guard let pending = pendingTakeover else { return }
-        pendingTakeover = nil
-        stream(app: pending.app, on: pending.host, takeoverAuthorized: true)
     }
 
     /// The per-launch UI state, reset at every start. The click anchors live
@@ -120,6 +106,7 @@ extension AppModel {
 
         var cfg = nativeStreamConfig(for: host)
         cfg.windowTitle = Self.streamWindowTitle(hostName: host.displayName, appName: app.name)
+        cfg.pointerPolicy = PointerPolicy.forApp(named: app.name)
         // One line naming how the stream will be shown and what was asked for,
         // so a "why is it 1080p in a window" report answers itself from the log.
         Diag.info("Show the stream: \(cfg.displayMode.displayName.lowercased()) - requesting "
@@ -218,7 +205,6 @@ extension AppModel {
                 self.isStreaming = false
             }
             self.cleanupAfterStream(host: host, caughtError: caughtError)
-            if takeover != nil { self.presentTakeoverAlertIfNeeded() }
         }
     }
 
@@ -300,9 +286,8 @@ extension AppModel {
         // Wait out /cancel before probing. An established session also holds the chip
         // through transient misses, even when its pre-stream sample is stale.
         self.restartHostStatusPolling(afterStream: true)
-        NSApp.activate()
-        if let main = NSApp.windows.first(where: {
-            $0.identifier?.rawValue == "main" || $0.title == "Glimmer"
+        if NSApp.isActive, let main = NSApp.windows.first(where: {
+            $0.identifier?.rawValue == "main" || $0.title == "Citadel"
         }) {
             main.makeKeyAndOrderFront(nil)
         }

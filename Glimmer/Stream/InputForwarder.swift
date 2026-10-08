@@ -178,6 +178,12 @@ public final class InputForwarder {
     /// InputForwarder+WindowPointer.swift and +HoverCapture.swift.
     var isWindowMode: Bool = false
 
+    /// Who owns the Mac pointer (see `PointerPolicy`). `.free` (the PC's Desktop)
+    /// never captures: no relative aim, no hidden cursor, positions always
+    /// absolute, and Mac shortcuts are translated (InputForwarder+CommandTranslate.swift).
+    /// Set by the session at attach, before any input reaches the view.
+    var pointerPolicy: PointerPolicy = .lock
+
     /// The stream's pixel dimensions, the reference frame absolute pointer
     /// positions are measured in. Set by the session at start and re-set on a
     /// reconnect that changes resolution; `.zero` (full screen, or before the
@@ -442,6 +448,8 @@ public final class InputForwarder {
     /// focus transitions and tear down cleanly in `detach()`.
     var didBecomeKeyObserver: NSObjectProtocol?
     var didResignKeyObserver: NSObjectProtocol?
+    /// Lock mode only: frees the pointer when the window leaves the active Space.
+    var activeSpaceObserver: NSObjectProtocol?
 
     public convenience init() {
         self.init(cruiseTuning: CruiseTraversal.Tuning.current())

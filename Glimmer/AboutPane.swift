@@ -47,7 +47,7 @@ struct AboutPane: View {
                             .frame(width: 96, height: 96)
                     }
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Glimmer")
+                        Text("Citadel")
                             .font(.system(size: 28, weight: .bold))
                             .tracking(-0.4)
                         Text("Stream your gaming PC to this Mac.")
@@ -86,12 +86,12 @@ struct AboutPane: View {
             // closing note of appreciation.
             Section("Support") {
                 if let url = URL(string: AboutLink.donate) {
-                    Link("Support Glimmer's development", destination: url)
+                    Link("Support Citadel's development", destination: url)
                         .font(.footnote)
                 }
             }
             Section("License") {
-                Text("Glimmer is free software under the GNU General Public License v3. "
+                Text("Citadel is free software under the GNU General Public License v3. "
                     + "You may run, study, share, and modify it. There is no warranty.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
@@ -102,7 +102,7 @@ struct AboutPane: View {
             }
             Section("Acknowledgements") {
                 Text("Built for Sunshine, the open-source game-streaming app that runs on "
-                    + "your PC. Glimmer talks to it over the same RTSP-based protocol as Moonlight, "
+                    + "your PC. Citadel talks to it over the same RTSP-based protocol as Moonlight, "
                     + "the client that inspired it, and the transport is ported from "
                     + "moonlight-common-c, with respect.")
                     .font(.footnote)

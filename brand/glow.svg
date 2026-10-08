@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024"><defs><filter id="bl" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="46"/></filter></defs>
+<circle cx="512.0" cy="512.0" r="110" fill="#ff9a3c" opacity="0.8" filter="url(#bl)"/>
+<circle cx="221.0" cy="693.9" r="110" fill="#a9c8ff" opacity="0.8" filter="url(#bl)"/>
+<circle cx="803.0" cy="330.1" r="110" fill="#3aa0ff" opacity="0.8" filter="url(#bl)"/>
+</svg>

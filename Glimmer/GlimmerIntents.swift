@@ -40,7 +40,7 @@ struct PCQuery: EnumerableEntityQuery {
 
 struct StreamIntent: AppIntent {
     static let title: LocalizedStringResource = "Stream from PC"
-    static let description = IntentDescription("Opens Glimmer and streams an app from a paired PC.")
+    static let description = IntentDescription("Opens Citadel and streams an app from a paired PC.")
     static let supportedModes: IntentModes = .foreground
 
     @Parameter(title: "PC")
@@ -48,7 +48,7 @@ struct StreamIntent: AppIntent {
 
     @Parameter(
         title: "App",
-        description: "An app on the PC, such as Desktop. Leave it empty for the app Glimmer's Stream button shows.")
+        description: "An app on the PC, such as Desktop. Leave it empty for the app Citadel's Stream button shows.")
     var app: String?
 
     static var parameterSummary: some ParameterSummary {
@@ -170,8 +170,8 @@ enum PCIntentError: Error, Equatable, CustomLocalizedStringResourceConvertible {
 
     var localizedStringResource: LocalizedStringResource {
         switch self {
-        case .notReady: "Glimmer is still starting. Try again in a moment."
-        case .notPaired: "That PC isn't paired with Glimmer anymore."
+        case .notReady: "Citadel is still starting. Try again in a moment."
+        case .notPaired: "That PC isn't paired with Citadel anymore."
         case .alreadyStreaming: "\(CommandChannel.alreadyStreaming)"
         case .notSent: "\(AppModel.WakeFailureReason.couldNotSend.line)"
         case let .noApp(app, pc): "\(pc) has no app named \(app)."

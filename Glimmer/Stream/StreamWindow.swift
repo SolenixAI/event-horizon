@@ -157,6 +157,10 @@ public final class StreamWindow {
     /// Window-mode title ("Tower - Desktop"). Ignored by the borderless cover.
     public var windowTitle: String = ""
 
+    /// Free for the PC's Desktop: the window never hides, warps or traps the
+    /// cursor. Set by the session at build time; see `PointerPolicy`.
+    var pointerPolicy: PointerPolicy = .lock
+
     /// The window as a small floating panel (StreamWindow+MiniPlayer.swift).
     /// A window-mode variant: `displayMode` reads `.window` while it is on.
     public internal(set) var isMiniPlayer = false

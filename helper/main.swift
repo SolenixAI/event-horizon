@@ -1,7 +1,7 @@
 import Foundation
 import os.log
 
-let log = OSLog(subsystem: "io.ugfugl.glimmer.helper", category: "main")
+let log = OSLog(subsystem: "dev.solenix.citadel.helper", category: "main")
 os_log("Glimmer helper starting (pid %d)", log: log, type: .info, getpid())
 
 if getuid() != 0 {

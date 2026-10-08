@@ -43,12 +43,11 @@ public enum StreamDisplayMode: String, CaseIterable, Identifiable, Sendable {
         rawValue.flatMap(StreamDisplayMode.init(rawValue:)) ?? defaultMode
     }
 
-    /// The mode a session actually gets: the user's choice under Custom, full
-    /// screen under every other preset. The persisted choice is left alone
-    /// while a panel-native preset is selected, so switching back to Custom
-    /// finds the window toggle where it was.
+    /// The mode a session actually gets. Citadel always streams in a window:
+    /// full screen is the green button (a native Space the user opens), never
+    /// something the app takes over. The persisted choice is left alone.
     static func effective(chosen: StreamDisplayMode, preset: QualityPreset) -> StreamDisplayMode {
-        preset == .custom ? chosen : .fullScreen
+        .window
     }
 
     /// The refresh a WINDOWED stream asks for: Custom's Hz capped at the

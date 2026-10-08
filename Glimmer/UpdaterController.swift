@@ -30,7 +30,7 @@ final class UpdaterController {
         // release grabs it, and a dev build at/after the latest release stays
         // silent until the next one - exactly the desired behavior, for free.
         controller = SPUStandardUpdaterController(
-            startingUpdater: true, updaterDelegate: streamAwareAlerts, userDriverDelegate: streamAwareAlerts)
+            startingUpdater: false, updaterDelegate: streamAwareAlerts, userDriverDelegate: streamAwareAlerts)
         streamAwareAlerts.observeAvailability(of: controller.updater)
         // PRESCRIPTIVE nag policy (2026-08-26). Previously nothing set a check
         // schedule: Sparkle's own opt-in prompt decided whether SCHEDULED

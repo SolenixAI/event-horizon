@@ -17,7 +17,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>$(PRODUCT_NAME)</string>
+	<string>Citadel</string>
 	<key>CFBundlePackageType</key>
 	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
 	<key>CFBundleShortVersionString</key>
@@ -31,7 +31,7 @@
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2026 ugfugl.io. GNU GPL v3.</string>
 	<key>CFBundleDisplayName</key>
-	<string>Glimmer</string>
+	<string>Citadel</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<!-- Tell AppKit not to wrap notched MacBook panels in safe-area
@@ -53,14 +53,14 @@
 	     type the app browses - Discovery.swift browses _nvstream._tcp (GFE)
 	     and _nvstream-tcp._tcp (Sunshine). -->
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Glimmer finds and connects to your gaming PCs on your local network.</string>
+	<string>Citadel finds and connects to your gaming PCs on your local network.</string>
 	<!-- Input Monitoring (kIOHIDRequestTypeListenEvent). REQUIRED for the
 	     permission API to behave: without this key IOHIDCheckAccess /
 	     IOHIDRequestAccess return denied even when the user HAS granted the
 	     app in System Settings (Apple DTS forum 809431). Covers raw-HID
 	     controller reads (DualSense) and raw mouse input. -->
 	<key>NSInputMonitoringUsageDescription</key>
-	<string>Glimmer reads game controllers and raw mouse motion so your input reaches the gaming PC accurately.</string>
+	<string>Citadel reads game controllers and raw mouse motion so your input reaches the gaming PC accurately.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_nvstream._tcp</string>
@@ -74,14 +74,12 @@
 	     unsandboxed it needs no entitlement to reach it (the sandbox-era
 	     mach-lookup exception is gone). Daily background checks; the user is
 	     prompted before an update installs (Sparkle default). -->
-	<key>SUFeedURL</key>
-	<string>https://se7enbrc.github.io/glimmer/appcast.xml</string>
-	<key>SUPublicEDKey</key>
+		<key>SUPublicEDKey</key>
 	<string>bUc9IWEtH/FuDUIsGqyDIVy/1gvlPtBkFXNcVO/TrPU=</string>
 	<key>SUEnableInstallerLauncherService</key>
 	<true/>
 	<key>SUEnableAutomaticChecks</key>
-	<true/>
+	<false/>
 	<key>SUScheduledCheckInterval</key>
 	<integer>86400</integer>
 </dict>

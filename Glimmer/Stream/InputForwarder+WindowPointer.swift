@@ -44,10 +44,15 @@ extension InputForwarder {
         return window?.isKeyWindow ?? false
     }
 
+    /// Whether pointer positions go out as ABSOLUTE rather than relative deltas:
+    /// always under `.free` (the PC's Desktop never captures), else window mode
+    /// with the pointer free. Constant `false` in full screen, so the relative
+    /// path there is untouched.
+    var usesAbsolutePointer: Bool { pointerPolicy == .free || (isWindowMode && !isMouseCaptured) }
+
     /// Whether pointer motion should be sent as an absolute POSITION rather
-    /// than a relative delta: window mode with the pointer free. Constant
-    /// `false` in full screen, so the relative path there is untouched.
-    var sendsAbsolutePointer: Bool { isWindowMode && !isMouseCaptured }
+    /// than a relative delta.
+    var sendsAbsolutePointer: Bool { usesAbsolutePointer }
 
     /// Switch pointer policy mid-session. Used by the Path-B Space exit that
     /// lands a fullscreen session in a window: the always-on capture is
@@ -98,7 +103,7 @@ extension InputForwarder {
     /// input, so a pointer sweeping over a background stream window on its way
     /// somewhere else would vanish into a game the user is not looking at.
     func capturePointer(reason: String) {
-        guard isWindowMode, !isMouseCaptured, let window, window.isKeyWindow else { return }
+        guard pointerPolicy == .lock, isWindowMode, !isMouseCaptured, let window, window.isKeyWindow else { return }
         log.info("Pointer capture requested (\(reason, privacy: .public))")
         // Clear the latch as the grab lands: it exists to keep a release from
         // being undone, and the pointer is captured again, so the question it
@@ -166,7 +171,7 @@ extension InputForwarder {
     /// is gated on the pointer being free, which is exactly the state this is
     /// leaving. Window mode only, so full screen never emits an absolute event.
     func syncHostPointerToCurrentLocation() {
-        guard isReady, isWindowMode, let window, let view = inputView else { return }
+        guard isReady, isWindowMode || usesAbsolutePointer, let window, let view = inputView else { return }
         let viewPoint = view.convert(window.mouseLocationOutsideOfEventStream, from: nil)
         guard view.bounds.contains(viewPoint) else { return }
         guard let point = PointerMapping.streamPoint(

@@ -106,7 +106,7 @@ struct GlimmerApp: App {
     var body: some Scene {
         // `Window` (single-instance) over `WindowGroup` - `openWindow(id:)`
         // brings the existing one to front instead of spawning a duplicate.
-        Window("Glimmer", id: "main") {
+        Window("Citadel", id: "main") {
             MainWindow()
                 .environment(model)
                 // 532pt content + 24pt margins per side = 580. This MUST equal the
@@ -134,16 +134,6 @@ struct GlimmerApp: App {
             CommandGroup(replacing: .newItem) {}
             // No help book, so no dead "Glimmer Help" item; the Help menu keeps macOS's ⌘? menu search.
             CommandGroup(replacing: .help) {}
-            #if canImport(Sparkle)
-            // Standard macOS "Check for Updates..." under the app menu (after the
-            // About item). Sparkle drives the rest: a check on every open
-            // (applicationDidFinishLaunching) plus a daily background check and
-            // the update panels. Mirrored in the menu bar panel's overflow menu
-            // for the accessory (no-window) case - see MenuBarPanel.
-            CommandGroup(after: .appInfo) {
-                CheckForUpdatesView(updater: UpdaterController.shared.updater)
-            }
-            #endif
             CommandGroup(after: .appSettings) {
                 Button("Install Command Line Tool…") { CommandLineToolInstaller.install() }
             }
@@ -274,18 +264,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ) { _ in recheck() })
     }
 
-    #if canImport(Sparkle)
-    /// Check for updates on every open the user makes, on top of Sparkle's daily check,
-    /// so a cold start surfaces a newer release at once; silent unless there is one.
-    /// Skipped on login launches, which the daily check covers.
-    func applicationDidFinishLaunching(_ notification: Notification) {
-        guard !launchedAtLogin else { return }
-        // Sparkle's own scheduled check may already be running; asking again
-        // then only logs a fault.
-        let updater = UpdaterController.shared.updater
-        if !updater.sessionInProgress { updater.checkForUpdatesInBackground() }
-    }
-    #endif
+    // Citadel: no launch-time update check (Citadel never reads Glimmer's feed).
+    // Opening straight into the PC starts from AppModel.bootstrap().
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         // Keep the menu bar item alive when all windows close.

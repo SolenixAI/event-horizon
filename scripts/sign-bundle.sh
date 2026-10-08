@@ -66,10 +66,10 @@ fi
 for dylib in "$APP/Contents/Frameworks/"*.dylib; do
 	[ -f "$dylib" ] && sign_plain "$dylib"
 done
-DAEMON="$APP/Contents/MacOS/io.ugfugl.glimmer.helper"
+DAEMON="$APP/Contents/MacOS/dev.solenix.citadel.helper"
 if [ -f "$DAEMON" ]; then
 	echo "Signing the AWDL network helper (root LaunchDaemon, hardened runtime, no entitlements)"
-	codesign --force --options runtime $TS $KCF --sign "$ID" --identifier "io.ugfugl.glimmer.helper" "$DAEMON"
+	codesign --force --options runtime $TS $KCF --sign "$ID" --identifier "dev.solenix.citadel.helper" "$DAEMON"
 fi
 
 echo "Signing the app bundle (Glimmer entitlements, no --deep)"

@@ -1,68 +1,12 @@
 {
-  "fill-specializations": [
-    {
-      "value": {
-        "linear-gradient": [
-          "display-p3:0.39502,0.05441,0.58496,1.00000",
-          "display-p3:0.00000,0.00000,0.00000,1.00000"
-        ],
-        "orientation": {
-          "start": {
-            "x": 0.5,
-            "y": 0
-          },
-          "stop": {
-            "x": 0.5,
-            "y": 0.7
-          }
-        }
-      }
-    },
-    {
-      "appearance": "dark",
-      "value": {
-        "linear-gradient": [
-          "display-p3:0.41415,0.05891,0.61035,1.00000",
-          "display-p3:0.00000,0.00000,0.00000,1.00000"
-        ],
-        "orientation": {
-          "start": {
-            "x": 0.5,
-            "y": 0
-          },
-          "stop": {
-            "x": 0.5,
-            "y": 0.7
-          }
-        }
-      }
-    }
+  "fill" : { "linear-gradient" : [ "display-p3:0.06000,0.05000,0.16000,1.00000", "display-p3:0.00500,0.00500,0.02500,1.00000" ] },
+  "groups" : [
+    { "layers" : [ { "glass" : true, "image-name" : "bodies.png", "name" : "bodies" } ],
+      "lighting" : "individual", "shadow" : { "kind" : "layer-color", "opacity" : 0.5 }, "specular" : true,
+      "translucency" : { "enabled" : true, "value" : 0.15 } },
+    { "layers" : [ { "glass" : false, "image-name" : "glow.png", "name" : "glow", "blend-mode" : "plus-lighter" },
+                   { "glass" : false, "image-name" : "orbit.png", "name" : "orbit" } ],
+      "shadow" : { "kind" : "none", "opacity" : 0 }, "translucency" : { "enabled" : false, "value" : 0 } }
   ],
-  "groups": [
-    {
-      "layers": [
-        {
-          "image-name": "eclipse-mark.png",
-          "name": "eclipse mark",
-          "opacity": 1,
-          "position": {
-            "scale": 1,
-            "translation-in-points": [0, -39]
-          }
-        }
-      ],
-      "shadow": {
-        "kind": "neutral",
-        "opacity": 0
-      },
-      "translucency": {
-        "enabled": false,
-        "value": 0
-      }
-    }
-  ],
-  "supported-platforms": {
-    "circles": ["watchOS"],
-    "squares": "shared"
-  }
+  "supported-platforms" : { "squares" : [ "macOS" ] }
 }

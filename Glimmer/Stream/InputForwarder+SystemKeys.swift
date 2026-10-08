@@ -15,9 +15,12 @@ extension InputForwarder {
     /// Otherwise ⌘ stays the Mac's, so a ⌘-Tab or ⌘V never leaves a lone Win tap.
     var forwardsCommand: Bool { captureSysKeys && isMouseCaptured }
 
-    /// A ⌘ key equivalent, offered before the main menu sees it. Claimed and
-    /// forwarded to the PC only while ⌘ is.
+    /// A ⌘ key equivalent, offered before the main menu sees it. On the PC's
+    /// Desktop a Mac shortcut is claimed and sent as its Ctrl twin (Edit › Paste
+    /// and ⌘W never fire); otherwise it is claimed and forwarded to the PC only
+    /// while ⌘ is.
     func streamView(_ view: StreamInputView, handleKeyEquivalent event: NSEvent) -> Bool {
+        if sendTranslatedCommand(event) { return true }
         guard forwardsCommand, event.modifierFlags.contains(.command) else { return false }
         streamView(view, handleKeyDown: event)
         return true

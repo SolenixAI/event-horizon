@@ -353,7 +353,7 @@ struct MenuBarPanel: View {
     private var footer: some View {
         HStack(spacing: 8) {
             // Written out, the way Control Center does, not hidden in the "…" menu.
-            Button("Open Glimmer") { openLauncher() }
+            Button("Open Citadel") { openLauncher() }
                 .buttonStyle(.plain)
                 .font(.subheadline)
             Spacer()
@@ -367,14 +367,7 @@ struct MenuBarPanel: View {
             .buttonBorderShape(.circle)
             .help("Settings")
             Menu {
-                #if canImport(Sparkle)
-                Button("Check for Updates…") {
-                    UpdaterController.shared.updater.checkForUpdates()
-                    activate()
-                }
-                Divider()
-                #endif
-                Button("Quit Glimmer") { NSApp.terminate(nil) }
+                Button("Quit Citadel") { NSApp.terminate(nil) }
             } label: {
                 Label("More", systemImage: "ellipsis").labelStyle(.iconOnly)
             }

@@ -117,8 +117,10 @@ extension StreamWindow {
         // the fade-in takes them. The re-hide is latch-safe and the transparent
         // cursor backstops an arrow the WindowServer drew while we were away.
         if !awaitingFirstFrameFadeIn {
-            setCursorHidden(true)
-            reassertCursorHiddenIfNeeded()
+            if pointerPolicy == .lock {
+                setCursorHidden(true)
+                reassertCursorHiddenIfNeeded()
+            }
             applyPresentationOptions(coversNotch: coversNotch)
         }
         onBackgroundedChanged?(false)
@@ -130,8 +132,10 @@ extension StreamWindow {
     func takePointerOnFirstFrame() {
         if displayMode == .fullScreen {
             if NSApp.isActive, !window.isKeyWindow { window.makeKey() }
-            if let screen = window.screen { warpCursorToCentre(of: screen) }
-            setCursorHidden(true)
+            if pointerPolicy == .lock {
+                if let screen = window.screen { warpCursorToCentre(of: screen) }
+                setCursorHidden(true)
+            }
         }
         onDidBecomeReadyForInput?()
     }

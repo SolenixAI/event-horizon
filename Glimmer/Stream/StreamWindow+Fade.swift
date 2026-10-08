@@ -202,8 +202,8 @@ extension StreamWindow {
     /// synchronously (during the fade) brings the launcher in front of the
     /// still-fading stream window, which masks the fade entirely and reads as a
     /// hard cut. Deferring it makes the exit a real fade-out, mirroring the
-    /// first-frame fade-in. `NSApp.activate()` is the macOS 14+ replacement for
-    /// `activate(ignoringOtherApps:)`.
+    /// first-frame fade-in. Never activates the app: the launcher only comes
+    /// forward when Citadel already is frontmost.
     private func finishClose() {
         // Now that the window is invisible, drop the last frame + hide it.
         displayLayer.sampleBufferRenderer.flush(removingDisplayedImage: true) { }
@@ -211,8 +211,8 @@ extension StreamWindow {
         // Reset alphaValue so a future show() of this window isn't
         // invisible (defensive - close() is currently the last call).
         window.alphaValue = 1.0
-        NSApp.activate()
-        if let main = NSApp.windows.first(where: { $0.identifier?.rawValue == "main" || $0.title == "Glimmer" }) {
+        if NSApp.isActive,
+           let main = NSApp.windows.first(where: { $0.identifier?.rawValue == "main" || $0.title == "Citadel" }) {
             main.makeKeyAndOrderFront(nil)
         }
     }

@@ -24,8 +24,8 @@ struct MenuBarPresentationTests {
     @Test func idleKeepsTheEclipseMark() {
         #expect(MenuBarPresentation.systemImage(for: .idle) == nil)
         #expect(MenuBarPresentation.systemImage(for: .streaming) == "play.fill")
-        #expect(MenuBarPresentation.accessibilityLabel(state: .streaming, hostName: "Tower") == "Glimmer, streaming to Tower")
-        #expect(MenuBarPresentation.accessibilityLabel(state: .idle, hostName: nil) == "Glimmer")
+        #expect(MenuBarPresentation.accessibilityLabel(state: .streaming, hostName: "Tower") == "Citadel, streaming to Tower")
+        #expect(MenuBarPresentation.accessibilityLabel(state: .idle, hostName: nil) == "Citadel")
     }
 
     private func action(_ phase: StreamPhase = .idle, reconnecting: Bool = false,

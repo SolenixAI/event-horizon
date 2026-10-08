@@ -52,7 +52,7 @@ enum GlimmerCLI {
         Commands:
           pair <address> [--pin NNNN]    Pair with a PC running Sunshine
           list [<pc>] [--csv]            List paired PCs, or the apps on one PC
-          stream <pc> [<app>]            Stream an app in Glimmer (default: the running app,
+          stream <pc> [<app>]            Stream an app in Citadel (default: the running app,
                                          else Settings › General › Default action)
             --force                      Quit an app already running on the PC without asking
             --wait                       Return when the stream ends

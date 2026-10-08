@@ -43,11 +43,11 @@ extension AppModel {
     /// Why a PC can't be woken yet, in the same words in the ⋯ menu,
     /// `glimmer wake` and the Wake PC shortcut.
     nonisolated static func wakeNoMacMessage(_ pc: String) -> String {
-        "Glimmer doesn't have the MAC address of \(pc) yet. Select it in Glimmer once while it's on."
+        "Citadel doesn't have the MAC address of \(pc) yet. Select it in Citadel once while it's on."
     }
 
     nonisolated static func wakeOffMessage(_ pc: String) -> String {
-        "Wake on LAN is off for \(pc). Turn it on from the PC's ⋯ menu in Glimmer."
+        "Wake on LAN is off for \(pc). Turn it on from the PC's ⋯ menu in Citadel."
     }
 
     /// The PC opted in and Sunshine has told us its MAC address.
