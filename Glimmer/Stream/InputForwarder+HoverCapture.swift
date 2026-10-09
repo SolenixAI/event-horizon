@@ -101,7 +101,7 @@ extension InputForwarder {
         guard isWindowMode else { return }
         noteHoverCaptureEvent(.pointerEntered)
         if isMiniPlayer { onMiniPlayerHoverChanged?(true); return }
-        guard pointerPolicy == .lock, HoverCapture.shouldCaptureOnEnter(
+        guard !capturesOnClick, pointerPolicy == .lock, HoverCapture.shouldCaptureOnEnter(
             isKeyWindow: window?.isKeyWindow ?? false,
             isSuppressed: isHoverCaptureSuppressed,
             isCaptured: isMouseCaptured
@@ -128,7 +128,8 @@ extension InputForwarder {
     /// the two moments where the window gains the input without the pointer
     /// moving: the windowed bring-up, and a Cmd-Tab back.
     func captureIfPointerIsOverTheStreamView(reason: String) {
-        guard pointerPolicy == .lock, isWindowMode, !isMiniPlayer, let window, let view = inputView else { return }
+        guard !capturesOnClick, pointerPolicy == .lock, isWindowMode, !isMiniPlayer,
+              let window, let view = inputView else { return }
         guard HoverCapture.shouldCaptureOnKey(
             pointerIsInside: Self.pointerIsInside(view, of: window),
             isKeyWindow: window.isKeyWindow,

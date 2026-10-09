@@ -60,7 +60,7 @@ extension StreamWindow {
     /// once per person, not once per launch.
     func showCaptureHintIfBudgetAllows() {
         guard HintBudget.windowCapture.claimShow() else { return }
-        captureHintBanner.setText("Hold Esc to free the pointer")
+        captureHintBanner.setText(isEmbedded ? "Hold Esc to free the pointer · ⌘W for Home" : "Hold Esc to free the pointer")
         captureHintBanner.setVisible(true)
         // ~4s all in: 0.2s fade in, 3.6s legible, 0.2s fade out. The
         // generation stamp means a re-capture inside that window re-shows the

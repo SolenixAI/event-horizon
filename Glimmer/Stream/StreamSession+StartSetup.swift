@@ -238,6 +238,12 @@ extension StreamSession {
             // Home shows the PC live, so it is not a background: the decoder
             // keeps presenting, and only the launcher hears about it.
             win.onHomeChanged = { atHome in onBackgroundedChanged?(atHome) }
+            // One click on the PC on the desk goes back in.
+            surface?.onDeskClick = { [weak win, weak inp] in
+                win?.leaveHome()
+                inp?.resumeFromHome()
+            }
+            inp.capturesOnClick = true
         } else {
             inp.attach(to: win.window)
         }

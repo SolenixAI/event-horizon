@@ -46,6 +46,11 @@ final class StreamInputView: NSView {
     /// to Home underneath (the embedded twin of the window's ignoresMouseEvents).
     var passesMouseThrough = false
 
+    /// Home is showing and this is the PC on the desk: one click goes back
+    /// into the PC, and nothing (pointer, clicks, scroll) reaches it meanwhile.
+    var isOnDesk = false
+    var onDeskClick: (@MainActor () -> Void)?
+
     override func hitTest(_ point: NSPoint) -> NSView? {
         passesMouseThrough ? nil : super.hitTest(point)
     }
@@ -210,32 +215,36 @@ final class StreamInputView: NSView {
 
     // MARK: NSResponder - mouse
 
-    override func mouseMoved(with event: NSEvent) { forwardMotion(event) }
+    override func mouseMoved(with event: NSEvent) { if !isOnDesk { forwardMotion(event) } }
     override func mouseDragged(with event: NSEvent) { forwardMotion(event) }
     override func rightMouseDragged(with event: NSEvent) { forwardMotion(event) }
     override func otherMouseDragged(with event: NSEvent) { forwardMotion(event) }
 
     private func forwardMotion(_ event: NSEvent) {
+        guard !isOnDesk else { return }
         guard !discardsNextMotion else { discardsNextMotion = false; return }
         delegate?.streamView(self, handleMouseMoved: event)
     }
 
-    override func mouseDown(with event: NSEvent) { delegate?.streamView(self, handleMouseDown: event) }
-    override func rightMouseDown(with event: NSEvent) { delegate?.streamView(self, handleMouseDown: event) }
-    override func otherMouseDown(with event: NSEvent) { delegate?.streamView(self, handleMouseDown: event) }
+    override func mouseDown(with event: NSEvent) {
+        if isOnDesk { onDeskClick?(); return }
+        delegate?.streamView(self, handleMouseDown: event)
+    }
+    override func rightMouseDown(with event: NSEvent) { if isOnDesk { return }; delegate?.streamView(self, handleMouseDown: event) }
+    override func otherMouseDown(with event: NSEvent) { if isOnDesk { return }; delegate?.streamView(self, handleMouseDown: event) }
 
-    override func mouseUp(with event: NSEvent) { delegate?.streamView(self, handleMouseUp: event) }
-    override func rightMouseUp(with event: NSEvent) { delegate?.streamView(self, handleMouseUp: event) }
-    override func otherMouseUp(with event: NSEvent) { delegate?.streamView(self, handleMouseUp: event) }
+    override func mouseUp(with event: NSEvent) { if isOnDesk { return }; delegate?.streamView(self, handleMouseUp: event) }
+    override func rightMouseUp(with event: NSEvent) { if isOnDesk { return }; delegate?.streamView(self, handleMouseUp: event) }
+    override func otherMouseUp(with event: NSEvent) { if isOnDesk { return }; delegate?.streamView(self, handleMouseUp: event) }
 
-    override func scrollWheel(with event: NSEvent) { delegate?.streamView(self, handleScroll: event) }
+    override func scrollWheel(with event: NSEvent) { if isOnDesk { return }; delegate?.streamView(self, handleScroll: event) }
 
     // Window mode's grab edge. Nothing is decided here - the view reports the
     // crossing and the forwarder's pure rule decides, so full screen (which
     // ignores both) pays one delegate hop and nothing else. No event is
     // consumed: AppKit does not route enter/exit anywhere else.
-    override func mouseEntered(with event: NSEvent) { delegate?.streamViewPointerDidEnter(self) }
-    override func mouseExited(with event: NSEvent) { delegate?.streamViewPointerDidExit(self) }
+    override func mouseEntered(with event: NSEvent) { if isOnDesk { return }; delegate?.streamViewPointerDidEnter(self) }
+    override func mouseExited(with event: NSEvent) { if isOnDesk { return }; delegate?.streamViewPointerDidExit(self) }
 }
 
 // MARK: - Shared cursor-centering helper

@@ -43,9 +43,11 @@ extension StreamWindow {
                                               width: rect.width, height: rect.height)
     }
 
-    /// Clicks fall through while the picture is invisible or on the desk.
+    /// Clicks fall through to Home while the picture is still invisible; on
+    /// the desk the PC catches its own click (the way back in).
     func updateEmbeddedPassThrough() {
-        embeddedSurface?.passesMouseThrough = awaitingFirstFrameFadeIn || embeddedAtHome
+        embeddedSurface?.passesMouseThrough = awaitingFirstFrameFadeIn
+        embeddedSurface?.isOnDesk = embeddedAtHome
     }
 
     /// The embedded bring-up: the window grows to the stream, the surface sits

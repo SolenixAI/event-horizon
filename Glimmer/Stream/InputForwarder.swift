@@ -165,6 +165,10 @@ public final class InputForwarder {
     /// Mini player: no hover grab, a click takes the pointer. Set live by
     /// `setMiniPlayer` (InputForwarder+WindowPointer.swift).
     var isMiniPlayer = false
+
+    /// Citadel's window: a game takes the pointer when the user clicks into
+    /// it, never by the pointer merely passing over the window.
+    var capturesOnClick = false
     /// The pointer entered or left the mini player; the window shows its
     /// close button off this edge.
     var onMiniPlayerHoverChanged: (@MainActor (Bool) -> Void)?

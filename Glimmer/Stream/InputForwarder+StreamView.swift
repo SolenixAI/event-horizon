@@ -357,6 +357,10 @@ extension InputForwarder: StreamInputViewDelegate {
         // Mini player: the click is the grab, and it still reaches the host
         // so the button under the pointer is pressed, not just aimed at.
         if isMiniPlayer, !isMouseCaptured { capturePointer(reason: "click on the mini player") }
+        // Citadel: the click into a game is the grab (and still lands in it).
+        if capturesOnClick, pointerPolicy == .lock, !isMouseCaptured {
+            capturePointer(reason: "click into the game")
+        }
         // A click in a window reaches the HOST - that is the whole point of
         // absolute mode, and the reason click-to-capture is gone. Send the
         // position first so the host's cursor is under the click before the
