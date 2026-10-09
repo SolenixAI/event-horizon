@@ -1,0 +1,13 @@
+[package]
+name = "event-horizon-companion"
+version = "0.1.0"
+edition = "2024"
+license = "GPL-3.0-only"
+description = "Turns a gaming PC into an Event Horizon host"
+publish = false
+
+[dependencies]
+tokio = { version = "1", features = ["sync", "time", "macros", "rt"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["sync", "time", "macros", "rt", "test-util"] }

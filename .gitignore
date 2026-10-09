@@ -113,3 +113,6 @@ __pycache__/
 
 # Live captures of a real PC screen: private, never published
 .impeccable/review/captures/
+
+# Rust build output (PC companion)
+companion/target/
