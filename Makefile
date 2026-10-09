@@ -75,9 +75,9 @@ DIST_DIR        := $(DERIVED)/dist
 BUILD_NUMBER    := $(shell sed -n 's/^CURRENT_PROJECT_VERSION = \(.*\)/\1/p' Glimmer/Version.xcconfig | tr -d ' ')
 # Repo that hosts the Sparkle appcast (GitHub Pages) + release assets - the
 # public source repo itself.
-RELEASES_REPO   ?= Se7enbrc/glimmer
+RELEASES_REPO   ?= SolenixAI/event-horizon
 # Homebrew tap that carries the cask (`brew install --cask se7enbrc/glimmer/glimmer`).
-TAP_REPO        ?= Se7enbrc/homebrew-glimmer
+TAP_REPO        ?= SolenixAI/homebrew-event-horizon
 export RELEASES_REPO TAP_REPO
 # Which release `make brew-bump` points the cask at - the one being built by default.
 VERSION         ?= $(MARKETING_VERSION)
