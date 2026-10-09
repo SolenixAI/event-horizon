@@ -2,6 +2,7 @@
 type: design
 status: draft
 generated: 2026-10-09T19:15-02:30
+updated: 2026-10-09T19:30-02:30
 sources:
   - docs/HOST_SETUP.md (the manual PC setup this companion automates)
   - docs/research/companion.md (primary-source facts, in progress)
@@ -27,9 +28,10 @@ their Mac in 5 minutes or less, with no help and no terminal.
 3. The companion advertises itself on the home network. The Mac finds it.
 4. The Mac asks to pair. The PC shows "Allow <Mac name> to use this PC?" with
    the same 6-letter code. One click on **Allow** pairs them.
-5. From now on the companion keeps the PC awake and unlocked while the Mac is
-   connected, tells the Mac what is really on screen, and keeps the game
-   shelf in step with the PC's library.
+5. From now on the companion keeps the PC awake while the Mac is connected
+   (no blanking, no sleep, no idle auto-lock), tells the Mac what is really
+   on screen, and keeps the game shelf in step with the PC's library. A PC
+   that was already locked still asks for its password once.
 
 ## Modules
 
@@ -88,8 +90,11 @@ impl Host {
 Inside the core (internal seams, tested through `Host`):
 
 - **Pairing.** It holds a pending request, asks `Prompt`, and on Allow
-  submits the Mac's PIN to Sunshine. A request expires after 2 minutes. A
-  second request from the same Mac replaces the first.
+  submits the Mac's PIN to Sunshine. Two timers: the companion waits 2
+  minutes for a click; Sunshine holds the Mac's started pairing for 5. A
+  second request from the same Mac replaces the first. Sunshine matches the
+  PIN to the Mac by its pending pairing (`GET /api/pin`, then `POST
+  /api/pin` with `pairing_id`, `pin` and `name`).
 - **Lease.** The Mac renews a lease every 30 s while it streams. While any
   lease is fresh, the core holds one `Awake` guard. When the last lease is
   older than 90 s, it drops the guard. One guard, not one per Mac.
@@ -109,7 +114,7 @@ tests, so each is a real seam.
 | Seam | Interface | Windows adapter | Linux adapter |
 |---|---|---|---|
 | `Installer` | `ensure_sunshine() -> SunshineInstall` (idempotent; sets credentials, virtual display, firewall) | Sunshine installer, silent; Virtual Display Driver with `docs/vddsettings.xml` | Flatpak `dev.lizardbyte.app.Sunshine`; user service; uinput setup |
-| `Awake` | `hold() -> AwakeGuard` (dropping the guard releases it) | `SetThreadExecutionState` / power request | `org.freedesktop.ScreenSaver.Inhibit` + login1 idle inhibit |
+| `Awake` | `hold() -> AwakeGuard` (dropping the guard releases it) | Power request: display + system required (proven: `powercfg /requests` lists it) | `org.freedesktop.ScreenSaver.Inhibit` + login1 `idle:sleep` inhibit, from the desktop session |
 | `Foreground` | `current() -> Option<RunningApp>` | `GetForegroundWindow` → process image | KWin over D-Bus (active window → pid → executable) |
 | `Prompt` | `ask_allow(mac_name, code) -> Decision` (times out to Deny) | Native dialog from the tray app | KDE notification with actions, fallback dialog |
 | `GameSources` | `installed() -> Vec<Game>` | Steam library, Epic, others later | Steam library (native + Flatpak), Jagex launcher |
@@ -131,6 +136,20 @@ set) plus a fake, so it is an internal seam for tests, not an OS seam.
   companion too.
 - **Protocol.** JSON over HTTPS: `POST /pair`, `POST /lease`, `GET /status`.
   Three requests; versioned by the `v` TXT field.
+
+## Rules learned the hard way
+
+- **One pairing per Mac identity.** Sunshine accepts a client certificate
+  only when exactly one paired record matches it (`is_client_enabled`,
+  `src/nvhttp.cpp`). Pairing the same Mac twice locks it out until the
+  duplicate is removed (seen on the tower, 2026-10-09T19:23-02:30). The Mac
+  checks `PairStatus` before it pairs, and never pairs a PC it is paired
+  with.
+- **No system OpenSSL.** On Linux the companion uses Rust's own TLS; the
+  OS's TLS on Windows. Sunshine's local certificate is self-signed, so the
+  client accepts it on the loopback address only.
+- **Sunshine skips its CSRF check for API clients** (no `Origin` or
+  `Referer` header), so the companion needs only its Basic login.
 
 ## Errors the core owns
 

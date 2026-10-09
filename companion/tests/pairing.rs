@@ -26,7 +26,10 @@ async fn allow_pairs_the_mac_with_sunshine() {
     let outcome = host.pair(request("mac-1", "4821")).await;
 
     assert_eq!(outcome, PairOutcome::Paired);
-    assert_eq!(*sunshine.pins.lock().unwrap(), vec!["4821".to_string()]);
+    assert_eq!(
+        *sunshine.pins.lock().unwrap(),
+        vec![("Jager's MacBook Air".to_string(), "4821".to_string())]
+    );
 }
 
 #[tokio::test(start_paused = true)]
@@ -94,7 +97,10 @@ async fn a_second_request_from_the_same_mac_replaces_the_first() {
 
     assert_eq!(first, PairOutcome::Replaced);
     assert_eq!(second, PairOutcome::Paired);
-    assert_eq!(*sunshine.pins.lock().unwrap(), vec!["2222".to_string()]);
+    assert_eq!(
+        *sunshine.pins.lock().unwrap(),
+        vec![("Jager's MacBook Air".to_string(), "2222".to_string())]
+    );
 }
 
 #[tokio::test(start_paused = true)]

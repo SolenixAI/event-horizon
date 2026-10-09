@@ -17,14 +17,19 @@ pub trait Prompt: Send + Sync {
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum SunshineError {
-    Unreachable,
+    Unreachable(String),
     Rejected(String),
 }
 
 /// Sunshine's local config API on this PC.
 pub trait SunshineApi: Send + Sync {
-    /// Completes a pairing a Mac started with Sunshine, using the Mac's PIN.
-    fn submit_pin(&self, pin: &str) -> impl Future<Output = Result<(), SunshineError>> + Send;
+    /// Completes the pairing `mac_name` started with Sunshine, using the PIN
+    /// the Mac chose. Sunshine holds a started pairing for 5 minutes.
+    fn submit_pin(
+        &self,
+        mac_name: &str,
+        pin: &str,
+    ) -> impl Future<Output = Result<(), SunshineError>> + Send;
 }
 
 /// Keeps the PC's display on and its screen unlocked. Dropping the guard

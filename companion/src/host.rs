@@ -123,7 +123,11 @@ impl<S: SunshineApi, P: Prompt, A: Awake> Host<S, P, A> {
         match answer {
             Err(_) => PairOutcome::Expired,
             Ok(Decision::Deny) => PairOutcome::Denied,
-            Ok(Decision::Allow) => match self.sunshine.submit_pin(&request.pin).await {
+            Ok(Decision::Allow) => match self
+                .sunshine
+                .submit_pin(&request.mac_name, &request.pin)
+                .await
+            {
                 Ok(()) => PairOutcome::Paired,
                 Err(_) => PairOutcome::SunshineDown,
             },

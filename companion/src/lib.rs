@@ -6,6 +6,7 @@ pub mod library;
 pub mod os;
 mod ports;
 pub mod steam;
+pub mod sunshine;
 
 pub use host::{Host, LEASE_TTL, PAIR_TIMEOUT, PairOutcome, PairRequest};
 pub use ports::{Awake, Decision, Prompt, SunshineApi, SunshineError};

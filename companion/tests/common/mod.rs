@@ -10,16 +10,20 @@ use std::time::Duration;
 /// Sunshine that records every PIN it is given.
 #[derive(Clone, Default)]
 pub struct FakeSunshine {
-    pub pins: Arc<Mutex<Vec<String>>>,
+    /// (Mac name, PIN) for every PIN Sunshine was given.
+    pub pins: Arc<Mutex<Vec<(String, String)>>>,
     pub down: bool,
 }
 
 impl SunshineApi for FakeSunshine {
-    async fn submit_pin(&self, pin: &str) -> Result<(), SunshineError> {
+    async fn submit_pin(&self, mac_name: &str, pin: &str) -> Result<(), SunshineError> {
         if self.down {
-            return Err(SunshineError::Unreachable);
+            return Err(SunshineError::Unreachable("fake: down".into()));
         }
-        self.pins.lock().unwrap().push(pin.to_string());
+        self.pins
+            .lock()
+            .unwrap()
+            .push((mac_name.to_string(), pin.to_string()));
         Ok(())
     }
 }
