@@ -18,7 +18,7 @@ import os.log
 
 extension AppModel {
 
-    /// Citadel never asks. Whatever runs on the PC gives way: the engine cancels
+    /// Event Horizon never asks. Whatever runs on the PC gives way: the engine cancels
     /// it and launches the chosen app, so the same app or another one is one tap.
     func requestStream(app: LibraryApp, on host: Host) {
         stream(app: app, on: host, takeoverAuthorized: true)
@@ -287,7 +287,7 @@ extension AppModel {
         // through transient misses, even when its pre-stream sample is stale.
         self.restartHostStatusPolling(afterStream: true)
         if NSApp.isActive, let main = NSApp.windows.first(where: {
-            $0.identifier?.rawValue == "main" || $0.title == "Citadel"
+            $0.identifier?.rawValue == "main" || $0.title == "Event Horizon"
         }) {
             main.makeKeyAndOrderFront(nil)
         }

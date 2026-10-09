@@ -5,11 +5,11 @@
 
 ## Product Overview
 **One-liner:** Your gaming PC, as a Mac app.
-**Name:** Event Horizon (founder decision 2026-10-09). The black hole's flat surface that holds everything inside: your PC's world, flattened onto your Mac's screen. "Citadel" is the codename.
-**What it does:** Citadel puts the gaming PC in the other room inside a Mac window. Home shows the PC as a live screen on a desk with a shelf of its games; one click grows the PC into the window, and ⌘W puts it back on the desk while it keeps running. The Mac stays yours: free cursor on the PC's desktop, pointer lock only in games, Mac shortcuts on the PC.
+**Name:** Event Horizon (founder decision 2026-10-09). The black hole's flat surface that holds everything inside: your PC's world, flattened onto your Mac's screen. "Event Horizon" is the codename.
+**What it does:** Event Horizon puts the gaming PC in the other room inside a Mac window. Home shows the PC as a live screen on a desk with a shelf of its games; one click grows the PC into the window, and ⌘W puts it back on the desk while it keeps running. The Mac stays yours: free cursor on the PC's desktop, pointer lock only in games, Mac shortcuts on the PC.
 **Product category:** Remote play / game streaming client for Mac (shelf neighbours: Moonlight, Steam Remote Play, Parsec, Jump Desktop).
 **Product type:** Native macOS app (Apple Silicon, macOS 26), sold direct. The PC runs Sunshine (free, open source).
-**Business model:** $29 one-time with a 14-day trial and a year of updates, optional renewal after (founder decision 2026-10-09). Sold direct (merchant of record: Paddle or Lemon Squeezy), never the Mac App Store. Constraint: Citadel is GPL-3 (built on Glimmer and Moonlight), so the source is public; the paid product is the signed, updated, supported build plus the one-link PC setup.
+**Business model:** $29 one-time with a 14-day trial and a year of updates, optional renewal after (founder decision 2026-10-09). Sold direct (merchant of record: Paddle or Lemon Squeezy), never the Mac App Store. Constraint: Event Horizon is GPL-3 (built on Glimmer and Moonlight), so the source is public; the paid product is the signed, updated, supported build plus the one-link PC setup.
 
 ## Target Audience
 **Target customers:** Mac owners who also own a Windows or Linux gaming PC at home.
@@ -51,7 +51,7 @@
 ## Objections
 | Objection | Response |
 |-----------|----------|
-| Moonlight is free. | It is, and Citadel's source is too. You pay for the Mac experience, signed updates and the one-link PC setup. |
+| Moonlight is free. | It is, and Event Horizon's source is too. You pay for the Mac experience, signed updates and the one-link PC setup. |
 | Setting up Sunshine is hard. | The PC companion (planned) installs and pairs it in one link. `<!>` Not built yet. |
 | Will it lag on Wi-Fi? | Same engine class as Moonlight; measured 0 dropped frames over 5 h on home Wi-Fi (2026-10-08). |
 
@@ -78,7 +78,7 @@
 **Glossary:**
 | Term | Meaning |
 |------|---------|
-| Home / the desk | Citadel's main screen; the PC as a live screen with its games |
+| Home / the desk | Event Horizon's main screen; the PC as a live screen with its games |
 | Grow | Opening the PC: it fills the window |
 | PC companion | Planned one-link installer for Sunshine on the PC |
 

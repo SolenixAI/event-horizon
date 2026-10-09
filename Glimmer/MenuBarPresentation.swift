@@ -83,11 +83,11 @@ enum MenuBarPresentation {
     static func accessibilityLabel(state: MenuBarIconState, hostName: String?) -> String {
         let name = hostName ?? "your PC"
         switch state {
-        case .idle: return "Citadel"
-        case .connecting: return "Citadel, connecting to \(name)"
-        case .reconnecting: return "Citadel, reconnecting to \(name)"
-        case .streaming: return "Citadel, streaming to \(name)"
-        case .attention: return "Citadel, needs attention"
+        case .idle: return "Event Horizon"
+        case .connecting: return "Event Horizon, connecting to \(name)"
+        case .reconnecting: return "Event Horizon, reconnecting to \(name)"
+        case .streaming: return "Event Horizon, streaming to \(name)"
+        case .attention: return "Event Horizon, needs attention"
         }
     }
 

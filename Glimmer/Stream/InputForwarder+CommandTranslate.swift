@@ -3,7 +3,7 @@
 //
 //  Mac shortcuts on the PC's Desktop. There ⌘ is the Mac's, so ⌘C reaches the
 //  PC as Ctrl+C: ⌘ plus C, V, X, Z, A, S, F or T (⇧ allowed) becomes the
-//  same chord on Ctrl. ⌘W is Citadel's: it goes Home (StreamInputView). Only under `.free`; a game keeps raw keys. ⌘Q, ⌘Tab,
+//  same chord on Ctrl. ⌘W is Event Horizon's: it goes Home (StreamInputView). Only under `.free`; a game keeps raw keys. ⌘Q, ⌘Tab,
 //  ⌘Space and every other ⌘ chord are not in the table and stay with macOS.
 //
 

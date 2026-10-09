@@ -3,15 +3,15 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>dev.solenix.citadel.helper</string>
+    <string>dev.solenix.eventhorizon.helper</string>
     <!-- Path within Glimmer.app to the daemon binary (SMAppService.daemon convention). -->
     <key>BundleProgram</key>
-    <string>Contents/MacOS/dev.solenix.citadel.helper</string>
+    <string>Contents/MacOS/dev.solenix.eventhorizon.helper</string>
     <!-- launchd starts the daemon on-demand when the app connects to this service;
          SMAppService manages the lifecycle, so no RunAtLoad/KeepAlive/ProcessType. -->
     <key>MachServices</key>
     <dict>
-        <key>dev.solenix.citadel.helper</key>
+        <key>dev.solenix.eventhorizon.helper</key>
         <true/>
     </dict>
     <!-- Groups the daemon under the app in System Settings > Login Items & Extensions. -->

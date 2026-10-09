@@ -7,7 +7,7 @@ related_targets: []
 
 # Surface brief: Home (the PC on the desk)
 
-Scope: Citadel's main window, Home state and the grow into the PC. Mode: Operate.
+Scope: Event Horizon's main window, Home state and the grow into the PC. Mode: Operate.
 Audience: Mac owners with a gaming PC; job: open the PC or a game in one click, see what is running, come back Home without ending it.
 
 ## Direction contract

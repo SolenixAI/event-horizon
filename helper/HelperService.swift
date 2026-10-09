@@ -7,7 +7,7 @@ final class HelperService: NSObject, NSXPCListenerDelegate, GlimmerHelperProtoco
     // 5T7M4RH3F8). main.swift hands this to the listener, so the OS rejects any
     // other process before it can reach this root helper.
     static let designatedRequirement =
-        "identifier \"dev.solenix.citadel\" and anchor apple generic "
+        "identifier \"dev.solenix.eventhorizon\" and anchor apple generic "
         + "and certificate leaf[subject.OU] = \"5T7M4RH3F8\""
 
     init(suppressor: AWDLSuppressor) {

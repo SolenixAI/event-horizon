@@ -1829,7 +1829,7 @@
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LoginHelper/Info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				PRODUCT_BUNDLE_IDENTIFIER = dev.solenix.citadel.LoginHelper;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.solenix.eventhorizon.LoginHelper;
 				PRODUCT_NAME = "Glimmer Login Helper";
 				SKIP_INSTALL = NO;
 				SWIFT_STRICT_CONCURRENCY = complete;
@@ -1980,7 +1980,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				PRODUCT_BUNDLE_IDENTIFIER = dev.solenix.citadel;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.solenix.eventhorizon;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_STRICT_CONCURRENCY = complete;
@@ -2012,7 +2012,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				PRODUCT_BUNDLE_IDENTIFIER = dev.solenix.citadel;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.solenix.eventhorizon;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_STRICT_CONCURRENCY = complete;
@@ -2064,7 +2064,7 @@
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LoginHelper/Info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				PRODUCT_BUNDLE_IDENTIFIER = dev.solenix.citadel.LoginHelper;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.solenix.eventhorizon.LoginHelper;
 				PRODUCT_NAME = "Glimmer Login Helper";
 				SKIP_INSTALL = NO;
 				SWIFT_STRICT_CONCURRENCY = complete;

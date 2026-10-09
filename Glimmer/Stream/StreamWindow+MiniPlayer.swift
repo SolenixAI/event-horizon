@@ -27,7 +27,7 @@ extension StreamWindow {
     }
 
     func enterMiniPlayer() {
-        // Inside Citadel's window the PC already shrinks onto the desk (⌘W);
+        // Inside Event Horizon's window the PC already shrinks onto the desk (⌘W);
         // the main window is never turned into a floating panel.
         guard !didClose, !isMiniPlayer, !isEmbedded else { return }
         miniPlayerReturnMode = displayMode

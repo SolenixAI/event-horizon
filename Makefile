@@ -36,7 +36,7 @@
 #   make enable-telem      Turn the app's opt-in telemetry exporter on.
 #   make disable-telem     Turn the app's opt-in telemetry exporter off.
 
-GLIMMER_APP_DST ?= /Applications/Citadel.app
+GLIMMER_APP_DST ?= /Applications/Event Horizon.app
 CONFIG          ?= Debug
 DERIVED         := $(CURDIR)/build
 GLIMMER_APP_SRC := $(DERIVED)/Build/Products/$(CONFIG)/Glimmer.app
@@ -92,7 +92,7 @@ export SPARKLE_VERSION
 # Contents/Library/LaunchDaemons/, where SMAppService.daemon loads it. Signed
 # inside-out (its own block in scripts/sign-bundle.sh, hardened runtime, no
 # entitlements) before the app's outer seal.
-HELPER_LABEL  := dev.solenix.citadel.helper
+HELPER_LABEL  := dev.solenix.eventhorizon.helper
 HELPER_SRCS   := helper/Protocol.swift helper/AWDLSuppressor.swift helper/HelperService.swift helper/main.swift
 HELPER_PLIST  := helper/$(HELPER_LABEL).plist
 HELPER_BIN    := $(DERIVED)/$(HELPER_LABEL)

@@ -38,7 +38,7 @@ struct MainWindow: View {
             StreamEndedToast()
                 .padding(.top, 16)
         }
-        .navigationTitle("Citadel")
+        .navigationTitle("Event Horizon")
     }
 }
 

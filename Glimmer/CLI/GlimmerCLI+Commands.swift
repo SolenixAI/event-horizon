@@ -149,13 +149,13 @@ extension GlimmerCLI {
         do {
             opened = try await NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: configuration)
         } catch {
-            printError("Couldn't open Citadel: \(error.localizedDescription)")
+            printError("Couldn't open Event Horizon: \(error.localizedDescription)")
             return nil
         }
         // With the app already open, Launch Services can answer with this process.
         if opened.processIdentifier != ProcessInfo.processInfo.processIdentifier { return opened }
         if let app = runningGlimmer() { return app }
-        printError("Couldn't open Citadel. Open it from the Applications folder and try again.")
+        printError("Couldn't open Event Horizon. Open it from the Applications folder and try again.")
         return nil
     }
 

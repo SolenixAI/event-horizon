@@ -1,7 +1,7 @@
 //
 //  AppModel+Desk.swift
 //
-//  Citadel's Home, the PC on the desk: what the screen does when clicked,
+//  Event Horizon's Home, the PC on the desk: what the screen does when clicked,
 //  switching from one app to another, and the games' cover art (Sunshine's
 //  /appasset, cached on disk per PC).
 //
@@ -13,7 +13,7 @@ import Foundation
 enum CoverArt {
     static func url(hostID: String, appID: Int) -> URL {
         let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-        let bundle = Bundle.main.bundleIdentifier ?? "dev.solenix.citadel"
+        let bundle = Bundle.main.bundleIdentifier ?? "dev.solenix.eventhorizon"
         return caches.appendingPathComponent(bundle).appendingPathComponent("covers")
             .appendingPathComponent(hostID, isDirectory: true).appendingPathComponent("\(appID).png")
     }

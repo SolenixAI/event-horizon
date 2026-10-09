@@ -106,7 +106,7 @@ struct GlimmerApp: App {
     var body: some Scene {
         // `Window` (single-instance) over `WindowGroup` - `openWindow(id:)`
         // brings the existing one to front instead of spawning a duplicate.
-        Window("Citadel", id: "main") {
+        Window("Event Horizon", id: "main") {
             MainWindow()
                 .environment(model)
                 // 532pt content + 24pt margins per side = 580. This MUST equal the
@@ -118,7 +118,7 @@ struct GlimmerApp: App {
                 .containerBackground(for: .window) { Color.clear.glassEffect(.regular, in: .rect) }
         }
         .windowStyle(.hiddenTitleBar)
-        // Citadel: the PC opens inside this window, so it grows to the stream and the
+        // Event Horizon: the PC opens inside this window, so it grows to the stream and the
         // user can size it (and give it a full-screen Space) like any Mac window.
         .windowResizability(.contentMinSize)
         // Room for the PC's screen and its shelf on first open.
@@ -265,7 +265,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ) { _ in recheck() })
     }
 
-    // Citadel: no launch-time update check (Citadel never reads Glimmer's feed).
+    // Event Horizon: no launch-time update check (Event Horizon never reads Glimmer's feed).
     // Opening straight into the PC starts from AppModel.bootstrap().
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {

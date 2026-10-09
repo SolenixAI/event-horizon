@@ -357,7 +357,7 @@ extension InputForwarder: StreamInputViewDelegate {
         // Mini player: the click is the grab, and it still reaches the host
         // so the button under the pointer is pressed, not just aimed at.
         if isMiniPlayer, !isMouseCaptured { capturePointer(reason: "click on the mini player") }
-        // Citadel: the click into a game is the grab (and still lands in it).
+        // Event Horizon: the click into a game is the grab (and still lands in it).
         if capturesOnClick, pointerPolicy == .lock, !isMouseCaptured {
             capturePointer(reason: "click into the game")
         }

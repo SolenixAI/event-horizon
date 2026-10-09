@@ -17,7 +17,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Citadel</string>
+	<string>Event Horizon</string>
 	<key>CFBundlePackageType</key>
 	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
 	<key>CFBundleShortVersionString</key>
@@ -31,7 +31,7 @@
 	<key>NSHumanReadableCopyright</key>
 	<string>Made by Solenix. Built on Glimmer, © 2026 ugfugl.io. GNU GPL v3.</string>
 	<key>CFBundleDisplayName</key>
-	<string>Citadel</string>
+	<string>Event Horizon</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<!-- Tell AppKit not to wrap notched MacBook panels in safe-area
@@ -53,14 +53,14 @@
 	     type the app browses - Discovery.swift browses _nvstream._tcp (GFE)
 	     and _nvstream-tcp._tcp (Sunshine). -->
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Citadel finds and connects to your gaming PCs on your local network.</string>
+	<string>Event Horizon finds and connects to your gaming PCs on your local network.</string>
 	<!-- Input Monitoring (kIOHIDRequestTypeListenEvent). REQUIRED for the
 	     permission API to behave: without this key IOHIDCheckAccess /
 	     IOHIDRequestAccess return denied even when the user HAS granted the
 	     app in System Settings (Apple DTS forum 809431). Covers raw-HID
 	     controller reads (DualSense) and raw mouse input. -->
 	<key>NSInputMonitoringUsageDescription</key>
-	<string>Citadel reads game controllers and raw mouse motion so your input reaches the gaming PC accurately.</string>
+	<string>Event Horizon reads game controllers and raw mouse motion so your input reaches the gaming PC accurately.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_nvstream._tcp</string>

@@ -49,7 +49,7 @@ struct DiagnosticsPane: View {
             } header: {
                 Text("Logs")
             } footer: {
-                Text("Recent entries from Citadel's unified log. Copy them when "
+                Text("Recent entries from Event Horizon's unified log. Copy them when "
                     + "filing an issue.")
             }
 

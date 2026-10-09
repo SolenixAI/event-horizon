@@ -1,7 +1,7 @@
 //
 //  StreamWindow+Embedded.swift
 //
-//  Citadel: the stream inside the app's own window. The input view (which
+//  Event Horizon: the stream inside the app's own window. The input view (which
 //  wraps the display view) sits on top of Home in the main window's content
 //  view. Home is the PC on the desk: the same live surface, shrunk onto the
 //  desk's screen frame and hands-off (clicks fall through to Home, keys and
@@ -28,10 +28,10 @@ extension StreamWindow {
         }
     }
 
-    static let deskFrameDidChange = Notification.Name("CitadelDeskFrameDidChange")
+    static let deskFrameDidChange = Notification.Name("EventHorizonDeskFrameDidChange")
 
     /// Home is showing with a live PC on the desk. The user chose Home, so a
-    /// ⌘Tab back into Citadel lands there, not in the stream.
+    /// ⌘Tab back into Event Horizon lands there, not in the stream.
     static var homeShowing = false
 
     /// The desk frame in the content view's own coordinates, or nil while Home

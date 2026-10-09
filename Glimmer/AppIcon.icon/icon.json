@@ -1,12 +1,74 @@
 {
-  "fill" : { "linear-gradient" : [ "display-p3:0.06000,0.05000,0.16000,1.00000", "display-p3:0.00500,0.00500,0.02500,1.00000" ] },
-  "groups" : [
-    { "layers" : [ { "glass" : true, "image-name" : "bodies.png", "name" : "bodies" } ],
-      "lighting" : "individual", "shadow" : { "kind" : "layer-color", "opacity" : 0.5 }, "specular" : true,
-      "translucency" : { "enabled" : true, "value" : 0.15 } },
-    { "layers" : [ { "glass" : false, "image-name" : "glow.png", "name" : "glow", "blend-mode" : "plus-lighter" },
-                   { "glass" : false, "image-name" : "orbit.png", "name" : "orbit" } ],
-      "shadow" : { "kind" : "none", "opacity" : 0 }, "translucency" : { "enabled" : false, "value" : 0 } }
+  "fill": {
+    "linear-gradient": [
+      "display-p3:0.06000,0.05000,0.16000,1.00000",
+      "display-p3:0.00500,0.00500,0.02500,1.00000"
+    ]
+  },
+  "groups": [
+    {
+      "layers": [
+        {
+          "glass": true,
+          "image-name": "bodies.png",
+          "name": "bodies"
+        }
+      ],
+      "lighting": "individual",
+      "shadow": {
+        "kind": "layer-color",
+        "opacity": 0.5
+      },
+      "specular": true,
+      "translucency": {
+        "enabled": true,
+        "value": 0.15
+      }
+    },
+    {
+      "layers": [
+        {
+          "glass": false,
+          "image-name": "glow.png",
+          "name": "glow",
+          "blend-mode": "plus-lighter"
+        },
+        {
+          "glass": false,
+          "image-name": "orbit.png",
+          "name": "orbit"
+        }
+      ],
+      "shadow": {
+        "kind": "none",
+        "opacity": 0
+      },
+      "translucency": {
+        "enabled": false,
+        "value": 0
+      }
+    },
+    {
+      "layers": [
+        {
+          "glass": false,
+          "image-name": "horizon.png",
+          "name": "horizon"
+        }
+      ],
+      "shadow": {
+        "kind": "none",
+        "opacity": 0
+      },
+      "translucency": {
+        "enabled": false,
+        "value": 0
+      }
+    }
   ],
-  "supported-platforms" : { "squares" : [ "macOS" ] }
+  "supported-platforms": {
+    "squares": [
+      "macOS"
+    ]
+  }
 }

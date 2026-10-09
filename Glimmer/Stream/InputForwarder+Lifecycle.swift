@@ -64,7 +64,7 @@ extension InputForwarder {
         log.info("InputForwarder attached to window; first-responder install deferred until window is key")
     }
 
-    /// Citadel's window: put the input view ON TOP of the window's own content
+    /// Event Horizon's window: put the input view ON TOP of the window's own content
     /// (Home stays underneath) instead of replacing it, wrapping `content`, the
     /// view whose root layer is the AVSampleBufferDisplayLayer. The surface is
     /// the stream; hiding it shows Home. Returns nil when the window has no

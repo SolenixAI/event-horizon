@@ -350,7 +350,7 @@ struct SessionSafetyTests {
         // The pinned-path verdicts, named as fetchServerInfo names them.
         let classify = { NetworkClient.classifyPairedPathFailure($0, hostName: "Tower") }
         let stuck = "Tower is awake, but Sunshine's secure port (47984) is refusing connections because "
-            + "its HTTPS listener is stuck. Restart Sunshine on the PC; quitting Citadel will not help."
+            + "its HTTPS listener is stuck. Restart Sunshine on the PC; quitting Event Horizon will not help."
         let cases: [(Error, AppModel.StreamErrorKind, String)] = [
             (StreamError.hostUnreachable("connect to 192.0.2.10:47984 failed or timed out"), .unreachable,
              AppModel.unreachableMessage("Tower")),
@@ -383,7 +383,7 @@ struct SessionSafetyTests {
             (StreamError.crypto("bad key length"), .other,
              "A security error stopped the connection to Tower. Try again, and pair again if it keeps happening."),
             (StreamError.truncatedRead("recv timeout"), .unreachable, AppModel.unreachableMessage("Tower")),
-            (StreamError.gameStreamHost, .pairing, "Citadel needs Sunshine on Tower, which is running NVIDIA GameStream.")
+            (StreamError.gameStreamHost, .pairing, "Event Horizon needs Sunshine on Tower, which is running NVIDIA GameStream.")
         ]
         for (error, kind, message) in cases {
             let failure = AppModel.connectFailure(for: error, hostName: "Tower")

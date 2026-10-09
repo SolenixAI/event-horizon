@@ -8,4 +8,4 @@ import Foundation
     func reSuppressCount(reply: @escaping (UInt64) -> Void)
 }
 
-public let glimmerHelperMachServiceName = "dev.solenix.citadel.helper"
+public let glimmerHelperMachServiceName = "dev.solenix.eventhorizon.helper"

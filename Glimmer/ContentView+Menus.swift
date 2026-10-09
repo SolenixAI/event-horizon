@@ -99,7 +99,7 @@ private struct HostContextMenu: ViewModifier {
             Button("Unpair", role: .destructive) { model.unpair(host) }
             Button("Cancel", role: .cancel) { }
         } message: {
-            Text("Citadel will forget \(host.displayName). You can pair it again at any time.")
+            Text("Event Horizon will forget \(host.displayName). You can pair it again at any time.")
         }
         // Lands on the PIN step; pairing re-pins the PC's certificate. Settings'
         // PC list has no launcher sheet to hand this to, so it carries its own.

@@ -239,7 +239,7 @@ struct EmptyPairingState: View {
                 Text("Let's find your gaming PC")
                     .font(.system(size: 26, weight: .bold))
                     .tracking(-0.4)
-                Text("Citadel plays your PC's games on this Mac.")
+                Text("Event Horizon puts your other computer in a Mac window.")
                     .font(.title3)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)

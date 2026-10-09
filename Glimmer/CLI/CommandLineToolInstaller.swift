@@ -21,8 +21,8 @@ enum CommandLineToolInstaller {
         }
         // A copy run from a disk image or Downloads moves or vanishes; the link would dangle.
         guard isInApplications(Bundle.main.bundlePath) else {
-            show("Move Citadel to Applications first.",
-                 detail: "The command runs this copy of Citadel, so it needs to stay where it is.")
+            show("Move Event Horizon to Applications first.",
+                 detail: "The command runs this copy of Event Horizon, so it needs to stay where it is.")
             return
         }
         var error: NSDictionary?

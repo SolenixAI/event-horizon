@@ -35,7 +35,7 @@ extension StreamWindow {
     static let frameAutosaveName = "GlimmerStreamWindow"
 
     /// Order the stream window front, and make it key only while this app is
-    /// already active. Citadel never pulls the Mac's focus away from another
+    /// already active. Event Horizon never pulls the Mac's focus away from another
     /// app: a stream opened from the CLI or Shortcuts appears quietly.
     func orderFrontWithoutStealingFocus() {
         if NSApp.isActive { window.makeKeyAndOrderFront(nil) } else { window.orderFront(nil) }
@@ -68,7 +68,7 @@ extension StreamWindow {
         // Key backstop - same reasoning as Path A's: a window can be on screen
         // and still not key if the app wasn't active at makeKeyAndOrderFront.
         // Never activates: an inactive app simply leaves the window unkeyed
-        // until the user brings Citadel forward.
+        // until the user brings Event Horizon forward.
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
             guard let self, !self.didClose, !self.window.isKeyWindow, NSApp.isActive else { return }
             self.log.error("Window not key 1.5s after show(); retrying makeKeyAndOrderFront + first-responder install")

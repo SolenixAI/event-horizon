@@ -260,7 +260,7 @@ public final class StreamWindow {
     /// pointer (it holds off while the window passes clicks through).
     public var onDidBecomeReadyForInput: (@MainActor () -> Void)?
 
-    /// Citadel: the stream lives inside the app's own window, on top of Home,
+    /// Event Horizon: the stream lives inside the app's own window, on top of Home,
     /// instead of in a window of its own. `window` is then that main window,
     /// which this class never styles, orders out or closes; Home is the
     /// surface hidden (StreamWindow+Embedded.swift).
@@ -410,7 +410,7 @@ public final class StreamWindow {
     }
 
     /// The stream's own window: level, Spaces behaviour, background and the
-    /// screen-capture refusal. Never applied to Citadel's main window.
+    /// screen-capture refusal. Never applied to Event Horizon's main window.
     private static func configureOwnWindow(_ window: NSWindow, displayMode: StreamDisplayMode) {
         window.isReleasedWhenClosed = false
 

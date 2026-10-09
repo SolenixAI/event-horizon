@@ -350,7 +350,7 @@ struct MenuBarPanel: View {
     private var footer: some View {
         HStack(spacing: 8) {
             // Written out, the way Control Center does, not hidden in the "…" menu.
-            Button("Open Citadel") { openLauncher() }
+            Button("Open Event Horizon") { openLauncher() }
                 .buttonStyle(.plain)
                 .font(.subheadline)
             Spacer()
@@ -364,7 +364,7 @@ struct MenuBarPanel: View {
             .buttonBorderShape(.circle)
             .help("Settings")
             Menu {
-                Button("Quit Citadel") { NSApp.terminate(nil) }
+                Button("Quit Event Horizon") { NSApp.terminate(nil) }
             } label: {
                 Label("More", systemImage: "ellipsis").labelStyle(.iconOnly)
             }

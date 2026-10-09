@@ -43,7 +43,7 @@ public enum StreamDisplayMode: String, CaseIterable, Identifiable, Sendable {
         rawValue.flatMap(StreamDisplayMode.init(rawValue:)) ?? defaultMode
     }
 
-    /// The mode a session actually gets. Citadel always streams in a window:
+    /// The mode a session actually gets. Event Horizon always streams in a window:
     /// full screen is the green button (a native Space the user opens), never
     /// something the app takes over. The persisted choice is left alone.
     static func effective(chosen: StreamDisplayMode, preset: QualityPreset) -> StreamDisplayMode {

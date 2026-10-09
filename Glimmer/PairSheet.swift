@@ -264,7 +264,7 @@ private struct HostChooser: View {
             // land within a second of the sheet opening. Rendered FIRST, in the
             // same body pass that arms discovery, so the reason is already on
             // screen when the prompt arrives - not somewhere behind it.
-            Text("Citadel looks for PCs running Sunshine on your local network; "
+            Text("Event Horizon looks for PCs running Sunshine on your local network; "
                 + "macOS will ask to allow that.")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
@@ -368,7 +368,7 @@ private struct HostChooser: View {
 
     private var deniedNotice: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label("Citadel isn't allowed to find devices on your network.", systemImage: "hand.raised.fill")
+            Label("Event Horizon isn't allowed to find devices on your network.", systemImage: "hand.raised.fill")
                 .foregroundStyle(.secondary)
             if let url = Self.localNetworkSettings {
                 Link("Open Local Network Settings", destination: url)

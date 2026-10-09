@@ -19,7 +19,7 @@ MacBook Air M5, one Linux gaming PC running Sunshine).
 
 ## Product Purpose
 
-Citadel makes a gaming PC feel like an app on the Mac: open Citadel, pick the PC
+Event Horizon makes a gaming PC feel like an app on the Mac: open Event Horizon, pick the PC
 or a game, and the PC is there, sharp and immediate, inside a real Mac window.
 Success is the user forgetting it is a stream while the Mac stays fully theirs.
 
@@ -27,7 +27,7 @@ Success is the user forgetting it is a stream while the Mac stays fully theirs.
 
 **It never takes over your Mac.** Game-first clients (Moonlight, Glimmer, Steam
 Remote Play) lock the pointer, cover the desktop and raise popups that trap the
-user. Citadel is a Mac app around the PC: the cursor, gestures, Spaces, Stage
+user. Event Horizon is a Mac app around the PC: the cursor, gestures, Spaces, Stage
 Manager and Mac shortcuts stay the user's, while the PC feels local.
 
 - Desktop: a free cursor that is the PC's cursor; Mac shortcuts (⌘C ⌘V ⌘Z …)
@@ -35,12 +35,12 @@ Manager and Mac shortcuts stay the user's, while the PC feels local.
 - Games: the pointer locks only while the game is in front and frees itself when
   the user leaves.
 - Engine: Glimmer's native Swift stream engine (decode, pacing, audio, input),
-  which Citadel builds on. Solenix builds only the experience layer.
+  which Event Horizon builds on. Solenix builds only the experience layer.
 
 ## Operating Context
 
-- Open Citadel → Home with the paired PC(s) and their apps (Desktop + games).
-- Pick one → the PC opens in Citadel's window; the green button gives Citadel
+- Open Event Horizon → Home with the paired PC(s) and their apps (Desktop + games).
+- Pick one → the PC opens in Event Horizon's window; the green button gives Event Horizon
   its own full-screen Space; ⌘W returns Home while the PC keeps running; Quit
   disconnects.
 - Home network or Tailscale from anywhere; Sunshine on the PC with a virtual
@@ -51,23 +51,25 @@ Manager and Mac shortcuts stay the user's, while the PC feels local.
 ## Capabilities and Constraints
 
 - macOS 26 or later, Apple Silicon. The platform value above is `ios` because
-  the schema has no macOS value; it selects Apple HIG guidance. Citadel is a Mac
+  the schema has no macOS value; it selects Apple HIG guidance. Event Horizon is a Mac
   app: the macOS HIG applies, iPhone-specific guidance does not.
 - Never an attention hijack: no popups over or before the stream, no forced
   activation, no cursor hidden or trapped outside an explicit game lock, never
   covering the user's desktop Space.
 - Works against a current, unmodified Sunshine.
-- No analytics, tracking or third-party network calls.
-- Built on Glimmer (GPL-3): Citadel's source must be open when distributed; it
+- Analytics only with consent: PostHog measures solenix.dev and checkout; the app sends anonymous usage only after the user opts in (once, in Settings, never a popup). No other third-party calls.
+- Stack: Vercel (deploys), GitHub (code), Linear (planning, source of truth), PostHog (analytics), Stripe (money: Checkout + Managed Payments, licence keys via a Vercel function). Their full feature sets cover every need before anything else is added.
+- The PC companion: Rust, one core with an adapter per OS (Windows, Linux, macOS), same repo, GPL-3; pairs by appearing on the Mac with an Allow button.
+- Built on Glimmer (GPL-3): Event Horizon's source must be open when distributed; it
   is unsandboxed, so the Mac App Store is not an option as-is.
 - Unsigned local builds cannot use the Wi-Fi (AWDL) helper; signed builds need
   the Apple Developer Program (undecided).
 - Business model (2026-10-09): $29 one-time, 14-day trial, a year of updates; sold direct, not the Mac App Store (GPL-3).
-- The product's name is Event Horizon (2026-10-09); "Citadel" is the codename.
+- The product's name is Event Horizon (2026-10-09).
 
 ## Brand Commitments
 
-- The name is Citadel (pending a public-name check).
+- The name is Event Horizon (founder decision 2026-10-09).
 - The icon is the three-body figure-eight orbit (`brand/`, `Glimmer/AppIcon.icon`).
 - Accent: the logo's gold and blue, replacing Glimmer's purple.
 - Credit Glimmer as the open-source engine.
@@ -86,7 +88,7 @@ Manager and Mac shortcuts stay the user's, while the PC feels local.
 
 ## Product Principles
 
-1. The Mac stays the user's: nothing in Citadel may take the cursor, the
+1. The Mac stays the user's: nothing in Event Horizon may take the cursor, the
    keyboard, the screen or attention without the user asking.
 2. The PC should feel local: fidelity and latency come before features.
 3. One app, one window, one journey: Home → PC → Home, no detours.

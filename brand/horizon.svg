@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024"><defs>
+<linearGradient id="ring" x1="0.15" y1="0.1" x2="0.85" y2="0.9"><stop offset="0" stop-color="#ffe3a3"/><stop offset="0.35" stop-color="#ff9a3c"/><stop offset="0.65" stop-color="#3aa0ff"/><stop offset="1" stop-color="#a9c8ff"/></linearGradient>
+<radialGradient id="hole" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#000000" stop-opacity="0.85"/><stop offset="0.75" stop-color="#000000" stop-opacity="0.55"/><stop offset="1" stop-color="#000000" stop-opacity="0"/></radialGradient>
+<filter id="halo" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="22"/></filter>
+</defs>
+<circle cx="512" cy="512" r="404" fill="url(#hole)"/>
+<circle cx="512" cy="512" r="410" fill="none" stroke="url(#ring)" stroke-width="44" opacity="0.55" filter="url(#halo)"/>
+<circle cx="512" cy="512" r="410" fill="none" stroke="url(#ring)" stroke-width="9"/>
+</svg>

@@ -163,7 +163,7 @@ extension StreamWindow {
         if !isEmbedded, window.styleMask.contains(.fullScreen) {
             window.toggleFullScreen(nil)
         }
-        // Citadel's window stays; only the surface leaves (StreamWindow+Embedded.swift).
+        // Event Horizon's window stays; only the surface leaves (StreamWindow+Embedded.swift).
         if isEmbedded { closeEmbedded(); return }
 
         // 5. Drop first responder, fade out, orderOut. Fading instead of a
@@ -206,7 +206,7 @@ extension StreamWindow {
     /// still-fading stream window, which masks the fade entirely and reads as a
     /// hard cut. Deferring it makes the exit a real fade-out, mirroring the
     /// first-frame fade-in. Never activates the app: the launcher only comes
-    /// forward when Citadel already is frontmost.
+    /// forward when Event Horizon already is frontmost.
     private func finishClose() {
         // Now that the window is invisible, drop the last frame + hide it.
         displayLayer.sampleBufferRenderer.flush(removingDisplayedImage: true) { }
@@ -215,7 +215,7 @@ extension StreamWindow {
         // invisible (defensive - close() is currently the last call).
         window.alphaValue = 1.0
         if NSApp.isActive,
-           let main = NSApp.windows.first(where: { $0.identifier?.rawValue == "main" || $0.title == "Citadel" }) {
+           let main = NSApp.windows.first(where: { $0.identifier?.rawValue == "main" || $0.title == "Event Horizon" }) {
             main.makeKeyAndOrderFront(nil)
         }
     }

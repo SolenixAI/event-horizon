@@ -37,7 +37,7 @@ protocol StreamInputViewDelegate: AnyObject {
 final class StreamInputView: NSView {
     weak var delegate: (any StreamInputViewDelegate)?
 
-    /// Citadel's window: ⌘W takes the user Home while the PC keeps running.
+    /// Event Horizon's window: ⌘W takes the user Home while the PC keeps running.
     /// Set only when the stream lives inside the main window; claimed before
     /// the forwarder, so no pointer policy can send ⌘W to the PC.
     var onHomeRequested: (@MainActor () -> Void)?

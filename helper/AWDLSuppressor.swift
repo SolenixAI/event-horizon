@@ -10,13 +10,13 @@ final class AWDLSuppressor: @unchecked Sendable {
     private let interfaceIsUp: (@Sendable () -> Bool)?
     private let runIfconfig: (@Sendable ([String]) -> Bool)?
     private let clockNow: @Sendable () -> ContinuousClock.Instant
-    private let log = Logger(subsystem: "dev.solenix.citadel.helper", category: "AWDL")
+    private let log = Logger(subsystem: "dev.solenix.eventhorizon.helper", category: "AWDL")
     /// Event-servicing queue: route socket, poll timer, SCDynamicStore handler.
-    private let queue = DispatchQueue(label: "dev.solenix.citadel.helper.awdl", qos: .userInitiated)
+    private let queue = DispatchQueue(label: "dev.solenix.eventhorizon.helper.awdl", qos: .userInitiated)
     /// Interface-mutation queue. Serial (preserves re-suppress-count ordering)
     /// but SEPARATE from `queue` so the blocking ifconfig execs never stall the
     /// route socket from servicing the next kernel raise edge.
-    private let execQueue = DispatchQueue(label: "dev.solenix.citadel.helper.awdl.exec", qos: .userInitiated)
+    private let execQueue = DispatchQueue(label: "dev.solenix.eventhorizon.helper.awdl.exec", qos: .userInitiated)
 
     private var dynamicStore: SCDynamicStore?
     private var runLoopSource: CFRunLoopSource?
@@ -310,7 +310,7 @@ final class AWDLSuppressor: @unchecked Sendable {
         let storeOpt = withUnsafeMutablePointer(to: &ctx) { ctxPtr -> SCDynamicStore? in
             SCDynamicStoreCreate(
                 nil,
-                "dev.solenix.citadel.helper" as CFString,
+                "dev.solenix.eventhorizon.helper" as CFString,
                 { _, changedKeys, info in
                     guard let info else { return }
                     let owner = Unmanaged<AWDLSuppressor>.fromOpaque(info).takeUnretainedValue()

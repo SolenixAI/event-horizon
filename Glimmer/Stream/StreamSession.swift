@@ -50,7 +50,7 @@ public actor StreamSession {
     public func setCursorHidden(_ hidden: Bool) async {
         let win = self.window
         let inp = self.input
-        // Citadel: the stream is inside the main window, behind Home.
+        // Event Horizon: the stream is inside the main window, behind Home.
         let embedded = await MainActor.run { win?.isEmbedded == true }
         if embedded {
             await MainActor.run {

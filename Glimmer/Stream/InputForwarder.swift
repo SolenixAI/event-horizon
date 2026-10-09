@@ -166,7 +166,7 @@ public final class InputForwarder {
     /// `setMiniPlayer` (InputForwarder+WindowPointer.swift).
     var isMiniPlayer = false
 
-    /// Citadel's window: a game takes the pointer when the user clicks into
+    /// Event Horizon's window: a game takes the pointer when the user clicks into
     /// it, never by the pointer merely passing over the window.
     var capturesOnClick = false
     /// The pointer entered or left the mini player; the window shows its

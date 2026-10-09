@@ -50,12 +50,12 @@ extension GlimmerCLI {
     /// target (the probe just selected this PC, so a running app is resumed).
     private static func pickApp(_ name: String?, on host: Host, model: AppModel) -> LibraryApp? {
         guard let name else {
-            if model.heroTargetApp == nil { printError("Citadel doesn't know any apps on \(host.displayName).") }
+            if model.heroTargetApp == nil { printError("Event Horizon doesn't know any apps on \(host.displayName).") }
             return model.heroTargetApp
         }
         if let app = host.app(named: name) { return app }
         let known = host.apps.map(\.name).joined(separator: ", ")
-        printError("Citadel doesn't know “\(name)” on \(host.displayName). Its apps: \(known)")
+        printError("Event Horizon doesn't know “\(name)” on \(host.displayName). Its apps: \(known)")
         return nil
     }
 
@@ -79,17 +79,17 @@ extension GlimmerCLI {
         let replies = CommandReplies()
         let request = [Key.verb: "stream", Key.host: host.id, Key.app: String(app.id), Key.takeover: takeover ? "1" : "0"]
         guard let first = await ask(request, within: .seconds(20), replies: replies) else {
-            printError("Citadel didn't answer. Open it and try again.")
+            printError("Event Horizon didn't answer. Open it and try again.")
             return Exit.failed
         }
         guard first[Key.event] == Event.accepted else {
-            printError(first[Key.detail] ?? "Citadel couldn't start the stream.")
+            printError(first[Key.detail] ?? "Event Horizon couldn't start the stream.")
             return Exit.failed
         }
         let wait = command.flags.contains("--wait")
         let json = command.flags.contains("--json")
         guard wait || json || command.flags.contains("--exit-after-first-frame") else {
-            print("Citadel is starting \(app.name) on \(host.displayName).")
+            print("Event Horizon is starting \(app.name) on \(host.displayName).")
             return Exit.ok
         }
         while let reply = await replies.next(giveUp: { glimmer.isTerminated }) {
@@ -101,7 +101,7 @@ extension GlimmerCLI {
                 return Exit.failed
             }
         }
-        printError("Citadel quit before the stream ended.")
+        printError("Event Horizon quit before the stream ended.")
         return Exit.failed
     }
 

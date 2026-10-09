@@ -34,7 +34,7 @@ extension AppModel {
     /// Every surface's words for a PC running NVIDIA GameStream, which Glimmer
     /// refuses at pairing and at stream start.
     nonisolated static func needsSunshineMessage(_ pcName: String) -> String {
-        "Citadel needs Sunshine on \(pcName), which is running NVIDIA GameStream."
+        "Event Horizon needs Sunshine on \(pcName), which is running NVIDIA GameStream."
     }
 
     /// A start()-throw as the banner's sentence and the recovery it calls for.

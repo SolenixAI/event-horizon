@@ -1,7 +1,7 @@
 //
 //  DeskHome.swift
 //
-//  Citadel's Home: your PC on the desk. The PC's screen is the hero; a click
+//  Event Horizon's Home: your PC on the desk. The PC's screen is the hero; a click
 //  grows it into the window (the live stream surface sits on this frame,
 //  StreamWindow+Embedded.swift), and ⌘W puts it back here, still running.
 //  Under the screen: the PC's name and state, what is running on it, and a
@@ -14,7 +14,7 @@ import SwiftUI
 /// The logo's blue: live, running, the PC's own light. Gold (the accent) is
 /// for what you press.
 extension Color {
-    static let citadelBlue = Color(red: 0.227, green: 0.627, blue: 1.0)
+    static let horizonBlue = Color(red: 0.227, green: 0.627, blue: 1.0)
 }
 
 struct DeskHome: View {
@@ -165,7 +165,7 @@ private struct DeskScreen: View {
                 Image(nsImage: NSApp.applicationIconImage)
                     .resizable()
                     .frame(width: 84, height: 84)
-                    .shadow(color: Color.citadelBlue.opacity(0.35), radius: 24)
+                    .shadow(color: Color.horizonBlue.opacity(0.35), radius: 24)
             }
             Text(stateLine.title)
                 .font(.title2.weight(.semibold))
@@ -212,10 +212,10 @@ private struct RunningLabel: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Circle().fill(Color.citadelBlue).frame(width: 7, height: 7)
+            Circle().fill(Color.horizonBlue).frame(width: 7, height: 7)
             Text("Running \(name)")
                 .font(.callout.weight(.medium))
-                .foregroundStyle(Color.citadelBlue)
+                .foregroundStyle(Color.horizonBlue)
                 .lineLimit(1)
         }
         .accessibilityElement(children: .combine)
@@ -271,7 +271,7 @@ private struct CoverTile: View {
                     .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
                     .overlay {
                         RoundedRectangle(cornerRadius: 9, style: .continuous)
-                            .strokeBorder(isOnScreen ? Color.citadelBlue : Color.accentColor, lineWidth: 2)
+                            .strokeBorder(isOnScreen ? Color.horizonBlue : Color.accentColor, lineWidth: 2)
                             .opacity(isOnScreen || hovering ? 1 : 0)
                     }
                     .overlay {
@@ -282,7 +282,7 @@ private struct CoverTile: View {
                     .scaleEffect(hovering ? 1.03 : 1)
                 Text(app.name)
                     .font(.caption.weight(.medium))
-                    .foregroundStyle(isOnScreen ? Color.citadelBlue : .primary)
+                    .foregroundStyle(isOnScreen ? Color.horizonBlue : .primary)
                     .lineLimit(1)
                     .frame(width: 100, alignment: .leading)
             }
@@ -302,7 +302,7 @@ private struct CoverTile: View {
             Image(nsImage: image).resizable().aspectRatio(contentMode: .fill)
         } else {
             ZStack {
-                LinearGradient(colors: [Color.citadelBlue.opacity(0.55), Color.accentColor.opacity(0.45)],
+                LinearGradient(colors: [Color.horizonBlue.opacity(0.55), Color.accentColor.opacity(0.45)],
                                startPoint: .topLeading, endPoint: .bottomTrailing)
                 Image(systemName: app.systemImage)
                     .font(.system(size: 30, weight: .semibold))
@@ -323,7 +323,7 @@ private struct ControllerPermissionRow: View {
         HStack(spacing: 10) {
             Image(systemName: "gamecontroller")
                 .foregroundStyle(.secondary)
-            Text("\(model.hidPermissionPadName ?? "Your controller") needs Input Monitoring to work with Citadel.")
+            Text("\(model.hidPermissionPadName ?? "Your controller") needs Input Monitoring to work with Event Horizon.")
                 .font(.callout)
                 .lineLimit(2)
             Spacer(minLength: 8)

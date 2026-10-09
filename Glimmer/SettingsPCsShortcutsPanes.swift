@@ -186,7 +186,7 @@ struct ShortcutsPane: View {
         ]
         Form {
             Section("In-stream shortcuts") {
-                HotkeyRow(label: stop, detail: "Ends the stream and returns to Citadel.",
+                HotkeyRow(label: stop, detail: "Ends the stream and returns to Event Horizon.",
                           hotkey: $model.quitHotkey, taken: taken)
                 // Session-scoped on purpose: the next stream starts from the
                 // stream stats toggle in Quality.

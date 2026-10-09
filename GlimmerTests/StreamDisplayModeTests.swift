@@ -33,7 +33,7 @@ struct StreamDisplayModeTests {
 
     // MARK: Always a window
 
-    /// Citadel never covers the user's desktop: every preset streams in a
+    /// Event Horizon never covers the user's desktop: every preset streams in a
     /// window, whatever the persisted choice says. Full screen is the green button.
     @Test func everyPresetStreamsInAWindow() {
         for preset in QualityPreset.allCases {

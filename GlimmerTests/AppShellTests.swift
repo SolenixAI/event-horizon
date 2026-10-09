@@ -58,7 +58,7 @@ struct AppShellTests {
 
     @Test func streamRequestsTheAppCantServeAreRejectedWithTheReason() {
         var handled: Set<String> = []
-        let unknown = CommandChannel.Decision.rejected("Citadel doesn't know that PC or app.")
+        let unknown = CommandChannel.Decision.rejected("Event Horizon doesn't know that PC or app.")
         #expect(decide(["id": "a", "verb": "stream", "host": "UUID-9", "app": "7"], handled: &handled) == unknown)
         #expect(decide(["id": "b", "verb": "stream", "host": "UUID-1", "app": "8"], handled: &handled) == unknown)
         #expect(decide(["id": "c", "verb": "stream", "host": "UUID-1"], handled: &handled) == unknown)

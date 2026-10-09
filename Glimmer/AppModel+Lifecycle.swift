@@ -263,7 +263,7 @@ extension AppModel {
         return (NSScreen.main?.safeAreaInsets.top ?? 0) > 0
     }
 
-    /// The notch choice the session actually gets. Citadel never covers the
+    /// The notch choice the session actually gets. Event Horizon never covers the
     /// notch (Path A is retired: always a window), so this is always false.
     /// The persisted toggle is kept untouched.
     var effectiveStreamCoversNotch: Bool { false }

@@ -30,7 +30,7 @@ extension StreamSession {
         ProcessInfo.processInfo.endActivity(token)
         powerAssertion = ProcessInfo.processInfo.beginActivity(
             options: Self.sessionActivityOptions(hidden: hidden),
-            reason: "Citadel is streaming")
+            reason: "Event Horizon is streaming")
         powerAssertionHidden = hidden
     }
 
@@ -107,10 +107,10 @@ extension StreamSession {
         let onMiniPlayerChanged = options.onMiniPlayerChanged
         // The display mode is a construction-time choice (it picks the style
         // mask); the notch flag, title, and stream size feed show().
-        // Citadel: a window-mode stream lives inside the main window, on top
+        // Event Horizon: a window-mode stream lives inside the main window, on top
         // of Home, whenever that window is up (CLI and Shortcuts launches with
         // no window keep a window of their own).
-        let host = config.displayMode == .window ? Self.citadelMainWindow() : nil
+        let host = config.displayMode == .window ? Self.eventHorizonMainWindow() : nil
         let win = StreamWindow(displayMode: config.displayMode, embeddedIn: host)
         win.coversNotch = config.coversNotch
         win.windowTitle = config.windowTitle
@@ -271,9 +271,9 @@ extension StreamSession {
         return (win, inp, dec)
     }
 
-    /// Citadel's own window, when it is open and can host the stream.
+    /// Event Horizon's own window, when it is open and can host the stream.
     @MainActor
-    static func citadelMainWindow() -> NSWindow? {
+    static func eventHorizonMainWindow() -> NSWindow? {
         NSApp.windows.first { $0.identifier?.rawValue == "main" && $0.isVisible && $0.contentView != nil }
     }
 

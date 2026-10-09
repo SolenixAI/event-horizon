@@ -19,7 +19,7 @@ private enum AboutLink {
     static let license = "https://www.gnu.org/licenses/gpl-3.0.html"
     static let sunshine = "https://github.com/LizardByte/Sunshine"
     static let moonlight = "https://github.com/moonlight-stream"
-    /// Glimmer's author's sponsor page: Citadel's engine, credited with thanks.
+    /// Glimmer's author's sponsor page: Event Horizon's engine, credited with thanks.
     static let donate = "https://github.com/sponsors/Se7enbrc"
 }
 
@@ -48,10 +48,10 @@ struct AboutPane: View {
                             .frame(width: 96, height: 96)
                     }
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Citadel")
+                        Text("Event Horizon")
                             .font(.system(size: 28, weight: .bold))
                             .tracking(-0.4)
-                        Text("Your PC, as a Mac app.")
+                        Text("Your other computer, as a Mac app.")
                             .font(.title3)
                             .foregroundStyle(.secondary)
                         Text("Version \(versionString)")
@@ -90,7 +90,7 @@ struct AboutPane: View {
             // legal fact), and the third-party credits at the bottom as a
             // closing note of appreciation.
             Section("License") {
-                Text("Citadel is free software under the GNU General Public License v3. "
+                Text("Event Horizon is free software under the GNU General Public License v3. "
                     + "You may run, study, share, and modify it. There is no warranty.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
@@ -100,7 +100,7 @@ struct AboutPane: View {
                 }
             }
             Section("Acknowledgements") {
-                Text("Citadel's stream engine is Glimmer by ugfugl.io, a native Swift client for Sunshine.")
+                Text("Event Horizon's stream engine is Glimmer by ugfugl.io, a native Swift client for Sunshine.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                 if let url = URL(string: AboutLink.glimmer) {
@@ -112,7 +112,7 @@ struct AboutPane: View {
                         .font(.footnote)
                 }
                 Text("Built for Sunshine, the open-source game-streaming app that runs on "
-                    + "your PC. Citadel talks to it over the same RTSP-based protocol as Moonlight, "
+                    + "your PC. Event Horizon talks to it over the same RTSP-based protocol as Moonlight, "
                     + "the client that inspired it, and the transport is ported from "
                     + "moonlight-common-c, with respect.")
                     .font(.footnote)
