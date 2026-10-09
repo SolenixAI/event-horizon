@@ -153,7 +153,8 @@ extension InputForwarder {
     func enterCapturedMode() {
         // A window still passing clicks through (waiting for its first frame)
         // cannot hold the pointer either; the fade-in engages it.
-        guard pointerPolicy == .lock, !isMouseCaptured, window?.ignoresMouseEvents != true else { return }
+        guard pointerPolicy == .lock, !isMouseCaptured, window?.ignoresMouseEvents != true,
+              inputView?.passesMouseThrough != true, inputView?.isHiddenOrHasHiddenAncestor != true else { return }
         mouseResidualX = 0
         mouseResidualY = 0
         // Reset the Cruise inter-batch clock AND the windowed-velocity accums

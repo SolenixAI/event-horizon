@@ -49,6 +49,17 @@ public actor StreamSession {
     /// the window's own re-key path hides it again.
     public func setCursorHidden(_ hidden: Bool) async {
         let win = self.window
+        let inp = self.input
+        // Citadel: the stream is inside the main window, behind Home.
+        let embedded = await MainActor.run { win?.isEmbedded == true }
+        if embedded {
+            await MainActor.run {
+                win?.window.makeKeyAndOrderFront(nil)
+                win?.leaveHome()
+                inp?.resumeFromHome()
+            }
+            return
+        }
         await MainActor.run { win?.setCursorHidden(hidden) }
     }
 

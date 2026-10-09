@@ -154,6 +154,8 @@ extension InputForwarder {
     /// pointer is outside the window, which is exactly the "is it inside"
     /// question `bounds.contains` then answers.
     private static func pointerIsInside(_ view: NSView, of window: NSWindow) -> Bool {
-        view.bounds.contains(view.convert(window.mouseLocationOutsideOfEventStream, from: nil))
+        // A hidden surface (Citadel's Home is showing) is never under the pointer.
+        guard view.window === window, !view.isHiddenOrHasHiddenAncestor else { return false }
+        return view.bounds.contains(view.convert(window.mouseLocationOutsideOfEventStream, from: nil))
     }
 }

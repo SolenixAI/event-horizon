@@ -69,11 +69,11 @@ struct CommandTranslationTableTests {
     private let table: [(key: String, code: Int, vk: Int16)] = [
         ("c", kVK_ANSI_C, 0x43), ("v", kVK_ANSI_V, 0x56), ("x", kVK_ANSI_X, 0x58),
         ("z", kVK_ANSI_Z, 0x5A), ("a", kVK_ANSI_A, 0x41), ("s", kVK_ANSI_S, 0x53),
-        ("f", kVK_ANSI_F, 0x46), ("t", kVK_ANSI_T, 0x54), ("w", kVK_ANSI_W, 0x57)
+        ("f", kVK_ANSI_F, 0x46), ("t", kVK_ANSI_T, 0x54)
     ]
 
-    @Test func nineShortcutsBecomeTheirCtrlTwin() {
-        #expect(CommandTranslation.letters.count == 9)
+    @Test func eightShortcutsBecomeTheirCtrlTwin() {
+        #expect(CommandTranslation.letters.count == 8)
         for row in table {
             #expect(CommandTranslation.ctrlKey(typed: row.key, keyCode: row.code, modifiers: [.command],
                                                policy: .free) == row.vk, "⌘\(row.key)")
@@ -159,12 +159,23 @@ struct CommandChordTests {
         #expect(backend.keys[1].code == code(0x5A))
     }
 
-    @Test func pasteAndCloseAreClaimedSoTheMenusNeverFire() throws {
+    @Test func pasteIsClaimedSoTheMenuNeverFires() throws {
         let (forwarder, backend) = desktop()
         let view = StreamInputView()
         #expect(forwarder.streamView(view, handleKeyEquivalent: try keyEvent(kVK_ANSI_V, "v", mods: [.command])))
-        #expect(forwarder.streamView(view, handleKeyEquivalent: try keyEvent(kVK_ANSI_W, "w", mods: [.command])))
-        #expect(backend.keys.count == 8)
+        #expect(backend.keys.count == 4)
+    }
+
+    @Test func commandWGoesHomeAndNeverReachesThePC() throws {
+        let (forwarder, backend) = desktop()
+        let view = StreamInputView()
+        view.delegate = forwarder
+        var wentHome = 0
+        view.onHomeRequested = { wentHome += 1 }
+        #expect(view.performKeyEquivalent(with: try keyEvent(kVK_ANSI_W, "w", mods: [.command])))
+        #expect(wentHome == 1)
+        #expect(backend.keys.isEmpty)
+        #expect(!StreamInputView.isHomeChord(try keyEvent(kVK_ANSI_W, "w", mods: [.command, .shift])))
     }
 
     @Test func quitTabAndOtherCommandChordsStayWithTheMac() throws {
@@ -187,7 +198,7 @@ struct CommandChordTests {
     @Test func aChordBeforeTheStreamIsLiveBelongsToTheMac() throws {
         let (forwarder, backend) = desktop(ready: false)
         #expect(!forwarder.streamView(StreamInputView(), handleKeyEquivalent:
-            try keyEvent(kVK_ANSI_W, "w", mods: [.command])))
+            try keyEvent(kVK_ANSI_C, "c", mods: [.command])))
         #expect(backend.keys.isEmpty)
     }
 

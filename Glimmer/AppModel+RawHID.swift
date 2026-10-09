@@ -32,7 +32,9 @@ extension AppModel {
     func maybeOfferRawHID() {
         guard !rawHIDControllerEnabled, !rawHIDPromptAnswered, !isStreaming, !showRawHIDPrompt else { return }
         let hasDualSense = GCController.controllers().contains { $0.productCategory == GCProductCategoryDualSense }
-        if hasDualSense { showRawHIDPrompt = true }
+        // Citadel turns the extra buttons on by itself instead of asking: with
+        // the permission they work, without it the pad still plays.
+        if hasDualSense { enableRawHIDFromPrompt() }
     }
 
     /// "Turn On" from the auto-offer: turn it on and mark answered. We do NOT
@@ -100,8 +102,8 @@ extension AppModel {
     }
 
     func maybeOfferHIDPermission() {
+        // No alert: Home shows the pad's permission row (DeskHome) until it is answered.
         guard !isStreaming, hidPermissionPad != nil, !HIDGamepadManager.accessGranted else { return }
-        showHIDPermissionPrompt = true
     }
 
     /// "Continue": the system prompt blocks its thread for a moment, so it

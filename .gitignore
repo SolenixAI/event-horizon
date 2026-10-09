@@ -109,3 +109,4 @@ scripts/telem-client.sh
 
 # Python bytecode
 __pycache__/
+.impeccable/questions/

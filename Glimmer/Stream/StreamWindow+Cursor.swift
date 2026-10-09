@@ -72,7 +72,7 @@ extension StreamWindow {
     /// unreliable on the modern WindowServer - we avoid it entirely.)
     func reassertCursorHiddenIfNeeded() {
         guard didHideCursor else { return }   // only while WE want it hidden
-        (window.contentView as? StreamInputView)?.refreshCursor()
+        inputSurface?.refreshCursor()
     }
 
     /// THE single foreground re-engage. Re-hides the cursor, restores the
@@ -144,6 +144,6 @@ extension StreamWindow {
     /// carries the warp's jump rather than the user's hand.
     func warpCursorToCentre(of screen: NSScreen) {
         StreamCursor.warpToCentre(of: screen)
-        (window.contentView as? StreamInputView)?.discardsNextMotion = true
+        inputSurface?.discardsNextMotion = true
     }
 }

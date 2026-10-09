@@ -37,6 +37,25 @@ protocol StreamInputViewDelegate: AnyObject {
 final class StreamInputView: NSView {
     weak var delegate: (any StreamInputViewDelegate)?
 
+    /// Citadel's window: ⌘W takes the user Home while the PC keeps running.
+    /// Set only when the stream lives inside the main window; claimed before
+    /// the forwarder, so no pointer policy can send ⌘W to the PC.
+    var onHomeRequested: (@MainActor () -> Void)?
+
+    /// Until the first frame the picture is invisible, so clicks fall through
+    /// to Home underneath (the embedded twin of the window's ignoresMouseEvents).
+    var passesMouseThrough = false
+
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        passesMouseThrough ? nil : super.hitTest(point)
+    }
+
+    /// ⌘W and nothing else (⇧⌘W stays with the PC's Desktop table).
+    static func isHomeChord(_ event: NSEvent) -> Bool {
+        let mods = event.modifierFlags.intersection([.command, .shift, .control, .option])
+        return mods == [.command] && event.charactersIgnoringModifiers?.lowercased() == "w"
+    }
+
     private var trackingArea: NSTrackingArea?
 
     /// A fully transparent 1×1 cursor. Set in `cursorUpdate(with:)` as a
@@ -173,6 +192,10 @@ final class StreamInputView: NSView {
     /// shortcuts belong to the game the forwarder claims them here (⌘Q, ⌘W
     /// and the rest go to the PC instead of Glimmer's menus).
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        if event.type == .keyDown, let home = onHomeRequested, Self.isHomeChord(event) {
+            home()
+            return true
+        }
         if event.type == .keyDown, delegate?.streamView(self, handleKeyEquivalent: event) == true {
             return true
         }

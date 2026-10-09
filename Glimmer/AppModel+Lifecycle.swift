@@ -124,9 +124,7 @@ extension AppModel {
                 // (see restartHostStatusPolling); restarting here just resets
                 // the streak and fires an immediate probe for snappy feedback.
                 self.restartHostStatusPolling()
-                // If a DualSense is connected and the user hasn't decided on
-                // the raw-HID feature, offer it now (e.g. they returned to the
-                // launcher after plugging it in mid-stream).
+                // A DualSense plugged in mid-stream gets its extra buttons now.
                 self.maybeOfferRawHID()
                 // Cmd-Tab back into Glimmer while a stream is parked in the
                 // background should bring the stream forward - but ONLY for a
@@ -136,7 +134,7 @@ extension AppModel {
                 // didBecomeActive resume for this exact reason; we gate on the
                 // triggering event NOT being a mouse click so the launcher
                 // stays reachable mid-stream.
-                guard self.isStreaming, self.nativeStreamBackgrounded else { return }
+                guard self.isStreaming, self.nativeStreamBackgrounded, !StreamWindow.homeShowing else { return }
                 // Resume on Cmd-Tab, not a window click. currentEvent is nil for both,
                 // so the mouse button is the tell: a click-to-activate still has it down.
                 let evType = NSApp.currentEvent?.type

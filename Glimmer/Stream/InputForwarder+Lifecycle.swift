@@ -64,6 +64,49 @@ extension InputForwarder {
         log.info("InputForwarder attached to window; first-responder install deferred until window is key")
     }
 
+    /// Citadel's window: put the input view ON TOP of the window's own content
+    /// (Home stays underneath) instead of replacing it, wrapping `content`, the
+    /// view whose root layer is the AVSampleBufferDisplayLayer. The surface is
+    /// the stream; hiding it shows Home. Returns nil when the window has no
+    /// content view to host it.
+    @discardableResult
+    func attach(embedding content: NSView, in window: NSWindow) -> StreamInputView? {
+        guard let host = window.contentView else { return nil }
+        self.window = window
+        let view = StreamInputView(frame: host.bounds)
+        view.translatesAutoresizingMaskIntoConstraints = true
+        view.autoresizingMask = [.width, .height]
+        view.delegate = self
+        content.translatesAutoresizingMaskIntoConstraints = true
+        content.autoresizingMask = [.width, .height]
+        content.frame = view.bounds
+        view.addSubview(content)
+        host.addSubview(view)
+        self.inputView = view
+        window.acceptsMouseMovedEvents = true
+        initialConnectPending = true
+        modifiersNeedResync = true
+        loggedUnmappedKeyCodes = []
+        log.info("InputForwarder attached inside the main window; first-responder install deferred")
+        return view
+    }
+
+    /// Home is showing: everything held on the PC comes up, the pointer is the
+    /// Mac's again and keys stop going to the stream. The session stays live.
+    func suspendForHome() {
+        raiseAllHeldInputs(reason: "home")
+        exitCapturedMode()
+        cancelEscapeHold()
+        if let window, let view = inputView, window.firstResponder === view {
+            window.makeFirstResponder(nil)
+        }
+    }
+
+    /// Back from Home: keys and the pointer go to the PC again.
+    func resumeFromHome() {
+        installFirstResponder()
+    }
+
     /// Apply first-responder to our StreamInputView. Called by StreamWindow
     /// once the window is on screen and key. Idempotent - calling it more
     /// than once is a no-op past the first successful install.

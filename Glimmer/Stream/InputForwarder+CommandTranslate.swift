@@ -2,8 +2,8 @@
 //  InputForwarder+CommandTranslate.swift
 //
 //  Mac shortcuts on the PC's Desktop. There ⌘ is the Mac's, so ⌘C reaches the
-//  PC as Ctrl+C: ⌘ plus C, V, X, Z, A, S, F, T or W (⇧ allowed) becomes the
-//  same chord on Ctrl. Only under `.free`; a game keeps raw keys. ⌘Q, ⌘Tab,
+//  PC as Ctrl+C: ⌘ plus C, V, X, Z, A, S, F or T (⇧ allowed) becomes the
+//  same chord on Ctrl. ⌘W is Citadel's: it goes Home (StreamInputView). Only under `.free`; a game keeps raw keys. ⌘Q, ⌘Tab,
 //  ⌘Space and every other ⌘ chord are not in the table and stay with macOS.
 //
 
@@ -14,7 +14,7 @@ enum CommandTranslation {
     /// Mac letter to the PC's virtual-key code for it.
     static let letters: [String: Int16] = [
         "c": 0x43, "v": 0x56, "x": 0x58, "z": 0x5A, "a": 0x41,
-        "s": 0x53, "f": 0x46, "t": 0x54, "w": 0x57
+        "s": 0x53, "f": 0x46, "t": 0x54
     ]
 
     static let leftControl: Int16 = 0xA2 // VK_LCONTROL

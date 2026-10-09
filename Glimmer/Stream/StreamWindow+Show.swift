@@ -19,6 +19,7 @@ extension StreamWindow {
         // Window mode has its own bring-up (StreamWindow+Windowed.swift): a
         // titled window, no presentation-options change, no cover, no cursor
         // hide. Everything else is the fullscreen path, unchanged.
+        if isEmbedded { showEmbedded(); return }
         if displayMode == .window { showWindowed(); return }
         presentFullScreen(firstShow: true)
     }

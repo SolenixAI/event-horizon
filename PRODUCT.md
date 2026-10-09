@@ -80,6 +80,7 @@ Manager and Mac shortcuts stay the user's, while the PC feels local.
   Glimmer experience".
 - Measured: Mac↔PC Wi-Fi spread ±16–20 ms; host encode 4–6 ms; first frame
   0.9 s from launch.
+- Founder, 2026-10-08: "the experience is very intuitive and native feeling, big time".
 - No customers, benchmarks or testimonials beyond the founder. Do not invent them.
 
 ## Product Principles
@@ -90,6 +91,8 @@ Manager and Mac shortcuts stay the user's, while the PC feels local.
 3. One app, one window, one journey: Home → PC → Home, no detours.
 4. Native first: use the macOS control or behaviour, style it, never redraw it.
 5. Build only the experience; reuse the engine and the OS for everything else.
+6. Everything automatic, real-time and in sync: every quirk the user meets becomes
+   a native automatic fix (poka-yoke), never a setting or a step they must learn.
 
 ## Accessibility & Inclusion
 

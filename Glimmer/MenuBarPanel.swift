@@ -160,9 +160,6 @@ struct MenuBarPanel: View {
                 if model.isMiniPlayer { model.toggleMiniPlayer() }
                 handToStream()
             }
-            if !model.isMiniPlayer {
-                actionRow("Mini Player", systemImage: "pip.enter") { model.toggleMiniPlayer() }
-            }
             stopRow
             HStack(spacing: 8) {
                 Image(systemName: "chart.bar.xaxis")

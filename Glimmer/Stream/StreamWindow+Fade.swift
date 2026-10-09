@@ -34,6 +34,7 @@ extension StreamWindow {
         guard awaitingFirstFrameFadeIn, !didClose else { return }
         awaitingFirstFrameFadeIn = false
         if !userBackgrounded { takePointerOnFirstFrame() }
+        if isEmbedded { fadeInEmbedded(); return }
         // The window is at level `mainMenuWindow + 1` (notch path) or in a
         // fullscreen Space (safe-area path), so as alphaValue ramps 0 → 1
         // it visually covers the menu bar (level 24) and the Dock (level
@@ -140,7 +141,7 @@ extension StreamWindow {
         // Window mode: persist the frame under its autosave name and release
         // the name, so the next session's window can claim it (see
         // StreamWindow+Windowed.swift).
-        if displayMode == .window { finishWindowedFrameAutosave() }
+        if displayMode == .window, !isEmbedded { finishWindowedFrameAutosave() }
 
         // 3. Restore the app's presentation options BEFORE orderOut'ing the
         //    window. Order matters: if we orderOut first, the user briefly
@@ -159,9 +160,11 @@ extension StreamWindow {
         //    after the exit notification fires would be cleaner, but the
         //    in-flight orderOut below still works in practice because AppKit
         //    queues the orderOut after the exit-fullscreen Space animation.
-        if window.styleMask.contains(.fullScreen) {
+        if !isEmbedded, window.styleMask.contains(.fullScreen) {
             window.toggleFullScreen(nil)
         }
+        // Citadel's window stays; only the surface leaves (StreamWindow+Embedded.swift).
+        if isEmbedded { closeEmbedded(); return }
 
         // 5. Drop first responder, fade out, orderOut. Fading instead of a
         //    hard orderOut gives the user a 250ms acknowledgement that the

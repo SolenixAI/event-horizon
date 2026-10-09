@@ -107,7 +107,11 @@ extension StreamSession {
         let onMiniPlayerChanged = options.onMiniPlayerChanged
         // The display mode is a construction-time choice (it picks the style
         // mask); the notch flag, title, and stream size feed show().
-        let win = StreamWindow(displayMode: config.displayMode)
+        // Citadel: a window-mode stream lives inside the main window, on top
+        // of Home, whenever that window is up (CLI and Shortcuts launches with
+        // no window keep a window of their own).
+        let host = config.displayMode == .window ? Self.citadelMainWindow() : nil
+        let win = StreamWindow(displayMode: config.displayMode, embeddedIn: host)
         win.coversNotch = config.coversNotch
         win.windowTitle = config.windowTitle
         win.pointerPolicy = config.pointerPolicy
@@ -223,7 +227,20 @@ extension StreamSession {
         // The reference frame absolute positions are measured against.
         inp.streamPixelSize = CGSize(width: config.width, height: config.height)
         Self.wireWindowPointerModel(win: win, inp: inp, onMiniPlayerChanged: onMiniPlayerChanged)
-        inp.attach(to: win.window)
+        if win.isEmbedded {
+            let surface = inp.attach(embedding: win.streamContentView, in: win.window)
+            win.embeddedSurface = surface
+            // ⌘W: Home, with the PC still running behind it.
+            surface?.onHomeRequested = { [weak win, weak inp] in
+                inp?.suspendForHome()
+                win?.enterHome()
+            }
+            // Home shows the PC live, so it is not a background: the decoder
+            // keeps presenting, and only the launcher hears about it.
+            win.onHomeChanged = { atHome in onBackgroundedChanged?(atHome) }
+        } else {
+            inp.attach(to: win.window)
+        }
         // The window installs first responder only after it has
         // become key AND finished its enter-fullscreen transition.
         // macOS resets the responder chain during fullscreen Space
@@ -246,6 +263,12 @@ extension StreamSession {
             drivingView: win.streamContentView,
             configuredFps: Int32(config.fps))
         return (win, inp, dec)
+    }
+
+    /// Citadel's own window, when it is open and can host the stream.
+    @MainActor
+    static func citadelMainWindow() -> NSWindow? {
+        NSApp.windows.first { $0.identifier?.rawValue == "main" && $0.isVisible && $0.contentView != nil }
     }
 
     /// The window ⇄ forwarder edges of the window pointer model: capture

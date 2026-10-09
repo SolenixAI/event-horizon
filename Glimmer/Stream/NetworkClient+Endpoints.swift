@@ -244,6 +244,19 @@ extension NetworkClient {
         }
     }
 
+    // MARK: - Endpoint: /appasset
+
+    /// The app's cover art (Sunshine serves the PNG set as its image), over
+    /// the paired channel like every other call. Nil when the PC has none.
+    public func appAsset(appID: Int) async throws -> Data? {
+        let resp = try await rawResponse(
+            path: "appasset",
+            query: ["appid": String(appID), "AssetType": "2", "AssetIdx": "0"],
+            extraQuery: nil, usePaired: true, timeout: Self.controlTimeout)
+        // PNG signature; anything else (an XML error body) is "no art".
+        return resp.body.starts(with: [0x89, 0x50, 0x4E, 0x47]) ? resp.body : nil
+    }
+
     // MARK: - Endpoints: /launch and /resume
 
     public func launch(appID: Int, config: StreamConfig) async throws -> LaunchResponse {

@@ -134,6 +134,8 @@ final class AppModel {
     /// stream" affordance while this is true. Set by the StreamWindow's
     /// resign/become-key observers via callbacks on this manager.
     var nativeStreamBackgrounded: Bool = false
+    /// Bumped when a PC's cover art lands on disk, so Home re-reads it.
+    var coverArtRevision = 0
 
     var nativeStreamError: String?
 

@@ -112,16 +112,17 @@ struct GlimmerApp: App {
                 // 532pt content + 24pt margins per side = 580. This MUST equal the
                 // connect surface's real width (its .horizontal padding): a floor
                 // below it leaves the window a range to be dragged through.
-                .frame(minWidth: 580)
+                .frame(minWidth: 580, maxWidth: .infinity, maxHeight: .infinity)
                 // Frosted Liquid Glass is the launcher's surface: see-through enough to show
                 // colour behind it, blurred enough that text behind turns to colour.
                 .containerBackground(for: .window) { Color.clear.glassEffect(.regular, in: .rect) }
         }
         .windowStyle(.hiddenTitleBar)
-        // Exactly its content, never draggable bigger: nothing in the launcher grows, so a
-        // resize could only add empty space. Every element states a definite size, and
-        // there is no .defaultSize to second-guess it.
-        .windowResizability(.contentSize)
+        // Citadel: the PC opens inside this window, so it grows to the stream and the
+        // user can size it (and give it a full-screen Space) like any Mac window.
+        .windowResizability(.contentMinSize)
+        // Room for the PC's screen and its shelf on first open.
+        .defaultSize(width: 1180, height: 860)
         // Opt OUT of window state restoration so a previously-X-closed
         // launcher always re-spawns fresh next launch (the bug that made
         // first Dock click do nothing pre-restoration-fix).

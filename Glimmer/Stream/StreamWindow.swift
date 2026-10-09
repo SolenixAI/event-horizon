@@ -219,7 +219,13 @@ public final class StreamWindow {
     /// is invisible and passes clicks through to the launcher's Cancel, and it
     /// takes neither the pointer nor the menu bar.
     var awaitingFirstFrameFadeIn = false {
-        didSet { window.ignoresMouseEvents = awaitingFirstFrameFadeIn }
+        didSet {
+            if isEmbedded {
+                updateEmbeddedPassThrough()
+            } else {
+                window.ignoresMouseEvents = awaitingFirstFrameFadeIn
+            }
+        }
     }
 
     /// The user left the stream on purpose (Cmd-Tab away). Until they come
@@ -254,8 +260,37 @@ public final class StreamWindow {
     /// pointer (it holds off while the window passes clicks through).
     public var onDidBecomeReadyForInput: (@MainActor () -> Void)?
 
-    public init(displayMode: StreamDisplayMode = .fullScreen) {
-        self.displayMode = displayMode
+    /// Citadel: the stream lives inside the app's own window, on top of Home,
+    /// instead of in a window of its own. `window` is then that main window,
+    /// which this class never styles, orders out or closes; Home is the
+    /// surface hidden (StreamWindow+Embedded.swift).
+    public let isEmbedded: Bool
+
+    /// The input view that wraps the display view. Embedded only; a stream
+    /// window's input view is its contentView.
+    var embeddedSurface: StreamInputView?
+
+    /// Embedded: Home is showing and the PC sits live on the desk, small and
+    /// hands-off; false while it fills the window.
+    var embeddedAtHome = false
+
+    /// Embedded: the desk frame moved (window resized while Home shows).
+    var deskFrameObserver: NSObjectProtocol?
+
+    /// Embedded: Home came or went. The session tells the launcher; unlike
+    /// `onBackgroundedChanged` the picture keeps presenting, because Home
+    /// shows the PC live.
+    public var onHomeChanged: (@MainActor (Bool) -> Void)?
+
+    /// The stream's input view, wherever it lives.
+    var inputSurface: StreamInputView? {
+        embeddedSurface ?? window.contentView as? StreamInputView
+    }
+
+    public init(displayMode: StreamDisplayMode = .fullScreen, embeddedIn host: NSWindow? = nil) {
+        // Embedded is a window-mode stream: every full-screen-only path stays off.
+        self.displayMode = host == nil ? displayMode : .window
+        self.isEmbedded = host != nil
         // Pick the screen the user is *currently* on at construction time.
         // StreamSession constructs us right when the user clicks "Stream",
         // so NSScreen.main reflects the display the launcher window was on
@@ -282,56 +317,16 @@ public final class StreamWindow {
         // the responder chain never delivers keyDown to our content view.
         // KeyableWindow overrides both canBecomeKeyWindow + canBecomeMainWindow
         // to return true so input routes correctly.
-        let window = KeyableWindow(
+        let window: NSWindow = host ?? KeyableWindow(
             contentRect: screen.frame,
             styleMask: style,
             backing: .buffered,
             defer: false,
             screen: screen
         )
-        window.isReleasedWhenClosed = false
+        if host == nil { Self.configureOwnWindow(window, displayMode: displayMode) }
 
-        // Starts at .normal; show() raises Path A to mainMenuWindow + 1. Never the
-        // shielding level: AppKit makes a window key there but drops its key events.
-        window.level = .normal
-
-        // Collection behavior:
-        //   .fullScreenPrimary - declare we're a primary fullscreen window so
-        //                        `toggleFullScreen:` puts us into a Space-
-        //                        based fullscreen (Path B in show(), and the
-        //                        green button in window mode). NOTE: this is
-        //                        NOT what engages display HDR. An earlier
-        //                        revision believed the OS only raised the
-        //                        screen's EDR headroom for windows owning a
-        //                        Space; that was wrong - the default
-        //                        borderless cover (Path A, no Space) engages
-        //                        HDR just fine, as does a plain window: EDR
-        //                        follows the layer's PQ content +
-        //                        wantsExtendedDynamicRangeContent, not the
-        //                        window's Space membership.
-        //   .stationary        - don't get tossed into a different Space
-        //                        when Mission Control reflows windows. Full
-        //                        screen only: a real window should follow
-        //                        the user's own Space management.
-        window.collectionBehavior = displayMode == .window
-            ? [.fullScreenPrimary]
-            : [.fullScreenPrimary, .stationary]
-        window.backgroundColor = .black
-        window.acceptsMouseMovedEvents = true
-        window.hidesOnDeactivate = false
-
-        // SECURITY: refuse to be screen-captured. Prevents
-        // ScreenCaptureKit, the screencapture(1) tool, Cmd-Shift-5, Zoom /
-        // Teams / Discord screen-share, and the Quick-Time screen recording
-        // path from pulling the stream surface. Apps capturing the screen
-        // see a black region where the stream is drawn. Same posture as
-        // Apple TV+ and Netflix's macOS playback windows. If a user wants
-        // to record their stream they can use the host PC's own recording
-        // tools, where the underlying stream is unencrypted bytes the host
-        // owns - Glimmer is not the right place to expose that.
-        window.sharingType = .none
-
-        let view = DisplayContainerView(frame: screen.frame)
+        let view = DisplayContainerView(frame: host?.contentView?.bounds ?? screen.frame)
 
         // ---- AVSampleBufferDisplayLayer setup (parallels moonlight-qt's
         // vt_avsamplelayer.mm - `m_StreamView.layer = m_DisplayLayer;
@@ -354,7 +349,7 @@ public final class StreamWindow {
         let layer = StreamWindow.makeDisplayLayer(frame: view.bounds)
         view.layer = layer
         view.wantsLayer = true
-        window.contentView = view
+        if host == nil { window.contentView = view }
 
         // Stats overlay - sublayer of the display layer, positioned in the
         // top-left with a fixed inset. We attach it as a sublayer rather than
@@ -396,7 +391,7 @@ public final class StreamWindow {
         // flag stays in sync with `self.coversNotch` via show() time.
         let delegate = StreamWindowDelegate()
         delegate.displayMode = displayMode
-        window.delegate = delegate
+        if host == nil { window.delegate = delegate }
 
         self.window = window
         self.displayLayer = layer
@@ -412,6 +407,52 @@ public final class StreamWindow {
         // full initialization because it captures self.
         delegate.onCloseRequested = { [weak self] in self?.handleUserCloseRequest() }
         delegate.onMiniPlayerExitRequested = { [weak self] in self?.leaveMiniPlayer() }
+    }
+
+    /// The stream's own window: level, Spaces behaviour, background and the
+    /// screen-capture refusal. Never applied to Citadel's main window.
+    private static func configureOwnWindow(_ window: NSWindow, displayMode: StreamDisplayMode) {
+        window.isReleasedWhenClosed = false
+
+        // Starts at .normal; show() raises Path A to mainMenuWindow + 1. Never the
+        // shielding level: AppKit makes a window key there but drops its key events.
+        window.level = .normal
+
+        // Collection behavior:
+        //   .fullScreenPrimary - declare we're a primary fullscreen window so
+        //                        `toggleFullScreen:` puts us into a Space-
+        //                        based fullscreen (Path B in show(), and the
+        //                        green button in window mode). NOTE: this is
+        //                        NOT what engages display HDR. An earlier
+        //                        revision believed the OS only raised the
+        //                        screen's EDR headroom for windows owning a
+        //                        Space; that was wrong - the default
+        //                        borderless cover (Path A, no Space) engages
+        //                        HDR just fine, as does a plain window: EDR
+        //                        follows the layer's PQ content +
+        //                        wantsExtendedDynamicRangeContent, not the
+        //                        window's Space membership.
+        //   .stationary        - don't get tossed into a different Space
+        //                        when Mission Control reflows windows. Full
+        //                        screen only: a real window should follow
+        //                        the user's own Space management.
+        window.collectionBehavior = displayMode == .window
+            ? [.fullScreenPrimary]
+            : [.fullScreenPrimary, .stationary]
+        window.backgroundColor = .black
+        window.acceptsMouseMovedEvents = true
+        window.hidesOnDeactivate = false
+
+        // SECURITY: refuse to be screen-captured. Prevents
+        // ScreenCaptureKit, the screencapture(1) tool, Cmd-Shift-5, Zoom /
+        // Teams / Discord screen-share, and the Quick-Time screen recording
+        // path from pulling the stream surface. Apps capturing the screen
+        // see a black region where the stream is drawn. Same posture as
+        // Apple TV+ and Netflix's macOS playback windows. If a user wants
+        // to record their stream they can use the host PC's own recording
+        // tools, where the underlying stream is unencrypted bytes the host
+        // owns - Glimmer is not the right place to expose that.
+        window.sharingType = .none
     }
 
     /// Strong ref so the window delegate isn't deallocated mid-stream

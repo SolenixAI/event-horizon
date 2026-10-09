@@ -27,7 +27,9 @@ extension StreamWindow {
     }
 
     func enterMiniPlayer() {
-        guard !didClose, !isMiniPlayer else { return }
+        // Inside Citadel's window the PC already shrinks onto the desk (⌘W);
+        // the main window is never turned into a floating panel.
+        guard !didClose, !isMiniPlayer, !isEmbedded else { return }
         miniPlayerReturnMode = displayMode
         switch displayMode {
         case .window:
@@ -120,7 +122,7 @@ extension StreamWindow {
         window.setFrame(window.constrainFrameRect(window.frame, to: screen), display: false)
         // A free pointer shows the arrow over the picture; a backgrounded
         // full-screen window comes back on screen here.
-        (window.contentView as? StreamInputView)?.setTransparentCursorEnabled(false)
+        inputSurface?.setTransparentCursorEnabled(false)
         updateMiniPlayerControls()
         window.orderFront(nil)
         let size = window.contentRect(forFrameRect: window.frame).size

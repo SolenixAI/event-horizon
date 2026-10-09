@@ -120,7 +120,7 @@ extension StreamWindow {
         // needs a first responder, installed a runloop turn later), so a
         // bring-up that DOES land under the pointer still ends captured: this
         // seeds free, the grab then flips it.
-        (window.contentView as? StreamInputView)?.setTransparentCursorEnabled(false)
+        inputSurface?.setTransparentCursorEnabled(false)
     }
 
     /// The visible screen area a window's CONTENT can occupy: the visible
@@ -161,7 +161,7 @@ extension StreamWindow {
     func setPointerCaptured(_ captured: Bool) {
         guard displayMode == .window, !didClose else { return }
         setCursorHidden(captured)
-        (window.contentView as? StreamInputView)?.setTransparentCursorEnabled(captured)
+        inputSurface?.setTransparentCursorEnabled(captured)
         updateMiniPlayerControls()
         if captured {
             showCaptureHintIfBudgetAllows()

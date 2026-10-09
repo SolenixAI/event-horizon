@@ -45,6 +45,21 @@ extension NetworkClient {
                     extraQuery: String?,
                     usePaired: Bool,
                     timeout: TimeInterval) async throws -> XMLNode {
+        let resp = try await rawResponse(path: path, query: query, extraQuery: extraQuery,
+                                         usePaired: usePaired, timeout: timeout)
+        do {
+            return try XMLTreeBuilder.parse(data: resp.body)
+        } catch {
+            throw StreamError.launchFailed("Malformed XML on /\(path): \(error)")
+        }
+    }
+
+    /// The same request, returning the raw body (a PNG for /appasset).
+    func rawResponse(path: String,
+                     query: [String: String],
+                     extraQuery: String?,
+                     usePaired: Bool,
+                     timeout: TimeInterval) async throws -> ControlTransport.Response {
 
         // SECURITY: TLS without a pin would hand /launch's input key to any
         // certificate. The pin only comes from a finished PIN handshake.
@@ -116,11 +131,7 @@ extension NetworkClient {
         if !(200...299).contains(resp.status) {
             throw StreamError.launchFailed("HTTP \(resp.status) on /\(path)")
         }
-        do {
-            return try XMLTreeBuilder.parse(data: resp.body)
-        } catch {
-            throw StreamError.launchFailed("Malformed XML on /\(path): \(error)")
-        }
+        return resp
     }
 
     /// Without a request deadline (only /launch and a reconnect set one), a
