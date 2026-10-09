@@ -91,3 +91,39 @@ fn pairs(text: &str) -> Vec<(String, String)> {
         })
         .collect()
 }
+
+/// The game's tall 2:3 cover from Steam's library cache. Steam names it
+/// `library_600x900*.jpg` (older clients) or `library_capsule*.jpg`, and
+/// newer clients keep it one hashed folder down.
+pub fn cover(steam_root: &Path, appid: &str) -> Option<PathBuf> {
+    let dir = steam_root.join("appcache/librarycache").join(appid);
+    let mut files = Vec::new();
+    collect_files(&dir, 2, &mut files);
+    ["library_600x900", "library_capsule"]
+        .iter()
+        .find_map(|stem| {
+            files
+                .iter()
+                .find(|path| {
+                    path.file_name()
+                        .and_then(|n| n.to_str())
+                        .is_some_and(|n| n.starts_with(stem) && n.ends_with(".jpg"))
+                })
+                .cloned()
+        })
+}
+
+fn collect_files(dir: &Path, depth: u8, out: &mut Vec<PathBuf>) {
+    let Ok(entries) = fs::read_dir(dir) else {
+        return;
+    };
+    for path in entries.flatten().map(|e| e.path()) {
+        if path.is_dir() {
+            if depth > 1 {
+                collect_files(&path, depth - 1, out);
+            }
+        } else {
+            out.push(path);
+        }
+    }
+}

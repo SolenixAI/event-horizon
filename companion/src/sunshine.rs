@@ -19,6 +19,7 @@ pub fn pairing_for(pending: &Value, mac_name: &str) -> Option<String> {
 }
 
 /// The companion's login to Sunshine's web API, set by the installer.
+#[derive(Clone)]
 pub struct LocalSunshine {
     base: String,
     user: String,
@@ -73,6 +74,46 @@ impl LocalSunshine {
 }
 
 impl SunshineApi for LocalSunshine {
+    async fn apps(&self) -> Result<Value, SunshineError> {
+        let response = self
+            .http
+            .get(format!("{}/api/apps", self.base))
+            .basic_auth(&self.user, Some(&self.password))
+            .send()
+            .await
+            .map_err(|e| SunshineError::Unreachable(format!("{e:?}")))?;
+        if !response.status().is_success() {
+            return Err(SunshineError::Rejected(format!(
+                "apps: {}",
+                response.status()
+            )));
+        }
+        response
+            .json()
+            .await
+            .map_err(|e| SunshineError::Rejected(e.to_string()))
+    }
+
+    async fn save_app(&self, index: i64, mut app: Value) -> Result<(), SunshineError> {
+        app["index"] = json!(index);
+        let response = self
+            .http
+            .post(format!("{}/api/apps", self.base))
+            .basic_auth(&self.user, Some(&self.password))
+            .json(&app)
+            .send()
+            .await
+            .map_err(|e| SunshineError::Unreachable(format!("{e:?}")))?;
+        if response.status().is_success() {
+            Ok(())
+        } else {
+            Err(SunshineError::Rejected(format!(
+                "save app: {}",
+                response.status()
+            )))
+        }
+    }
+
     async fn submit_pin(&self, mac_name: &str, pin: &str) -> Result<(), SunshineError> {
         // The Mac starts its pairing with Sunshine as it asks us, so its
         // pending entry may land a moment later: look for up to 10 s.

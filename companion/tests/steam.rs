@@ -52,3 +52,23 @@ fn lists_games_from_every_library_and_skips_steam_tools() {
 fn a_missing_steam_folder_is_an_empty_library_not_an_error() {
     assert!(steam::installed(Path::new("/nonexistent/steam")).is_empty());
 }
+
+fn touch(path: &Path) {
+    fs::create_dir_all(path.parent().unwrap()).unwrap();
+    fs::write(path, b"jpg").unwrap();
+}
+
+#[test]
+fn finds_the_tall_cover_in_old_and_new_steam_layouts() {
+    let root = tempfile::tempdir().unwrap();
+    let cache = root.path().join("appcache/librarycache");
+    touch(&cache.join("1808500/3f2a9c/library_600x900.jpg")); // newer clients: a hashed folder
+    touch(&cache.join("1623730/library_capsule.jpg")); // capsule name
+    touch(&cache.join("2694490/header.jpg")); // no tall cover
+
+    let cover = |id| steam::cover(root.path(), id).map(|p| p.file_name().unwrap().to_owned());
+    assert_eq!(cover("1808500"), Some("library_600x900.jpg".into()));
+    assert_eq!(cover("1623730"), Some("library_capsule.jpg".into()));
+    assert_eq!(cover("2694490"), None);
+    assert_eq!(cover("999"), None);
+}

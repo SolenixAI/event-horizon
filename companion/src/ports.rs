@@ -23,6 +23,17 @@ pub enum SunshineError {
 
 /// Sunshine's local config API on this PC.
 pub trait SunshineApi: Send + Sync {
+    /// Sunshine's apps document: `{"apps": [...], ...}`.
+    fn apps(&self) -> impl Future<Output = Result<serde_json::Value, SunshineError>> + Send;
+
+    /// Save one app at `index` in the current list, or add it with -1.
+    /// Sunshine sorts the list by name afterwards, so indexes go stale.
+    fn save_app(
+        &self,
+        index: i64,
+        app: serde_json::Value,
+    ) -> impl Future<Output = Result<(), SunshineError>> + Send;
+
     /// Completes the pairing `mac_name` started with Sunshine, using the PIN
     /// the Mac chose. Sunshine holds a started pairing for 5 minutes.
     fn submit_pin(
@@ -37,4 +48,10 @@ pub trait SunshineApi: Send + Sync {
 pub trait Awake: Send + Sync {
     type Guard: Send + 'static;
     fn hold(&self) -> Self::Guard;
+}
+
+/// The games this PC has installed, ready to offer on the Mac's shelf
+/// (launch command and a PNG cover included).
+pub trait GameSources: Send + Sync {
+    fn installed(&self) -> Vec<crate::library::LibraryGame>;
 }

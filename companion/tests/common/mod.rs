@@ -8,14 +8,46 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 /// Sunshine that records every PIN it is given.
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct FakeSunshine {
     /// (Mac name, PIN) for every PIN Sunshine was given.
     pub pins: Arc<Mutex<Vec<(String, String)>>>,
     pub down: bool,
+    /// Sunshine's apps document, and how many saves it took.
+    pub apps: Arc<Mutex<serde_json::Value>>,
+    pub saves: Arc<Mutex<usize>>,
+}
+
+impl Default for FakeSunshine {
+    fn default() -> Self {
+        Self {
+            pins: Default::default(),
+            down: false,
+            apps: Arc::new(Mutex::new(serde_json::json!({ "apps": [], "env": {} }))),
+            saves: Default::default(),
+        }
+    }
 }
 
 impl SunshineApi for FakeSunshine {
+    async fn apps(&self) -> Result<serde_json::Value, SunshineError> {
+        Ok(self.apps.lock().unwrap().clone())
+    }
+
+    /// Like Sunshine: -1 adds, an index replaces, then the list is sorted by name.
+    async fn save_app(&self, index: i64, app: serde_json::Value) -> Result<(), SunshineError> {
+        let mut document = self.apps.lock().unwrap();
+        let list = document["apps"].as_array_mut().unwrap();
+        if index == -1 {
+            list.push(app);
+        } else {
+            list[index as usize] = app;
+        }
+        list.sort_by(|a, b| a["name"].as_str().cmp(&b["name"].as_str()));
+        *self.saves.lock().unwrap() += 1;
+        Ok(())
+    }
+
     async fn submit_pin(&self, mac_name: &str, pin: &str) -> Result<(), SunshineError> {
         if self.down {
             return Err(SunshineError::Unreachable("fake: down".into()));
@@ -100,4 +132,13 @@ pub fn host_on_fakes() -> (
         awake.clone(),
     );
     (host, awake)
+}
+
+/// A PC with a fixed list of installed games.
+pub struct FakeGames(pub Vec<event_horizon_companion::library::LibraryGame>);
+
+impl event_horizon_companion::GameSources for FakeGames {
+    fn installed(&self) -> Vec<event_horizon_companion::library::LibraryGame> {
+        self.0.clone()
+    }
 }

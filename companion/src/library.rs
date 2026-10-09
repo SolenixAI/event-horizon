@@ -3,6 +3,7 @@
 //! every app it does not know) as the user set it. The cross-platform form
 //! of the tower's `sunshine-steam-sync` script.
 
+use crate::ports::{GameSources, SunshineApi, SunshineError};
 use serde_json::{Value, json};
 
 /// A game to offer on the Mac's shelf.
@@ -66,4 +67,34 @@ pub fn merge(document: &mut Value, games: &[LibraryGame]) -> Vec<Change> {
         }
     }
     changes
+}
+
+/// Bring Sunshine's apps in line with the PC's games, one save per change.
+/// Sunshine re-sorts its list after every save, so each save re-reads it.
+pub async fn sync<S: SunshineApi, G: GameSources>(
+    sunshine: &S,
+    games: &G,
+) -> Result<Vec<Change>, SunshineError> {
+    let mut changes = Vec::new();
+    for game in games.installed() {
+        let mut document = sunshine.apps().await?;
+        let existing = document["apps"]
+            .as_array()
+            .and_then(|apps| apps.iter().position(|app| app["name"] == game.name));
+        let Some(change) = merge(&mut document, std::slice::from_ref(&game)).pop() else {
+            continue;
+        };
+        let apps = document["apps"]
+            .as_array()
+            .expect("merge leaves an apps array");
+        let app = apps
+            .iter()
+            .find(|app| app["name"] == game.name)
+            .expect("merge keeps the game it changed")
+            .clone();
+        let index = existing.map_or(-1, |i| i as i64);
+        sunshine.save_app(index, app).await?;
+        changes.push(change);
+    }
+    Ok(changes)
 }

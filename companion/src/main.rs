@@ -3,15 +3,33 @@
 #[cfg(any(target_os = "linux", windows))]
 #[tokio::main]
 async fn main() {
-    use event_horizon_companion::{Host, discovery, link, sunshine::LocalSunshine};
+    use event_horizon_companion::{
+        Host, discovery, games, library, link, play, sunshine::LocalSunshine,
+    };
     use std::collections::HashMap;
+
+    // `play <appid>`: what Sunshine runs to open a game.
+    let args: Vec<String> = std::env::args().collect();
+    if args.get(1).map(String::as_str) == Some("play") {
+        let (Some(appid), Some(root)) = (args.get(2), games::steam_root()) else {
+            eprintln!("usage: event-horizon-companion play <steam app id> (needs Steam installed)");
+            std::process::exit(2);
+        };
+        play::run(&root, appid);
+        return;
+    }
 
     let dir = config_dir();
     let env: HashMap<String, String> = std::fs::read_to_string(dir.join("companion.env"))
         .unwrap_or_default()
         .lines()
         .filter_map(|line| line.split_once('='))
-        .map(|(k, v)| (k.trim().to_string(), v.trim().to_string()))
+        .map(|(k, v)| {
+            (
+                k.trim().to_string(),
+                v.trim().trim_matches(|c| c == '"' || c == '\'').to_string(),
+            )
+        })
         .collect();
     let get = |key: &str| {
         env.get(key)
@@ -23,16 +41,62 @@ async fn main() {
 
     #[cfg(target_os = "linux")]
     let host = Host::new(
-        sunshine,
+        sunshine.clone(),
         event_horizon_companion::os::linux::Notification,
         event_horizon_companion::os::linux::SessionInhibit,
     );
     #[cfg(windows)]
     let host = Host::new(
-        sunshine,
+        sunshine.clone(),
         event_horizon_companion::os::windows::Dialog,
         event_horizon_companion::os::windows::PowerRequest,
     );
+
+    // The game shelf: the PC's Steam games, kept in Sunshine's apps.
+    if let Some(steam_root) = games::steam_root() {
+        let exe = std::env::current_exe()
+            .map(|p| p.display().to_string())
+            .unwrap_or_default();
+        let sunshine_flatpak = cfg!(target_os = "linux")
+            && std::path::Path::new(&get("HOME"))
+                .join(".var/app/dev.lizardbyte.app.Sunshine")
+                .is_dir();
+        let (play, covers) = if sunshine_flatpak {
+            // Flatpak Sunshine runs commands in its sandbox and reads only its own folders.
+            let sunshine_config = std::path::Path::new(&get("HOME"))
+                .join(".var/app/dev.lizardbyte.app.Sunshine/config/sunshine");
+            (
+                format!("flatpak-spawn --host setsid {exe} play"),
+                sunshine_config.join("covers"),
+            )
+        } else {
+            (format!("\"{exe}\" play"), dir.join("covers"))
+        };
+        let overrides = env
+            .iter()
+            .filter_map(|(k, v)| {
+                k.strip_prefix("LAUNCH_")
+                    .map(|id| (id.to_string(), v.clone()))
+            })
+            .collect();
+        let source = games::SteamGames {
+            steam_root,
+            covers,
+            play,
+            overrides,
+        };
+        let sunshine = sunshine.clone();
+        tokio::spawn(async move {
+            loop {
+                match library::sync(&sunshine, &source).await {
+                    Ok(changes) if !changes.is_empty() => println!("library: {changes:?}"),
+                    Ok(_) => {}
+                    Err(e) => eprintln!("library: {e:?}"),
+                }
+                tokio::time::sleep(std::time::Duration::from_secs(600)).await;
+            }
+        });
+    }
 
     let pc_name = hostname();
     let _announced = discovery::announce(&pc_name)
