@@ -3,6 +3,7 @@
 
 mod host;
 pub mod library;
+pub mod link;
 pub mod os;
 mod ports;
 pub mod steam;

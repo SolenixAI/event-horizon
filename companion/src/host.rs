@@ -16,7 +16,7 @@ pub const LEASE_TTL: Duration = Duration::from_secs(90);
 
 /// A Mac asking to pair. `pin` is the PIN the Mac gave Sunshine; `code` is
 /// the short code both screens show, so the person knows it is their Mac.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Deserialize)]
 pub struct PairRequest {
     pub mac_id: String,
     pub mac_name: String,

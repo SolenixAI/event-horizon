@@ -128,12 +128,12 @@ set) plus a fake, so it is an internal seam for tests, not an OS seam.
 - **Discovery.** mDNS service `_eventhorizon._tcp` with TXT `v=1`, the
   Sunshine host's unique id, and the companion's certificate fingerprint.
   The Mac matches it to the Sunshine host it already sees.
-- **Trust.** One root of trust: Sunshine's paired clients. Before pairing,
-  only `POST /pair` answers, and it does nothing without a click on Allow on
-  the PC. After pairing, the Mac uses the same client certificate it uses
-  for Sunshine (mutual TLS), and the companion accepts exactly the
-  certificates Sunshine has paired. Unpairing in Sunshine unpairs the
-  companion too.
+- **Trust (v1).** Before pairing, only `POST /pair` answers, and it does
+  nothing without a click on Allow on the PC and the Mac's Sunshine PIN. On
+  Allow the companion gives the Mac a random 256-bit token; it keeps only
+  the token's SHA-256, in one file, so a restart keeps every Mac paired.
+  `/lease` and `/status` need the token. Later: the same over TLS, with the
+  companion's certificate fingerprint in the mDNS TXT record.
 - **Protocol.** JSON over HTTPS: `POST /pair`, `POST /lease`, `GET /status`.
   Three requests; versioned by the `v` TXT field.
 
