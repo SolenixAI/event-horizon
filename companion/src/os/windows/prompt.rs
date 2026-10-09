@@ -14,9 +14,12 @@ fn wide(text: &str) -> Vec<u16> {
 
 impl Prompt for Dialog {
     async fn ask_allow(&self, mac_name: &str, code: &str) -> Decision {
-        let text = wide(&format!(
-            "Allow {mac_name} to use this PC?\n\nCode on your Mac: {code}"
-        ));
+        let detail = if code.is_empty() {
+            "Event Horizon on that Mac will keep this PC awake while it streams.".to_string()
+        } else {
+            format!("Code on your Mac: {code}")
+        };
+        let text = wide(&format!("Allow {mac_name} to use this PC?\n\n{detail}"));
         let title = wide("Event Horizon");
         tokio::task::spawn_blocking(move || {
             // SAFETY: both strings are NUL-terminated and outlive the call.
