@@ -1,11 +1,11 @@
 # Product Marketing Context
 
-**Document version:** v3
+**Document version:** v5
 **Last updated:** 2026-10-09
 
 ## Product Overview
-**One-liner:** Your gaming PC, as a Mac app.
-**Name:** Event Horizon (founder decision 2026-10-09). The black hole's flat surface that holds everything inside: your PC's world, flattened onto your Mac's screen. "Event Horizon" is the codename.
+**One-liner:** Your other computer, as a Mac app. (The About pane says the same.)
+**Name:** Event Horizon (founder decision 2026-10-09). The black hole's flat surface that holds everything inside: your PC's world, flattened onto your Mac's screen. Final name (was a codename until 2026-10-09).
 **What it does:** Event Horizon puts the gaming PC in the other room inside a Mac window. Home shows the PC as a live screen on a desk with a shelf of its games; one click grows the PC into the window, and ⌘W puts it back on the desk while it keeps running. The Mac stays yours: free cursor on the PC's desktop, pointer lock only in games, Mac shortcuts on the PC.
 **Product category:** Remote play / game streaming client for Mac (shelf neighbours: Moonlight, Steam Remote Play, Parsec, Jump Desktop).
 **Product type:** Native macOS app (Apple Silicon, macOS 26), sold direct. The PC runs Sunshine (free, open source).
@@ -52,7 +52,7 @@
 | Objection | Response |
 |-----------|----------|
 | Moonlight is free. | It is, and Event Horizon's source is too. You pay for the Mac experience, signed updates and the one-link PC setup. |
-| Setting up Sunshine is hard. | The PC companion (planned) installs and pairs it in one link. `<!>` Not built yet. |
+| Setting up Sunshine is hard. | The PC companion installs Sunshine and pairs with the Mac after one Allow click on the PC (proven on Windows and on a Bazzite Linux PC, 2026-10-09). `<!>` Not released yet. |
 | Will it lag on Wi-Fi? | Same engine class as Moonlight; measured 0 dropped frames over 5 h on home Wi-Fi (2026-10-08). |
 
 **Anti-persona:** People without a gaming PC (cloud gaming fits them); competitive esports players who need wired, local play.
@@ -80,7 +80,7 @@
 |------|---------|
 | Home / the desk | Event Horizon's main screen; the PC as a live screen with its games |
 | Grow | Opening the PC: it fills the window |
-| PC companion | Planned one-link installer for Sunshine on the PC |
+| PC companion | The small app on the PC (Windows or Linux): installs Sunshine, pairs with one Allow click, keeps the PC awake while the Mac plays |
 
 ## Brand Voice
 **Tone:** Calm, confident, Mac-native.
@@ -106,6 +106,7 @@
 
 ## Changelog
 *Newest first. One line per revision: what changed and why.*
+- v5 (2026-10-09) — One-liner matches the app ("Your other computer, as a Mac app."); the name is final; the PC companion is built (not yet released); header version matches the changelog.
 - v4 (2026-10-09) — Price $20 one-time (was $29); friends with a Mac and a PC get free licence keys; Stripe Managed Payments as merchant of record, about $18.40 kept per sale.
 - v3 (2026-10-09) — Product name: Event Horizon.
 - v2 (2026-10-09) — Business model set to $29 one-time + 14-day trial + 1 year of updates; rename before launch; direct sales only (GPL-3 rules out the Mac App Store).
