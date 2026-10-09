@@ -1,7 +1,9 @@
+#![allow(dead_code)] // each test file uses only some of these fakes
 //! In-memory adapters for the Host's ports. Tests drive the Host only
 //! through its interface; these stand in for the PC.
 
-use event_horizon_companion::{Decision, Prompt, SunshineApi, SunshineError};
+use event_horizon_companion::{Awake, Decision, Prompt, SunshineApi, SunshineError};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -46,4 +48,52 @@ impl Prompt for FakePrompt {
             None => std::future::pending().await,
         }
     }
+}
+
+/// The PC's display: counts who is holding it awake right now, and how many
+/// holds were ever taken.
+#[derive(Clone, Default)]
+pub struct FakeAwake {
+    active: Arc<AtomicUsize>,
+    taken: Arc<AtomicUsize>,
+}
+
+impl FakeAwake {
+    pub fn held(&self) -> usize {
+        self.active.load(Ordering::SeqCst)
+    }
+    pub fn holds_taken(&self) -> usize {
+        self.taken.load(Ordering::SeqCst)
+    }
+}
+
+pub struct FakeAwakeGuard(Arc<AtomicUsize>);
+
+impl Drop for FakeAwakeGuard {
+    fn drop(&mut self) {
+        self.0.fetch_sub(1, Ordering::SeqCst);
+    }
+}
+
+impl Awake for FakeAwake {
+    type Guard = FakeAwakeGuard;
+    fn hold(&self) -> FakeAwakeGuard {
+        self.active.fetch_add(1, Ordering::SeqCst);
+        self.taken.fetch_add(1, Ordering::SeqCst);
+        FakeAwakeGuard(self.active.clone())
+    }
+}
+
+/// A Host on fakes that never need a person: Allow at once, Sunshine up.
+pub fn host_on_fakes() -> (
+    event_horizon_companion::Host<FakeSunshine, FakePrompt, FakeAwake>,
+    FakeAwake,
+) {
+    let awake = FakeAwake::default();
+    let host = event_horizon_companion::Host::new(
+        FakeSunshine::default(),
+        FakePrompt::answers(Decision::Allow),
+        awake.clone(),
+    );
+    (host, awake)
 }

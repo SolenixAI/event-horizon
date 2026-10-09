@@ -26,3 +26,10 @@ pub trait SunshineApi: Send + Sync {
     /// Completes a pairing a Mac started with Sunshine, using the Mac's PIN.
     fn submit_pin(&self, pin: &str) -> impl Future<Output = Result<(), SunshineError>> + Send;
 }
+
+/// Keeps the PC's display on and its screen unlocked. Dropping the guard
+/// gives the PC back its own idle and lock timers.
+pub trait Awake: Send + Sync {
+    type Guard: Send + 'static;
+    fn hold(&self) -> Self::Guard;
+}
