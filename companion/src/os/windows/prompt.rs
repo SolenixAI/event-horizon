@@ -2,7 +2,8 @@
 
 use crate::ports::{Decision, Prompt};
 use windows_sys::Win32::UI::WindowsAndMessaging::{
-    IDYES, MB_ICONQUESTION, MB_SETFOREGROUND, MB_TOPMOST, MB_YESNO, MessageBoxW,
+    IDYES, MB_ICONINFORMATION, MB_ICONQUESTION, MB_OK, MB_SETFOREGROUND, MB_TOPMOST, MB_YESNO,
+    MessageBoxW,
 };
 
 #[derive(Clone, Copy, Default)]
@@ -39,5 +40,19 @@ impl Prompt for Dialog {
         })
         .await
         .unwrap_or(Decision::Deny)
+    }
+}
+
+/// A plain message with an OK button, in front of everything.
+pub fn notice(text: &str) {
+    let (text, title) = (wide(text), wide("Event Horizon"));
+    // SAFETY: both strings are NUL-terminated and outlive the call.
+    unsafe {
+        MessageBoxW(
+            std::ptr::null_mut(),
+            text.as_ptr(),
+            title.as_ptr(),
+            MB_OK | MB_ICONINFORMATION | MB_TOPMOST | MB_SETFOREGROUND,
+        );
     }
 }

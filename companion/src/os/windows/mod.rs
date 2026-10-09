@@ -1,6 +1,8 @@
 //! Windows adapters.
 
 mod awake;
+mod install;
 mod prompt;
 pub use awake::{PowerRequest, REASON};
-pub use prompt::Dialog;
+pub use install::install;
+pub use prompt::{Dialog, notice};

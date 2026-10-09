@@ -1,5 +1,8 @@
 //! The Event Horizon companion: run at login on the gaming PC.
 
+// No console window on Windows: it runs in the background at login.
+#![cfg_attr(windows, windows_subsystem = "windows")]
+
 #[cfg(any(target_os = "linux", windows))]
 #[tokio::main]
 async fn main() {
@@ -20,6 +23,25 @@ async fn main() {
     }
 
     let dir = config_dir();
+
+    // `install`: turn this PC into an Event Horizon host.
+    #[cfg(windows)]
+    if args.get(1).map(String::as_str) == Some("install") {
+        let result = event_horizon_companion::os::windows::install(&dir).await;
+        // One message at the end (not on CI, where nobody can click it).
+        if std::env::var_os("CI").is_none() {
+            let text = match &result {
+                Ok(()) => "This PC is ready. Open Event Horizon on your Mac.".to_string(),
+                Err(e) => format!("Setup stopped: {e}"),
+            };
+            event_horizon_companion::os::windows::notice(&text);
+        }
+        if let Err(e) = result {
+            eprintln!("install: {e}");
+            std::process::exit(1);
+        }
+        return;
+    }
     let env: HashMap<String, String> = std::fs::read_to_string(dir.join("companion.env"))
         .unwrap_or_default()
         .lines()

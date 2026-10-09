@@ -34,3 +34,41 @@ jobs:
         run: cargo clippy --all-targets -- -D warnings
       - name: Test
         run: cargo test
+  companion-install-windows:
+    # End to end on a fresh Windows PC: one command installs Sunshine and the
+    # companion, then the companion answers and its Sunshine login works.
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: companion
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build
+        run: cargo build --release
+      - name: Install (as a person would, by running the companion's installer)
+        run: |
+          $p = Start-Process ./target/release/event-horizon-companion.exe -ArgumentList install -Wait -PassThru -RedirectStandardError install-err.txt
+          Get-Content install-err.txt -ErrorAction SilentlyContinue
+          if ($p.ExitCode -ne 0) { throw "install ended with $($p.ExitCode)" }
+      - name: Sunshine is installed and running
+        run: |
+          Get-Service SunshineService | Format-List Name, Status, StartType
+          if ((Get-Service SunshineService).Status -ne 'Running') { throw 'SunshineService is not running' }
+      - name: The companion answers on the network
+        run: |
+          Start-Sleep -Seconds 5
+          $hello = Invoke-RestMethod http://127.0.0.1:47970/hello
+          if ($hello.app -ne 'event-horizon-companion') { throw "unexpected hello: $hello" }
+      - name: The companion's Sunshine login works
+        run: |
+          $env = Get-Content "$env:APPDATA\event-horizon\companion.env" | ConvertFrom-StringData
+          $user = $env.SUNSHINE_USER.Trim('"'); $pass = $env.SUNSHINE_PASSWORD.Trim('"')
+          $pair = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes("${user}:${pass}"))
+          $apps = Invoke-RestMethod -SkipCertificateCheck -Headers @{ Authorization = "Basic $pair" } https://127.0.0.1:47990/api/apps
+          $apps.apps | Select-Object name
+      - name: It starts at login
+        run: |
+          $run = Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
+          if (-not $run.'Event Horizon') { throw 'no Run entry' }
