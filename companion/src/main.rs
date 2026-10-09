@@ -25,6 +25,17 @@ async fn main() {
     let dir = config_dir();
 
     // `install`: turn this PC into an Event Horizon host.
+    #[cfg(target_os = "linux")]
+    if args.get(1).map(String::as_str) == Some("install") {
+        match event_horizon_companion::os::linux::install(&dir) {
+            Ok(()) => println!("This PC is ready. Open Event Horizon on your Mac."),
+            Err(e) => {
+                eprintln!("Setup stopped: {e}");
+                std::process::exit(1);
+            }
+        }
+        return;
+    }
     #[cfg(windows)]
     if args.get(1).map(String::as_str) == Some("install") {
         let elevated_child = args.iter().any(|a| a == "--elevated");
