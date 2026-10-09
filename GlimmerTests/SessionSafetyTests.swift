@@ -210,24 +210,38 @@ struct SessionSafetyTests {
     }
 
     /// A PC that closes without replying fails the request instead of taking the app down.
+    /// High priority, like `cancelClosesBlockedControlRequest`: on a busy test pool a
+    /// default-priority request may not start before the accept's setup limit.
     @Test func peerClosingWithoutAReplyFailsTheRequest() async throws {
-        let port = try #require(LoopbackPort(listening: true))
-        let request = Task { try await Self.plainGet(host: "127.0.0.1", port: Int(port.port)) }
-        close(try await acceptControlConnection(on: port.fd, requestFinished: ManagedAtomicFlag()))
-        await #expect(throws: StreamError.self) { try await request.value }
+        try await Task(priority: .high) {
+            let port = try #require(LoopbackPort(listening: true))
+            let finished = ManagedAtomicFlag()
+            let request = Task(priority: .high) {
+                defer { finished.set() }
+                return try await Self.plainGet(host: "127.0.0.1", port: Int(port.port))
+            }
+            close(try await acceptControlConnection(on: port.fd, requestFinished: finished))
+            await #expect(throws: StreamError.self) { try await request.value }
+        }.value
     }
 
     /// A hostname must reach an IPv4-only listener even when it also resolves to IPv6.
     @Test func localhostReachesAnIPv4OnlyListener() async throws {
-        let port = try #require(LoopbackPort(listening: true))
-        let request = Task { try await Self.plainGet(host: "localhost", port: Int(port.port)) }
-        let peer = try await acceptControlConnection(on: port.fd, requestFinished: ManagedAtomicFlag())
-        let reply = Array("HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nok".utf8)
-        _ = reply.withUnsafeBytes { write(peer, $0.baseAddress, $0.count) }
-        close(peer)
-        let response = try await request.value
-        #expect(response.status == 200)
-        #expect(response.body == Data("ok".utf8))
+        try await Task(priority: .high) {
+            let port = try #require(LoopbackPort(listening: true))
+            let finished = ManagedAtomicFlag()
+            let request = Task(priority: .high) {
+                defer { finished.set() }
+                return try await Self.plainGet(host: "localhost", port: Int(port.port))
+            }
+            let peer = try await acceptControlConnection(on: port.fd, requestFinished: finished)
+            let reply = Array("HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nok".utf8)
+            _ = reply.withUnsafeBytes { write(peer, $0.baseAddress, $0.count) }
+            close(peer)
+            let response = try await request.value
+            #expect(response.status == 200)
+            #expect(response.body == Data("ok".utf8))
+        }.value
     }
 
     private static func plainGet(host: String, port: Int) async throws -> ControlTransport.Response {
