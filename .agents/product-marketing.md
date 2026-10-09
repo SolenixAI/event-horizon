@@ -100,7 +100,7 @@
 | One window | Home → PC → Home with ⌘W |
 
 ## Goals
-**Business goal:** First paying customers outside the founder; business model to be decided (SOL-1578).
+**Business goal:** First paying customers outside the founder.
 **Conversion action:** Download and pair a PC.
 **Current metrics:** None (pre-launch).
 
