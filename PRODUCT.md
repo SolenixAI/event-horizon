@@ -62,7 +62,8 @@ Manager and Mac shortcuts stay the user's, while the PC feels local.
   is unsandboxed, so the Mac App Store is not an option as-is.
 - Unsigned local builds cannot use the Wi-Fi (AWDL) helper; signed builds need
   the Apple Developer Program (undecided).
-- Undecided: business model; public use of the name.
+- Business model (2026-10-09): $29 one-time, 14-day trial, a year of updates; sold direct, not the Mac App Store (GPL-3).
+- The public name changes before launch; "Citadel" is the codename.
 
 ## Brand Commitments
 
