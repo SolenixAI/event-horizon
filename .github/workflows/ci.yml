@@ -65,6 +65,17 @@ jobs:
           if ($hello.app -ne 'event-horizon-companion') { throw "unexpected hello: $hello" }
       - name: The companion's Sunshine login works
         run: |
+          # Sunshine probes encoders at start; give its web API up to 90 s.
+          $up = $false
+          foreach ($i in 1..45) {
+            if ((Test-NetConnection 127.0.0.1 -Port 47990 -WarningAction SilentlyContinue).TcpTestSucceeded) { $up = $true; break }
+            Start-Sleep -Seconds 2
+          }
+          if (-not $up) {
+            Get-Process sunshine* -ErrorAction SilentlyContinue | Format-Table Name, Id, SessionId
+            Get-Content "$env:ProgramFiles\Sunshine\config\sunshine.log" -Tail 40 -ErrorAction SilentlyContinue
+            throw 'Sunshine web API never listened on 47990'
+          }
           $env = Get-Content "$env:APPDATA\event-horizon\companion.env" | ConvertFrom-StringData
           $user = $env.SUNSHINE_USER.Trim('"'); $pass = $env.SUNSHINE_PASSWORD.Trim('"')
           $pair = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes("${user}:${pass}"))
