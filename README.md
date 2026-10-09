@@ -1,150 +1,70 @@
 <p align="center">
-  <img src="docs/assets/icon-512.png" width="140" alt="Glimmer">
+  <img src="docs/assets/icon-512.png" width="140" alt="Event Horizon">
 </p>
 
-# Glimmer
+# Event Horizon
 
-A Mac-native client for [Sunshine](https://github.com/LizardByte/Sunshine),
-written in Swift for Apple Silicon so a gaming PC in the other room feels
-plugged into your Mac.
+Your other computer, as a Mac app.
 
-![The Glimmer launcher](docs/assets/launcher.png)
-
-Socket, decoder, display, audio and input all run in one Swift process, with no
-external player and no C engine.
+Event Horizon puts the gaming PC in the other room inside a Mac window. Home
+shows your PC and its games. One click grows the PC into the window, and ⌘W
+puts it back on Home while it keeps running. Your cursor moves freely on the
+PC's desktop and locks only when you click into a game. On the desktop, ⌘C and
+⌘V work the way they work on your Mac.
 
 ## What you get
 
-- **Video.** Hardware-decoded H.264, HEVC and AV1, 8- and 10-bit, with a real
-  HDR10 pipeline. Up to 4K 240 Hz.
-- **Pacing.** Locks the display to the stream cadence, runs passthrough on a
-  clean link, buffers only for measured jitter. Tuned against per-frame
-  telemetry.
-- **Audio.** Stereo, 5.1 and 7.1, decoded by macOS and played through
-  AVAudioEngine with a small adaptive cushion, so device switches and rough
-  Wi-Fi don't crackle.
-- **Controllers.** Xbox, DualSense and every other pad macOS supports, plus
-  other USB and Bluetooth HID gamepads through SDL's controller database (those
-  need Input Monitoring). Rumble, trigger rumble, gyro, touchpad, battery and
-  light bar, whatever the pad has. Hold-to-stop chord. An optional raw-input
-  mode (off by default, needs Input Monitoring) adds the DualSense buttons macOS
-  hides and the game's adaptive-trigger effects.
-- **Mouse and keyboard.** Raw 1:1 aim at your Mac's tracking speed with the
-  acceleration curve removed, an optional velocity-gated boost on fast flicks,
-  optional ⌘-shortcut forwarding.
-- **Wi-Fi.** A helper parks AWDL (AirDrop's radio time-share), the usual cause
-  of multi-second Wi-Fi freezes, while you stream. Glimmer offers it the first
-  time it opens.
-- **PCs.** mDNS discovery, PIN pairing, PCs by address or name (Tailscale
-  works), Wake on LAN and a one-time import of moonlight-qt pairings.
-- **Mac things.** Menu bar item, mini player, display-matched quality presets,
-  stats overlay, hotkeys, notarized, self-updating. Shortcuts, Siri and
-  Spotlight actions stream from a PC, wake it, or quit the app it's running.
+- **The PC as a place in one window.** Home → PC → Home. Swipe or ⌘Tab away at
+  any time. No popups take over your Mac.
+- **A cursor that behaves.** Free on the desktop, locked in a game only while
+  the game is in front.
+- **Mac shortcuts on the PC's desktop.** Copy, cut, paste, undo, select all,
+  save, find and new tab become their Ctrl versions on the PC. ⌘Tab, ⌘Space and
+  ⌘Q stay with your Mac.
+- **Your games, on Home.** Each with its own cover, read from the PC.
+- **PC setup with one Allow click.** The PC companion (Windows and Linux)
+  installs [Sunshine](https://github.com/LizardByte/Sunshine), pairs with your
+  Mac when you click Allow on the PC, and keeps the PC awake while you play.
+- **A fast engine.** Hardware-decoded H.264, HEVC and AV1 with HDR10, up to
+  4K 240 Hz. Stereo, 5.1 and 7.1 audio. Xbox, DualSense and other controllers,
+  with rumble and gyro. Wake on LAN, and PCs by address or name (Tailscale
+  works).
 
-No accounts, no analytics. Glimmer talks to your own PC and, if you leave
-updates on, to the update feed; nothing else. Diagnostics are off by default,
-write local files under `~/Library/Logs/Glimmer`, and show your PC's address and
-names as short codes.
+No accounts and no analytics. Event Horizon talks to your own PC and your local
+network. Diagnostics are off by default and stay on your Mac.
 
 ## Install
 
-macOS 26+, Apple Silicon.
+**Mac:** macOS 26 or later on Apple Silicon. There is no download yet: build it
+from source (below). Signed downloads come with the first release.
 
-```bash
-brew tap se7enbrc/glimmer
-brew trust --tap se7enbrc/glimmer   # Homebrew requires this for third-party taps
-brew install --cask glimmer
-```
-
-Or the notarized `.dmg` from
-[Releases](https://github.com/Se7enbrc/glimmer/releases). Either way it updates
-itself. The cask also links the `glimmer` command. An existing Homebrew install
-gets it with `brew upgrade --greedy glimmer` (or
-`brew reinstall --cask glimmer`), because the app updates itself outside
-Homebrew.
-
-Signed and notarized, not sandboxed, not on the App Store: the Wi-Fi helper
-needs that freedom ([docs/SECURITY.md](docs/SECURITY.md)).
-
-Your PC needs Sunshine and a display that can present the exact mode you ask
-for: a virtual display driver on Windows, a current Sunshine on Linux.
-[docs/HOST_SETUP.md](docs/HOST_SETUP.md) walks through it.
-
-The Wi-Fi helper lives in Settings › Quality › Wi-Fi; macOS asks for one
-approval under Login Items & Extensions. If it reports `rejected by BTM`, run
-`sudo sfltool resetbtm` once.
-
-## Command line
-
-`glimmer` is the app itself, run from a terminal: it pairs, lists, wakes and
-quits headless, and hands a stream to the app so it gets its window. Stream
-settings come from Glimmer's Settings. `glimmer help` is the full reference.
-Installed from the `.dmg`, choose Glimmer › Install Command Line Tool… once and
-macOS asks for an administrator password to link `glimmer` into
-`/usr/local/bin`.
-
-```bash
-glimmer pair 192.0.2.10          # prints the PIN to enter in Sunshine
-glimmer list                     # paired PCs and whether each is ready
-glimmer stream "Living Room" Steam --wait
-```
-
-Coming from moonlight-qt:
-
-| moonlight-qt                         | Glimmer                               | Difference                                     |
-| ------------------------------------ | ------------------------------------- | ---------------------------------------------- |
-| `moonlight pair <host> [--pin NNNN]` | `glimmer pair <address> [--pin NNNN]` | None.                                          |
-| `moonlight list <host> [--csv]`      | `glimmer list <pc> [--csv]`           | `glimmer list [--csv]` lists the paired PCs.   |
-| `moonlight stream <host> <app> ...`  | `glimmer stream <pc> [<app>]`         | The app is optional; see below.                |
-| `moonlight quit <host>`              | `glimmer quit <pc>`                   | None.                                          |
-|                                      | `glimmer wake <pc> [--wait]`          | Wake on LAN, optionally waiting for an answer. |
-
-Without an app, `glimmer stream` resumes the running app, else follows Settings
-› General › Default action. The `--resolution`, `--bitrate` and other
-moonlight-qt stream options are refused, since Settings holds them; Glimmer adds
-`--force`, `--wait`, `--exit-after-first-frame` and `--json`. The CSV from
-`glimmer list <pc> --csv` has Name, ID, HDR Support and Hidden.
-
-`<pc>` is a paired PC's name or address, ignoring case. Exit status: 0 success,
-1 failure, 2 usage error, 3 PC unreachable, 4 PC not paired or no paired PC by
-that name.
+**PC:** the companion lives in [`companion/`](companion/); its first release is
+coming. Until then, set up Sunshine by hand with
+[docs/HOST_SETUP.md](docs/HOST_SETUP.md).
 
 ## Build
 
-Xcode 27 or later (Swift 6, the macOS 27 SDK). Its one third-party library is
-[Sparkle](https://sparkle-project.org), for updates.
+Xcode 27 or later.
 
 ```bash
-git clone https://github.com/Se7enbrc/glimmer.git
-cd glimmer
+git clone https://github.com/SolenixAI/event-horizon.git
+cd event-horizon
 make
 ```
 
-`make` builds and installs to /Applications the same way a release ships.
-`make app` compile-checks, `make test` runs the unit tests, `make uninstall`
-removes it. The engine is under `Glimmer/Stream/`, no submodules.
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md),
-[docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).
+`make` builds Event Horizon and installs it to /Applications. `make app`
+compile-checks, `make test` runs the unit tests, and `make uninstall` removes
+it. The PC companion builds with `cargo build --release` in `companion/`.
+Start with [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and
+[docs/CONTRIBUTING.md](docs/CONTRIBUTING.md); agents start with
+[AGENTS.md](AGENTS.md).
 
-## Why not Moonlight
+## Credits and license
 
-Moonlight is excellent and Glimmer would not exist without it. But moonlight-qt
-is a Qt port of cross-platform C++, one layer from the hardware. Glimmer talks
-to VideoToolbox, AVAudioEngine and GameController directly, which is where the
-pacing, HDR and controller work comes from, and it behaves like a Mac app
-because it is one.
-
-## Support
-
-Free software, spare time.
-[Sponsor it on GitHub](https://github.com/sponsors/Se7enbrc) if it makes your
-setup better.
-
-## License
-
-GPLv3. Copyright © 2026 ugfugl.io. See [LICENSE](LICENSE).
-
-The transport is ported from
-[moonlight-common-c](https://github.com/moonlight-stream/moonlight-common-c) and
-[moonlight-qt](https://github.com/moonlight-stream/moonlight-qt), both GPLv3, so
-Glimmer is too. Full acknowledgment in [CREDITS.md](CREDITS.md).
+Event Horizon is a fork of [Glimmer](https://github.com/Se7enbrc/glimmer)
+(Copyright © 2026 ugfugl.io), whose native Swift engine makes it possible. The
+transport is ported from
+[moonlight-common-c](https://github.com/moonlight-stream/moonlight-common-c)
+and [moonlight-qt](https://github.com/moonlight-stream/moonlight-qt). All are
+GPLv3, so Event Horizon is too. See [LICENSE](LICENSE) and
+[CREDITS.md](CREDITS.md).

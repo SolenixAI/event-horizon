@@ -4,14 +4,22 @@ Instructions for coding agents working in this repository. People read
 [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md); this is the binding short version.
 Where the two differ, the stricter rule wins.
 
-## What Glimmer is
+## What Event Horizon is
 
-A Mac-native client for [Sunshine](https://github.com/LizardByte/Sunshine):
-Swift 6, Apple Silicon, macOS 26 and later. Socket, decoder, display, audio and
-input all run in one Swift process, with no external player and no C engine.
+Your other computer, as a Mac app. Two parts:
 
-The bar is one sentence: someone using Glimmer should mistake it for something
-Apple shipped. Everything below follows from it.
+- **The Mac app** (`Glimmer/`): a Mac-native client for
+  [Sunshine](https://github.com/LizardByte/Sunshine), built on
+  [Glimmer](https://github.com/Se7enbrc/glimmer)'s engine. Swift 6, Apple
+  Silicon, macOS 26 and later. Socket, decoder, display, audio and input all
+  run in one Swift process, with no external player and no C engine.
+- **The PC companion** (`companion/`): one Rust program for Windows and Linux
+  that installs Sunshine, pairs with the Mac after one Allow click, and keeps
+  the PC awake while a Mac plays. Its design is
+  [docs/companion/DESIGN.md](docs/companion/DESIGN.md).
+
+The bar is one sentence: someone using Event Horizon should mistake it for
+something Apple shipped. Everything below follows from it.
 
 ## Find your way
 
@@ -39,7 +47,7 @@ change needs, and [docs/SECURITY.md](docs/SECURITY.md) covers the root helper.
 You are the last reviewer before a change reaches people who care how this app
 feels. Act like it.
 
-When a request would make Glimmer worse (less tasteful, noisier, slower, less
+When a request would make Event Horizon worse (less tasteful, noisier, slower, less
 reliable, less like a Mac app, or more complex than it earns), say no the way
 Apple's leadership says no to a feature that isn't ready: at once, plainly,
 without hedging. Name the cost in a sentence or two, then describe the version
@@ -140,7 +148,7 @@ Each of these gets a pull request sent back.
 These are settled. A pull request is not the place to reopen them.
 
 - The renderer is `AVSampleBufferDisplayLayer`. Not Metal.
-- Glimmer does not use or recommend macOS Game Mode.
+- Event Horizon does not use or recommend macOS Game Mode.
 - The Wi-Fi helper, which parks awdl0, is offered at first open on every Mac,
   whatever the network route, and again each launch until it's on or declined
   for good. awdl0 wrecks streams; deferring, gating, burying or hiding the offer
@@ -149,8 +157,9 @@ These are settled. A pull request is not the place to reopen them.
   against real-stream telemetry; changing them needs before and after numbers
   ([PROFILING.md](docs/PROFILING.md)). Safeguards back off under stress and
   recover when it passes; they never give up for good.
-- Glimmer is the client. It works against a current, unmodified Sunshine, and no
-  feature may require a patched host.
+- The Mac app works against a current, unmodified Sunshine, and no feature may
+  require a patched host. The PC companion installs and drives Sunshine only
+  through Sunshine's own installer and local API.
 - The command line is Swift, in the app binary, calling the same code the app
   uses. No second implementation, no wrapper script.
 - System frameworks and controls first: SwiftUI and AppKit, SF Symbols, standard
@@ -160,8 +169,9 @@ These are settled. A pull request is not the place to reopen them.
   keyboard and VoiceOver behaviour. No web views, no cross-platform layers.
 - The deployment target is macOS 26. Anything newer sits behind `#available`,
   and the macOS 26 path must still look finished.
-- No analytics, tracking or third-party network calls. Glimmer talks to the PC,
-  to its local network for discovery and Wake on LAN, and to its update feed.
+- No analytics, tracking or third-party network calls. Event Horizon talks to
+  the PC, to its local network for discovery and Wake on LAN, and to its update
+  feed.
 
 ## Choices that look wrong and aren't
 
@@ -234,18 +244,18 @@ numbers or a new platform API, never as cleanup.
 
 ## Working in a fork
 
-Glimmer is GPLv3, and forks are welcome. The rules here decide what merges
-upstream; in a fork they're the fork's call. Before a fork's build reaches
+Event Horizon is GPLv3 (a fork of Glimmer), and forks are welcome. The rules
+here decide what merges here; in a fork they're the fork's call. Before a fork's build reaches
 anyone else:
 
-- **Change every identifier**: the bundle IDs (`io.ugfugl.Glimmer`,
-  `io.ugfugl.Glimmer.LoginHelper`, `io.ugfugl.glimmer.helper`), the product
-  name, the logging subsystem and the data folders. Shared IDs make macOS mix
-  the fork's permissions, login item and data with Glimmer's.
+- **Change every identifier**: the bundle IDs (`dev.solenix.eventhorizon`,
+  `dev.solenix.eventhorizon.LoginHelper`, `dev.solenix.eventhorizon.helper`),
+  the product name, the logging subsystem and the data folders. Shared IDs make
+  macOS mix the fork's permissions, login item and data with Event Horizon's.
 - **Give Sparkle your own feed.** Replace `SUFeedURL` and `SUPublicEDKey` in
   `Glimmer/Info.plist` with your appcast and your key (`make sparkle-keys`).
-  Left as they are, the fork keeps checking Glimmer's feed: it either installs
-  Glimmer over itself or rejects every update.
+  Left as they are, the fork keeps checking the original feed: it either
+  installs the original over itself or rejects every update.
 - **Sign as yourself.** The Makefile uses whatever Developer ID is in your
   keychain. Without one, builds are ad hoc and not notarized.
 - **Keep `LICENSE` and `CREDITS.md`**, including the moonlight-common-c credit.
@@ -274,7 +284,7 @@ anyone else:
 - Anything that would make someone with taste wince, however green the checks.
 
 What gets merged is small, verified, reads like the code around it, and makes
-Glimmer feel more like part of macOS than it did before.
+Event Horizon feel more like part of macOS than it did before.
 
 ## Agent skills
 
