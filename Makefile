@@ -50,6 +50,11 @@ INSTRUMENTS_DIR := $(HOME)/Library/Developer/Xcode/Instruments
 # fall back to adhoc (local dev keeps working). Override on the CLI if needed.
 DEVELOPER_ID ?= $(shell security find-identity -v -p codesigning 2>/dev/null | \
                  sed -n 's/.*"\(Developer ID Application: .*\)"/\1/p' | head -1)
+# Without a Developer ID, local builds sign with the Mac's Apple Development
+# certificate when there is one: a stable identity, so macOS keeps Local Network
+# and the other permissions across rebuilds (adhoc resets them every build).
+LOCAL_ID ?= $(shell security find-identity -v -p codesigning 2>/dev/null | \
+              sed -n 's/.*"\(Apple Development: .*\)"/\1/p' | head -1)
 # notarytool keychain profile name (created by `make setup-notary`).
 NOTARY_PROFILE  ?= notary
 # Signing secrets: one KEY=value file, mode 0600, outside the repo, read and
@@ -205,8 +210,13 @@ embed-helper: app $(HELPER_BIN)
 # has no Team ID for validation to match. See SECURITY.md.
 sign: app embed-helper ensure-signing
 ifeq ($(strip $(DEVELOPER_ID)),)
+ifneq ($(strip $(LOCAL_ID)),)
+	@echo "▶ Signing bundle inside-out with the local identity: $(LOCAL_ID)"
+	scripts/sign-bundle.sh "$(GLIMMER_APP_SRC)" "$(LOCAL_ID)" "" Glimmer/Glimmer-Debug.entitlements
+else
 	@echo "▶ Adhoc-signing bundle inside-out (no Developer ID cert found)..."
 	scripts/sign-bundle.sh "$(GLIMMER_APP_SRC)" "-" "" Glimmer/Glimmer-Debug.entitlements
+endif
 else
 	@echo "▶ Signing bundle inside-out with: $(DEVELOPER_ID)"
 	scripts/sign-bundle.sh "$(GLIMMER_APP_SRC)" "$(DEVELOPER_ID)" "$(SIGN_KEYCHAIN)" $(if $(filter Release,$(CONFIG)),Glimmer/Glimmer.entitlements,Glimmer/Glimmer-Debug.entitlements)

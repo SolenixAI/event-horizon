@@ -29,7 +29,7 @@
 	<key>LSMinimumSystemVersion</key>
 	<string>26.0</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2026 ugfugl.io. GNU GPL v3.</string>
+	<string>Made by Solenix. Built on Glimmer, © 2026 ugfugl.io. GNU GPL v3.</string>
 	<key>CFBundleDisplayName</key>
 	<string>Citadel</string>
 	<key>NSPrincipalClass</key>

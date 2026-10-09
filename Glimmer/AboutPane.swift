@@ -13,12 +13,13 @@ import SwiftUI
 /// force-unwrapped URLs) so the pane renders link rows with a lint-clean
 /// `if let`; a malformed constant degrades to "row missing", never a crash.
 private enum AboutLink {
+    static let solenix = "https://solenix.dev"
+    static let glimmer = "https://github.com/Se7enbrc/glimmer"
     static let credits = "https://github.com/Se7enbrc/glimmer/blob/main/CREDITS.md"
     static let license = "https://www.gnu.org/licenses/gpl-3.0.html"
     static let sunshine = "https://github.com/LizardByte/Sunshine"
     static let moonlight = "https://github.com/moonlight-stream"
-    /// The support link - the donate row reads this one constant and nothing
-    /// else. Mirrors the repo's FUNDING.yml (GitHub Sponsors).
+    /// Glimmer's author's sponsor page: Citadel's engine, credited with thanks.
     static let donate = "https://github.com/sponsors/Se7enbrc"
 }
 
@@ -50,7 +51,7 @@ struct AboutPane: View {
                         Text("Citadel")
                             .font(.system(size: 28, weight: .bold))
                             .tracking(-0.4)
-                        Text("Stream your gaming PC to this Mac.")
+                        Text("Your PC, as a Mac app.")
                             .font(.title3)
                             .foregroundStyle(.secondary)
                         Text("Version \(versionString)")
@@ -76,6 +77,10 @@ struct AboutPane: View {
                             .help(model.showDiagnostics
                                   ? "Option-click to hide the developer tools"
                                   : "")
+                        if let url = URL(string: AboutLink.solenix) {
+                            Link("Made by Solenix", destination: url)
+                                .font(.footnote.weight(.medium))
+                        }
                     }
                     Spacer()
                 }
@@ -84,12 +89,6 @@ struct AboutPane: View {
             // Order: Support up top (the one ask), License in the middle (the
             // legal fact), and the third-party credits at the bottom as a
             // closing note of appreciation.
-            Section("Support") {
-                if let url = URL(string: AboutLink.donate) {
-                    Link("Support Citadel's development", destination: url)
-                        .font(.footnote)
-                }
-            }
             Section("License") {
                 Text("Citadel is free software under the GNU General Public License v3. "
                     + "You may run, study, share, and modify it. There is no warranty.")
@@ -101,6 +100,17 @@ struct AboutPane: View {
                 }
             }
             Section("Acknowledgements") {
+                Text("Citadel's stream engine is Glimmer by ugfugl.io, a native Swift client for Sunshine.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                if let url = URL(string: AboutLink.glimmer) {
+                    Link("github.com/Se7enbrc/glimmer", destination: url)
+                        .font(.footnote)
+                }
+                if let url = URL(string: AboutLink.donate) {
+                    Link("Sponsor Glimmer's author", destination: url)
+                        .font(.footnote)
+                }
                 Text("Built for Sunshine, the open-source game-streaming app that runs on "
                     + "your PC. Citadel talks to it over the same RTSP-based protocol as Moonlight, "
                     + "the client that inspired it, and the transport is ported from "
