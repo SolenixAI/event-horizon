@@ -1,11 +1,11 @@
 # Product Marketing Context
 
-**Document version:** v2
+**Document version:** v3
 **Last updated:** 2026-10-09
 
 ## Product Overview
 **One-liner:** Your gaming PC, as a Mac app.
-**Name:** "Citadel" is the codename; the product is renamed before launch (founder decision 2026-10-09: Citadel Securities and Games Workshop marks, poor findability).
+**Name:** Event Horizon (founder decision 2026-10-09). The black hole's flat surface that holds everything inside: your PC's world, flattened onto your Mac's screen. "Citadel" is the codename.
 **What it does:** Citadel puts the gaming PC in the other room inside a Mac window. Home shows the PC as a live screen on a desk with a shelf of its games; one click grows the PC into the window, and ⌘W puts it back on the desk while it keeps running. The Mac stays yours: free cursor on the PC's desktop, pointer lock only in games, Mac shortcuts on the PC.
 **Product category:** Remote play / game streaming client for Mac (shelf neighbours: Moonlight, Steam Remote Play, Parsec, Jump Desktop).
 **Product type:** Native macOS app (Apple Silicon, macOS 26), sold direct. The PC runs Sunshine (free, open source).
@@ -106,5 +106,6 @@
 
 ## Changelog
 *Newest first. One line per revision: what changed and why.*
+- v3 (2026-10-09) — Product name: Event Horizon.
 - v2 (2026-10-09) — Business model set to $29 one-time + 14-day trial + 1 year of updates; rename before launch; direct sales only (GPL-3 rules out the Mac App Store).
 - v1 (2026-10-09) — Initial context, auto-drafted from PRODUCT.md, the Phase 1–2 builds and the founder's own words.
