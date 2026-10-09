@@ -16,8 +16,8 @@ PC's desktop and locks only when you click into a game. On the desktop, ⌘C and
 
 - **The PC as a place in one window.** Home → PC → Home. Swipe or ⌘Tab away at
   any time. No popups take over your Mac.
-- **A cursor that behaves.** Free on the desktop, locked in a game only while
-  the game is in front.
+- **Your pointer stays yours.** It is locked only while a game is in front,
+  and freed the moment you swipe or ⌘Tab away.
 - **Mac shortcuts on the PC's desktop.** Copy, cut, paste, undo, select all,
   save, find and new tab become their Ctrl versions on the PC. ⌘Tab, ⌘Space and
   ⌘Q stay with your Mac.
@@ -25,10 +25,11 @@ PC's desktop and locks only when you click into a game. On the desktop, ⌘C and
 - **PC setup with one Allow click.** The PC companion (Windows and Linux)
   installs [Sunshine](https://github.com/LizardByte/Sunshine), pairs with your
   Mac when you click Allow on the PC, and keeps the PC awake while you play.
-- **A fast engine.** Hardware-decoded H.264, HEVC and AV1 with HDR10, up to
-  4K 240 Hz. Stereo, 5.1 and 7.1 audio. Xbox, DualSense and other controllers,
-  with rumble and gyro. Wake on LAN, and PCs by address or name (Tailscale
-  works).
+- **A fast engine.** Hardware-decoded H.264, HEVC and AV1 with HDR10. Stereo,
+  5.1 and 7.1 audio. Xbox, DualSense and other controllers, with rumble and
+  gyro. Wake on LAN, and PCs by address or name (Tailscale works). Tested: HEVC
+  at 2560×1600 and 60 fps over home Wi-Fi for 5 hours with 0 dropped frames
+  (2026-10-08).
 
 No accounts and no analytics. Event Horizon talks to your own PC and your local
 network. Diagnostics are off by default and stay on your Mac.
