@@ -1,6 +1,7 @@
 //! Event Horizon PC companion: turns a gaming PC into an Event Horizon host.
 //! One deep core (`Host`) and small OS seams. See docs/companion/DESIGN.md.
 
+pub mod discovery;
 mod host;
 pub mod library;
 pub mod link;
