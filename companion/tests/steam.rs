@@ -17,10 +17,9 @@ fn manifest(library: &Path, appid: &str, name: &str) {
 fn library_folders(root: &Path, libraries: &[&Path]) {
     let mut vdf = String::from("\"libraryfolders\"\n{\n");
     for (i, path) in libraries.iter().enumerate() {
-        vdf += &format!(
-            "\t\"{i}\"\n\t{{\n\t\t\"path\"\t\t\"{}\"\n\t}}\n",
-            path.display()
-        );
+        // Steam escapes the backslashes of Windows paths in its VDF files.
+        let escaped = path.display().to_string().replace('\\', "\\\\");
+        vdf += &format!("\t\"{i}\"\n\t{{\n\t\t\"path\"\t\t\"{escaped}\"\n\t}}\n");
     }
     vdf += "}\n";
     fs::create_dir_all(root.join("steamapps")).unwrap();

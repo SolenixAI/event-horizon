@@ -61,10 +61,10 @@ fn inhibit_logind() -> zbus::Result<OwnedFd> {
 
 impl Drop for SessionInhibitGuard {
     fn drop(&mut self) {
-        if let Some((connection, cookie)) = self.screensaver.take() {
-            if let Ok(proxy) = screensaver(&connection) {
-                let _: zbus::Result<()> = proxy.call("UnInhibit", &(cookie,));
-            }
+        if let Some((connection, cookie)) = self.screensaver.take()
+            && let Ok(proxy) = screensaver(&connection)
+        {
+            let _: zbus::Result<()> = proxy.call("UnInhibit", &(cookie,));
         }
     }
 }
