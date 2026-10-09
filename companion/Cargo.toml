@@ -7,9 +7,11 @@ description = "Turns a gaming PC into an Event Horizon host"
 publish = false
 
 [dependencies]
+serde_json = "1.0.151"
 tokio = { version = "1", features = ["sync", "time", "macros", "rt"] }
 
 [dev-dependencies]
+tempfile = "3.27.0"
 tokio = { version = "1", features = ["sync", "time", "macros", "rt", "test-util"] }
 
 [target.'cfg(windows)'.dependencies]
