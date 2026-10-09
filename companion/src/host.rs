@@ -14,13 +14,15 @@ pub const PAIR_TIMEOUT: Duration = Duration::from_secs(120);
 /// two missed renewals in a row are tolerated.
 pub const LEASE_TTL: Duration = Duration::from_secs(90);
 
-/// A Mac asking to pair. `pin` is the PIN the Mac gave Sunshine; `code` is
-/// the short code both screens show, so the person knows it is their Mac.
+/// A Mac asking to pair. `pin` is the PIN the Mac gave Sunshine; none means
+/// the Mac is already paired with Sunshine and only needs the companion's
+/// token. `code` is what both screens show, so the person knows the Mac.
 #[derive(Clone, Debug, serde::Deserialize)]
 pub struct PairRequest {
     pub mac_id: String,
     pub mac_name: String,
-    pub pin: String,
+    #[serde(default)]
+    pub pin: Option<String>,
     pub code: String,
 }
 
@@ -123,13 +125,12 @@ impl<S: SunshineApi, P: Prompt, A: Awake> Host<S, P, A> {
         match answer {
             Err(_) => PairOutcome::Expired,
             Ok(Decision::Deny) => PairOutcome::Denied,
-            Ok(Decision::Allow) => match self
-                .sunshine
-                .submit_pin(&request.mac_name, &request.pin)
-                .await
-            {
-                Ok(()) => PairOutcome::Paired,
-                Err(_) => PairOutcome::SunshineDown,
+            Ok(Decision::Allow) => match &request.pin {
+                None => PairOutcome::Paired,
+                Some(pin) => match self.sunshine.submit_pin(&request.mac_name, pin).await {
+                    Ok(()) => PairOutcome::Paired,
+                    Err(_) => PairOutcome::SunshineDown,
+                },
             },
         }
     }

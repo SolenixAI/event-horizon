@@ -9,7 +9,7 @@ fn request(mac: &str, pin: &str) -> PairRequest {
     PairRequest {
         mac_id: mac.into(),
         mac_name: "Jager's MacBook Air".into(),
-        pin: pin.into(),
+        pin: Some(pin.into()),
         code: "KX4TQZ".into(),
     }
 }
@@ -136,5 +136,25 @@ async fn allow_with_sunshine_down_says_so_instead_of_paired() {
     assert_eq!(
         host.pair(request("mac-1", "4821")).await,
         PairOutcome::SunshineDown
+    );
+}
+
+#[tokio::test(start_paused = true)]
+async fn a_mac_already_paired_with_sunshine_only_needs_allow() {
+    let sunshine = FakeSunshine::default();
+    let host = Host::new(
+        sunshine.clone(),
+        FakePrompt::answers(Decision::Allow),
+        FakeAwake::default(),
+    );
+    let link_only = PairRequest {
+        pin: None,
+        ..request("mac-1", "")
+    };
+
+    assert_eq!(host.pair(link_only).await, PairOutcome::Paired);
+    assert!(
+        sunshine.pins.lock().unwrap().is_empty(),
+        "Sunshine is not touched"
     );
 }

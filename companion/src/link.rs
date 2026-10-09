@@ -1,4 +1,5 @@
-//! Link: the Mac's way in, over the home network. Three requests:
+//! Link: the Mac's way in, over the home network. `GET /hello` says the
+//! companion is here; then three requests:
 //!
 //! - `POST /pair` asks the person at the PC; on Allow, Sunshine takes the
 //!   Mac's PIN and the Mac gets a token it keeps.
@@ -12,7 +13,7 @@ use crate::host::{Host, PairOutcome, PairRequest};
 use crate::ports::{Awake, Prompt, SunshineApi};
 use axum::extract::State;
 use axum::http::{HeaderMap, StatusCode};
-use axum::routing::post;
+use axum::routing::{get, post};
 use axum::{Json, Router};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -33,6 +34,7 @@ where
 {
     let link = Arc::new(Link { host, macs });
     let app = Router::new()
+        .route("/hello", get(hello))
         .route("/pair", post(pair::<S, P, A>))
         .route("/lease", post(lease::<S, P, A>))
         .with_state(link);
@@ -77,6 +79,11 @@ where
     };
     link.host.lease(&mac_id).await;
     StatusCode::NO_CONTENT
+}
+
+/// Open to anyone on the network: it only says this PC runs the companion.
+async fn hello() -> Json<Value> {
+    Json(json!({ "app": "event-horizon-companion", "v": 1 }))
 }
 
 fn new_token() -> String {

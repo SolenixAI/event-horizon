@@ -20,10 +20,44 @@ extension AppModel {
 
     func beforeStreamStart() {
         WiFiRoamWatch.shared.start()
+        startCompanionLease()
     }
 
     func afterStreamEnd() {
         WiFiRoamWatch.shared.stop()
+        companionLeaseTask?.cancel()
+        companionLeaseTask = nil
+    }
+
+    /// A PC that runs the companion stays awake while this Mac streams: the
+    /// lease is renewed every 30 s and lapses 90 s after the stream ends. A
+    /// Mac paired before the companion asks for its token once (Allow on the
+    /// PC, which the person sees in the stream), never pairing Sunshine again.
+    private func startCompanionLease() {
+        companionLeaseTask?.cancel()
+        companionLeaseTask = nil
+        guard let host = lastLaunchAttempt?.host,
+              let address = host.manualAddress ?? host.localAddress else { return }
+        let companion = CompanionClient(address: address)
+        let hostID = host.id
+        companionLeaseTask = Task {
+            var token = CompanionTokens.token(forHost: hostID)
+            if token == nil, await companion.isPresent() {
+                let macID = try? await IdentityManager.shared.uniqueID()
+                let result = await companion.pair(
+                    macID: macID ?? NetworkClient.pairingDeviceName,
+                    macName: NetworkClient.pairingDeviceName, pin: nil)
+                if case .paired(let fresh) = result {
+                    CompanionTokens.save(fresh, forHost: hostID)
+                    token = fresh
+                }
+            }
+            guard let token else { return }
+            while !Task.isCancelled {
+                if await !companion.lease(token: token) { return }
+                try? await Task.sleep(for: CompanionClient.leaseInterval)
+            }
+        }
     }
 
     // MARK: Pairing
@@ -149,6 +183,19 @@ extension AppModel {
             pairingPhase = .failure(.gameStream)
             return nil
         }
+        // A PC running the companion asks its person to click Allow and hands
+        // Sunshine this PIN itself; without one, the person types it as before.
+        let companion = CompanionClient(address: address)
+        let macID = (try? await IdentityManager.shared.uniqueID()) ?? NetworkClient.pairingDeviceName
+        let companionAsk = Task { () -> CompanionClient.PairResult in
+            guard await companion.isPresent() else { return .unavailable }
+            self.pairingViaCompanion = true
+            return await companion.pair(macID: macID, macName: NetworkClient.pairingDeviceName, pin: pin)
+        }
+        defer {
+            companionAsk.cancel()
+            pairingViaCompanion = false
+        }
         do {
             pairingPhase = .awaitingPin
             // Always the full handshake: this /serverinfo came over plain HTTP,
@@ -161,6 +208,9 @@ extension AppModel {
             try checkPairing(attempt)
             let apps = await pairingApps(server: verified)
             try checkPairing(attempt)
+            if case .paired(let token) = await companionAsk.value {
+                CompanionTokens.save(token, forHost: verified.uniqueId)
+            }
             try saveHost(
                 uuid: verified.uniqueId,
                 hostname: verified.serverName.isEmpty ? address : verified.serverName,

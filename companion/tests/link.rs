@@ -89,3 +89,19 @@ async fn a_paired_mac_stays_paired_after_the_companion_restarts() {
     assert_eq!(lease(&second, Some(&token)).await, 204);
     assert_eq!(awake.held(), 1);
 }
+
+#[tokio::test]
+async fn hello_tells_a_mac_this_pc_runs_the_companion() {
+    let dir = tempfile::tempdir().unwrap();
+    let (base, _) = start(Decision::Allow, &dir.path().join("macs.json")).await;
+
+    let body: Value = reqwest::get(format!("{base}/hello"))
+        .await
+        .unwrap()
+        .json()
+        .await
+        .unwrap();
+
+    assert_eq!(body["app"], "event-horizon-companion");
+    assert_eq!(body["v"], 1);
+}

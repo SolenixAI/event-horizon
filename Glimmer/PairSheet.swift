@@ -128,17 +128,24 @@ struct PairSheet: View {
                     // must be open on the host for the typed PIN to land.
                     startPairing()
                 }
-            Text("On your PC, open Sunshine's web page and choose PIN, then type this code.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-            // A headless PC has no screen to type on; its page opens here too.
-            Button("Open Sunshine on This Mac") { model.openSunshinePINPage(forHost: trimmedHost) }
-                .buttonStyle(.link)
-                .font(.footnote)
-            Text("Sunshine uses its own certificate, so your browser asks you to confirm before opening it.")
-                .font(.footnote)
-                .foregroundStyle(.tertiary)
-                .fixedSize(horizontal: false, vertical: true)
+            if model.pairingViaCompanion {
+                // The companion shows Allow on the PC with this same code.
+                Text("On \(pcLabel), click Allow. It shows this same code.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            } else {
+                Text("On your PC, open Sunshine's web page and choose PIN, then type this code.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                // A headless PC has no screen to type on; its page opens here too.
+                Button("Open Sunshine on This Mac") { model.openSunshinePINPage(forHost: trimmedHost) }
+                    .buttonStyle(.link)
+                    .font(.footnote)
+                Text("Sunshine uses its own certificate, so your browser asks you to confirm before opening it.")
+                    .font(.footnote)
+                    .foregroundStyle(.tertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
 
         if let status = statusText, !paired {
@@ -162,7 +169,8 @@ struct PairSheet: View {
         switch model.pairingPhase {
         case .idle, .success: return nil
         case .connecting: return "Connecting to \(pcLabel)…"
-        case .awaitingPin: return "Waiting for the code on \(pcLabel)…"
+        case .awaitingPin:
+            return model.pairingViaCompanion ? "Waiting for Allow on \(pcLabel)…" : "Waiting for the code on \(pcLabel)…"
         case .failure(let failure): return failure.message(pc: pcLabel)
         }
     }

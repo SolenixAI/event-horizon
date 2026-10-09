@@ -214,7 +214,7 @@ extension NetworkClient {
     /// "Glimmer" when that is unavailable. Replaces Moonlight's legacy "roth".
     static var pairingDeviceName: String {
         let name = Foundation.Host.current().localizedName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        return name.isEmpty ? "Glimmer" : name
+        return name.isEmpty ? "Event Horizon" : name
     }
 
     /// Per-request nonce. GFE uses a Qt UUID's raw 16 bytes hex-encoded; we

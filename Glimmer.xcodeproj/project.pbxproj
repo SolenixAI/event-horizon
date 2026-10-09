@@ -43,6 +43,7 @@
 		A100015A /* AppModel+Audio.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100015B /* AppModel+Audio.swift */; };
 		C17ADE100000000000000003 /* DeskHome.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17ADE100000000000000004 /* DeskHome.swift */; };
 		C17ADE100000000000000005 /* AppModel+Desk.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17ADE100000000000000006 /* AppModel+Desk.swift */; };
+		C17ADE100000000000000009 /* CompanionClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17ADE10000000000000000A /* CompanionClient.swift */; };
 		A100016A /* ContentViewSubviews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100016B /* ContentViewSubviews.swift */; };
 		DEC0DE01000000000000000A /* ContentView+Menus.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE01000000000000000B /* ContentView+Menus.swift */; };
 		DEC0DE02000000000000000A /* ContentView+ReadinessChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE02000000000000000B /* ContentView+ReadinessChip.swift */; };
@@ -336,6 +337,7 @@
 		DEC0DE2026091300000000B5 /* CommandKeyUpTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE2026091300000000B6 /* CommandKeyUpTests.swift */; };
 		DEC0DE2026100800000007 /* CommandTranslateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE2026100800000008 /* CommandTranslateTests.swift */; };
 		DEC0DE2026100800000005 /* PointerPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE2026100800000006 /* PointerPolicyTests.swift */; };
+		DEC0DE2026100900000001 /* CompanionClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE2026100900000002 /* CompanionClientTests.swift */; };
 		DEC0DE202609221400000007 /* StreamWindowFirstFrameTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202609221400000008 /* StreamWindowFirstFrameTests.swift */; };
 		DEC0DE202609221400000005 /* PasteTextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202609221400000006 /* PasteTextTests.swift */; };
 		DEC0DE2026092000000000D3 /* WakeOnLANTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE2026092000000000D4 /* WakeOnLANTests.swift */; };
@@ -466,6 +468,7 @@
 		A100015B /* AppModel+Audio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppModel+Audio.swift"; sourceTree = "<group>"; };
 		C17ADE100000000000000004 /* DeskHome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeskHome.swift; sourceTree = "<group>"; };
 		C17ADE100000000000000006 /* AppModel+Desk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppModel+Desk.swift"; sourceTree = "<group>"; };
+		C17ADE10000000000000000A /* CompanionClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionClient.swift; sourceTree = "<group>"; };
 		A100016B /* ContentViewSubviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentViewSubviews.swift; sourceTree = "<group>"; };
 		DEC0DE01000000000000000B /* ContentView+Menus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContentView+Menus.swift"; sourceTree = "<group>"; };
 		DEC0DE02000000000000000B /* ContentView+ReadinessChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContentView+ReadinessChip.swift"; sourceTree = "<group>"; };
@@ -769,6 +772,7 @@
 		DEC0DE2026091300000000B6 /* CommandKeyUpTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CommandKeyUpTests.swift"; sourceTree = "<group>"; };
 		DEC0DE2026100800000008 /* CommandTranslateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CommandTranslateTests.swift"; sourceTree = "<group>"; };
 		DEC0DE2026100800000006 /* PointerPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PointerPolicyTests.swift"; sourceTree = "<group>"; };
+		DEC0DE2026100900000002 /* CompanionClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CompanionClientTests.swift"; sourceTree = "<group>"; };
 		DEC0DE202609221400000008 /* StreamWindowFirstFrameTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StreamWindowFirstFrameTests.swift"; sourceTree = "<group>"; };
 		DEC0DE202609221400000006 /* PasteTextTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PasteTextTests.swift"; sourceTree = "<group>"; };
 		DEC0DE2026092000000000D4 /* WakeOnLANTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WakeOnLANTests.swift"; sourceTree = "<group>"; };
@@ -902,6 +906,7 @@
 				A100015B /* AppModel+Audio.swift */,
 				C17ADE100000000000000004 /* DeskHome.swift */,
 				C17ADE100000000000000006 /* AppModel+Desk.swift */,
+				C17ADE10000000000000000A /* CompanionClient.swift */,
 				A100016B /* ContentViewSubviews.swift */,
 				DEC0DE01000000000000000B /* ContentView+Menus.swift */,
 				DEC0DE02000000000000000B /* ContentView+ReadinessChip.swift */,
@@ -1239,6 +1244,7 @@
 				DEC0DE2026091300000000B6 /* CommandKeyUpTests.swift */,
 				DEC0DE2026100800000008 /* CommandTranslateTests.swift */,
 				DEC0DE2026100800000006 /* PointerPolicyTests.swift */,
+				DEC0DE2026100900000002 /* CompanionClientTests.swift */,
 				DEC0DE202609221400000008 /* StreamWindowFirstFrameTests.swift */,
 				DEC0DE202609221400000006 /* PasteTextTests.swift */,
 				DEC0DE2026092000000000D4 /* WakeOnLANTests.swift */,
@@ -1428,6 +1434,7 @@
 				A100015A /* AppModel+Audio.swift in Sources */,
 				C17ADE100000000000000003 /* DeskHome.swift in Sources */,
 				C17ADE100000000000000005 /* AppModel+Desk.swift in Sources */,
+				C17ADE100000000000000009 /* CompanionClient.swift in Sources */,
 				A100016A /* ContentViewSubviews.swift in Sources */,
 				DEC0DE01000000000000000A /* ContentView+Menus.swift in Sources */,
 				DEC0DE02000000000000000A /* ContentView+ReadinessChip.swift in Sources */,
@@ -1754,6 +1761,7 @@
 				DEC0DE2026091300000000B5 /* CommandKeyUpTests.swift in Sources */,
 				DEC0DE2026100800000007 /* CommandTranslateTests.swift in Sources */,
 				DEC0DE2026100800000005 /* PointerPolicyTests.swift in Sources */,
+				DEC0DE2026100900000001 /* CompanionClientTests.swift in Sources */,
 				DEC0DE202609221400000007 /* StreamWindowFirstFrameTests.swift in Sources */,
 				DEC0DE202609221400000005 /* PasteTextTests.swift in Sources */,
 				DEC0DE2026092000000000D3 /* WakeOnLANTests.swift in Sources */,

@@ -37,7 +37,11 @@ fn ask(mac_name: &str, code: &str) -> zbus::Result<Decision> {
             0u32,
             "video-display",
             format!("Allow {mac_name} to use this PC?"),
-            format!("Code on your Mac: {code}"),
+            if code.is_empty() {
+                "Event Horizon on that Mac will keep this PC awake while it streams.".to_string()
+            } else {
+                format!("Code on your Mac: {code}")
+            },
             vec!["allow", "Allow", "deny", "Deny"],
             hints,
             120_000i32,

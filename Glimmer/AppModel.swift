@@ -413,6 +413,13 @@ final class AppModel {
     /// banner icon, spinner, and result text.
     var pairingPhase: PairingPhase = .idle
 
+    /// The PC answered as running the Event Horizon companion: the pairing
+    /// sheet asks for a click on Allow there, not a code typed into Sunshine.
+    var pairingViaCompanion = false
+
+    /// Renews the companion's lease while a stream runs, so the PC stays awake.
+    @ObservationIgnored var companionLeaseTask: Task<Void, Never>?
+
     // Persisted stream config - held here so the UI's "Your next stream"
     // summary stays truthful without depending on moonlight-qt's UserDefaults
     // domain. Internal (not private) so the QualityCalculator extension
