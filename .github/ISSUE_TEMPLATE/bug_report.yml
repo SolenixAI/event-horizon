@@ -5,11 +5,11 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to report a bug. Glimmer's debugging culture
+        Thanks for taking the time to report a bug. Event Horizon's debugging culture
         is telemetry-first: a session scorecard plus the session log usually
         localizes a streaming problem in minutes, where a prose description
         alone can take days. Telemetry is **opt-in and stays on your Mac until
-        you attach it.** The files carry performance numbers and Glimmer's log
+        you attach it.** The files carry performance numbers and Event Horizon's log
         lines, including the app you streamed and your display and network
         setup. Your PC and Mac appear as short codes, not names, and addresses
         and error details read `<private>`. Encryption keys, PINs and the text
@@ -17,10 +17,10 @@ body:
   - type: input
     id: version
     attributes:
-      label: Glimmer version
+      label: Event Horizon version
       description:
         Menu bar → About, or `defaults read
-        /Applications/Glimmer.app/Contents/Info CFBundleShortVersionString`
+        "/Applications/Event Horizon.app/Contents/Info" CFBundleShortVersionString`
       placeholder: "2026.8.15 (20260830)"
     validations:
       required: true
