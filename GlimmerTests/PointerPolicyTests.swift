@@ -13,13 +13,13 @@ import Testing
 struct PointerPolicyForAppTests {
 
     @Test func desktopIsFreeInAnyCaseAndPadding() {
-        for name in ["Desktop", "desktop", "DESKTOP", "  Desktop  ", "Desktop\n"] {
+        for name in ["Desktop", "desktop", "DESKTOP", "  Desktop  ", "Desktop\n", "Steam Big Picture", "Old School RuneScape"] {
             #expect(PointerPolicy.forApp(named: name) == .free, "\(name.debugDescription)")
         }
     }
 
     @Test func everyOtherAppLocks() {
-        for name in ["ARC Raiders", "Steam Big Picture", "Remote Desktop", "Desktop 2", "", "  "] {
+        for name in ["ARC Raiders", "Path of Exile 2", "Remote Desktop", "Desktop 2", "", "  "] {
             #expect(PointerPolicy.forApp(named: name) == .lock, "\(name.debugDescription)")
         }
     }

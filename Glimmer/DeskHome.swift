@@ -45,6 +45,20 @@ struct DeskHome: View {
         .padding(.bottom, 22)
         .frame(minWidth: 640, idealWidth: 1040, maxWidth: .infinity,
                minHeight: 600, idealHeight: 780, maxHeight: .infinity)
+        // No toolbar, so full screen is all PC; Settings lives on Home (and ⌘,).
+        .overlay(alignment: .topTrailing) {
+            SettingsLink {
+                Image(systemName: "gearshape")
+                    .font(.system(size: 15, weight: .medium))
+                    .frame(width: 32, height: 32)
+            }
+            .buttonStyle(.plain)
+            .glassEffect(.regular.interactive(), in: .circle)
+            .help("Settings")
+            .accessibilityLabel("Settings")
+            .padding(.top, 10)
+            .padding(.trailing, 12)
+        }
         .task(id: model.selectedHost?.id) {
             guard let host = model.selectedHost else { return }
             await model.ensureCoverArt(for: host)

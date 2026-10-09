@@ -5,7 +5,6 @@ import AppKit
 
 struct MainWindow: View {
     @Environment(AppModel.self) private var model
-    @Environment(\.openSettings) private var openSettings
     /// Lifted out of EmptyPairingState so the sheet survives the swap to
     /// ConnectSurface the instant pairing fills `model.hosts` - the sheet used
     /// to hang off the empty state itself and vanish mid-handshake success.
@@ -38,21 +37,6 @@ struct MainWindow: View {
             // stream ends instead of the launcher just snapping back.
             StreamEndedToast()
                 .padding(.top, 16)
-        }
-        .toolbar {
-            // The PC switcher is the header's name; the toolbar keeps only Settings,
-            // on the trailing edge (a hidden title bar has no title to push it there).
-            ToolbarSpacer(.flexible)
-            ToolbarItem(placement: .automatic) {
-                Button {
-                    openSettings()
-                } label: {
-                    Image(systemName: "gearshape")
-                        .symbolRenderingMode(.hierarchical)
-                }
-                .keyboardShortcut(",", modifiers: .command)
-                .help("Settings")
-            }
         }
         .navigationTitle("Citadel")
     }

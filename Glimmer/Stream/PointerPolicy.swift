@@ -21,9 +21,12 @@ public enum PointerPolicy: Sendable, Equatable {
     /// The app name Sunshine lists for the PC's own desktop.
     static let desktopAppName = "desktop"
 
-    /// `.free` for the PC's Desktop (trimmed, any case), `.lock` for every other app.
+    /// Apps driven by a visible pointer, like a desktop: the PC's Desktop,
+    /// Steam's Big Picture, and click-to-move games (RuneScape through RuneLite).
+    static let freeAppNames: Set<String> = [desktopAppName, "steam big picture", "old school runescape"]
+
+    /// `.free` for pointer-driven apps (trimmed, any case), `.lock` for every other app.
     static func forApp(named name: String) -> PointerPolicy {
-        name.trimmingCharacters(in: .whitespacesAndNewlines)
-            .caseInsensitiveCompare(desktopAppName) == .orderedSame ? .free : .lock
+        freeAppNames.contains(name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()) ? .free : .lock
     }
 }
