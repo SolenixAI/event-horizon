@@ -42,6 +42,14 @@ extension AppModel {
         return name
     }
 
+    /// The one app on the PC's screen, from one source: the stream's own app
+    /// while Event Horizon streams, else what Sunshine says is running. The
+    /// shelf's ring and the "Running" label both read this, so they agree.
+    func appOnScreen(on host: Host) -> String? {
+        if isStreaming, let app = lastLaunchAttempt?.app { return app.name }
+        return runningAppName(on: host)
+    }
+
     /// Click on the PC's screen: back into a stream that is on the desk, or
     /// open the Desktop (waking the PC or pairing again first when it needs it).
     func openDesk(_ host: Host) {

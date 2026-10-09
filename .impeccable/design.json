@@ -1,412 +1,352 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-28T18:20:00Z",
-  "title": "Design System: Glimmer",
+  "generatedAt": "2026-10-09T18:39:21-02:30",
+  "title": "Design System: Event Horizon",
   "extensions": {
     "colorMeta": {
-      "eclipse-violet": {
+      "horizon-gold": {
         "role": "primary",
-        "displayName": "Eclipse Violet",
-        "canonical": "oklch(41.7% 0.203 308.0)",
-        "source": "AccentColor, light appearance",
+        "displayName": "Horizon Gold",
+        "canonical": "srgb(0.788 0.439 0.059), AccentColor light",
         "tonalRamp": [
-          "#140023",
-          "#360054",
-          "#5C008A",
-          "#7D2BB3",
-          "#A254DB",
-          "#C478FF",
-          "#E0AEFF",
-          "#FDE1FF"
+          "#3A1E03",
+          "#5C3005",
+          "#804308",
+          "#A5580B",
+          "#C9700F",
+          "#E08F3E",
+          "#EDB57A",
+          "#F8E1C6"
         ]
       },
-      "eclipse-violet-night": {
+      "horizon-gold-night": {
         "role": "primary",
-        "displayName": "Eclipse Violet, night",
-        "canonical": "oklch(59.5% 0.227 310.3)",
-        "source": "AccentColor, dark appearance",
+        "displayName": "Horizon Gold, night",
+        "canonical": "srgb(0.941 0.541 0.141), AccentColor dark",
         "tonalRamp": [
-          "#160025",
-          "#3A0058",
-          "#620090",
-          "#8418B9",
-          "#AA49E2",
-          "#CD6EFF",
-          "#E7A9FF",
-          "#FFDFFF"
+          "#3F2207",
+          "#64360B",
+          "#8C4C10",
+          "#B66416",
+          "#F08A24",
+          "#F4A85C",
+          "#F8C793",
+          "#FDEBD6"
         ]
       },
-      "ready-green": {
-        "role": "status",
-        "displayName": "Ready Green",
-        "canonical": "oklch(74.1% 0.222 144.7)",
-        "source": "NSColor.systemGreen; #32D74B in dark",
+      "horizon-blue": {
+        "role": "secondary",
+        "displayName": "Horizon Blue",
+        "canonical": "srgb(0.227 0.627 1.0), Color.horizonBlue",
         "tonalRamp": [
-          "#001300",
-          "#003300",
-          "#005700",
-          "#007900",
-          "#009F00",
-          "#14C236",
-          "#84E187",
-          "#CCFECC"
+          "#071B33",
+          "#0B2C52",
+          "#104276",
+          "#185E9F",
+          "#2A7FD0",
+          "#3AA0FF",
+          "#8CC6FF",
+          "#DCEDFF"
         ]
       },
-      "caution-orange": {
-        "role": "status",
-        "displayName": "Caution Orange",
-        "canonical": "oklch(76.5% 0.175 62.6)",
-        "source": "NSColor.systemOrange; #FF9F0A in dark",
+      "screen-black": {
+        "role": "neutral",
+        "displayName": "Screen Black",
         "tonalRamp": [
-          "#1D0200",
-          "#480C00",
-          "#771A00",
-          "#9E3B00",
-          "#C66100",
-          "#EB8400",
-          "#FFB572",
-          "#FFE5C1"
+          "#000000",
+          "#0A0A0A",
+          "#141414",
+          "#1E1E1E",
+          "#2A2A2A",
+          "#3A3A3A",
+          "#555555",
+          "#777777"
         ]
       },
-      "fault-red": {
-        "role": "status",
-        "displayName": "Fault Red",
-        "canonical": "oklch(65.4% 0.232 28.7)",
-        "source": "NSColor.systemRed; #FF453A in dark",
+      "window-day": {
+        "role": "neutral",
+        "displayName": "Window, day",
+        "canonical": "NSColor.windowBackgroundColor (light), sampled",
         "tonalRamp": [
-          "#260000",
-          "#590000",
-          "#920000",
-          "#BF0000",
-          "#EB201B",
-          "#FF5344",
-          "#FF9C8B",
-          "#FFD9CD"
+          "#262626",
+          "#444444",
+          "#666666",
+          "#8A8A8A",
+          "#B0B0B0",
+          "#D4D4D4",
+          "#ECECEC",
+          "#FFFFFF"
         ]
       },
-      "default-yellow": {
-        "role": "status",
-        "displayName": "Default Yellow",
-        "canonical": "oklch(86.5% 0.177 90.4)",
-        "source": "NSColor.systemYellow; #FFD60A in dark",
+      "window-night": {
+        "role": "neutral",
+        "displayName": "Window, night",
+        "canonical": "NSColor.windowBackgroundColor (dark), sampled",
         "tonalRamp": [
-          "#160800",
-          "#391D00",
-          "#613500",
-          "#835300",
-          "#A87800",
-          "#CB9A00",
-          "#E5C464",
-          "#FFEDBB"
+          "#0A0A0A",
+          "#141414",
+          "#1E1E1E",
+          "#2C2C2C",
+          "#3D3D3D",
+          "#555555",
+          "#777777",
+          "#9E9E9E"
         ]
       },
       "label": {
         "role": "neutral",
         "displayName": "Label",
-        "canonical": "NSColor.labelColor",
-        "source": "NSColor.labelColor: black 85%, white 85% in dark",
-        "tonalRamp": [
-          "#0B0B0B",
-          "#242424",
-          "#404040",
-          "#5D5D5D",
-          "#808080",
-          "#A1A1A1",
-          "#C7C7C7",
-          "#EEEEEE"
-        ]
+        "canonical": "NSColor.labelColor"
       },
       "secondary-label": {
         "role": "neutral",
         "displayName": "Secondary Label",
-        "canonical": "NSColor.secondaryLabelColor",
-        "source": "NSColor.secondaryLabelColor: black 50%, white 55% in dark",
-        "tonalRamp": [
-          "#0B0B0B",
-          "#242424",
-          "#404040",
-          "#5D5D5D",
-          "#808080",
-          "#A1A1A1",
-          "#C7C7C7",
-          "#EEEEEE"
-        ]
+        "canonical": "NSColor.secondaryLabelColor"
       },
-      "tertiary-label": {
-        "role": "neutral",
-        "displayName": "Tertiary Label",
-        "canonical": "NSColor.tertiaryLabelColor",
-        "source": "NSColor.tertiaryLabelColor: black 25%, white 25% in dark",
-        "tonalRamp": [
-          "#0B0B0B",
-          "#242424",
-          "#404040",
-          "#5D5D5D",
-          "#808080",
-          "#A1A1A1",
-          "#C7C7C7",
-          "#EEEEEE"
-        ]
+      "ready-green": {
+        "role": "status",
+        "displayName": "Ready Green",
+        "canonical": "system green"
+      },
+      "caution-orange": {
+        "role": "status",
+        "displayName": "Caution Orange",
+        "canonical": "system orange"
+      },
+      "fault-red": {
+        "role": "status",
+        "displayName": "Fault Red",
+        "canonical": "system red"
       }
     },
     "typographyMeta": {
-      "display": {
-        "displayName": "Display",
-        "purpose": "The empty state headline only."
-      },
       "pc-name": {
         "displayName": "PC name",
-        "purpose": "The launcher's title (title semibold)."
+        "purpose": "The PC's name under the screen. SwiftUI .title2.weight(.semibold)."
       },
-      "headline": {
-        "displayName": "Headline",
-        "purpose": "The state button's label (title2 semibold)."
-      },
-      "title": {
-        "displayName": "Title",
-        "purpose": "The empty state supporting line (title3)."
+      "screen-title": {
+        "displayName": "Screen title",
+        "purpose": "The idle face's line on the black screen, in white. .title2.weight(.semibold)."
       },
       "body": {
         "displayName": "Body",
-        "purpose": "The spec line, Settings rows, menus and form labels."
+        "purpose": "The spec line, in secondary. .body."
       },
-      "button": {
-        "displayName": "Button",
-        "purpose": "The app buttons' names (headline, bold 13pt)."
+      "callout": {
+        "displayName": "Callout",
+        "purpose": "The screen's detail line and the permission row. .callout."
       },
-      "label": {
-        "displayName": "Label",
-        "purpose": "The toast's title (callout medium)."
+      "running": {
+        "displayName": "Running",
+        "purpose": "The blue Running label. .callout.weight(.medium)."
       },
       "caption": {
         "displayName": "Caption",
-        "purpose": "Explanations under toggles, the readiness chip, Last played."
+        "purpose": "Cover names and the readiness chip. .caption.weight(.medium)."
       }
     },
     "shadows": [
       {
-        "name": "button-lift",
-        "value": "0 4px 12px rgba(0,0,0,0.18)",
-        "purpose": "App buttons, the state button, primary capsules."
+        "name": "bezel-lift",
+        "value": "0 10px 18px rgba(0,0,0,0.18)",
+        "purpose": "The bezel, light appearance only. None in dark."
       },
       {
-        "name": "icon-lift",
-        "value": "0 4px 10px rgba(0,0,0,0.20)",
-        "purpose": "The app icon on the About pane."
+        "name": "bezel-light-catch",
+        "value": "inset 1px stroke, white 60% (light) or 28% (dark) at the top, fading to 0 at the middle",
+        "purpose": "Lifts the bezel on any window."
       },
       {
-        "name": "toast-float",
-        "value": "0 4px 8px rgba(0,0,0,0.12)",
-        "purpose": "The Stream ended toast."
-      }
-    ],
-    "materials": [
-      {
-        "name": "window-glass",
-        "value": ".containerBackground(for: .window) { glassEffect(.regular) }",
-        "purpose": "The launcher window: frosted Liquid Glass, the surface everything sits on."
+        "name": "cover-lift",
+        "value": "0 6px 10px rgba(0,0,0,0.35)",
+        "purpose": "A cover under the pointer, with scale 1.03."
       },
       {
-        "name": "window-thin",
-        "value": ".thinMaterial",
-        "purpose": "The Settings window, sheets and the toast."
-      },
-      {
-        "name": "primary-surface",
-        "value": "opaque accent gradient, .glassEffect(.regular.tint(accent 0.15)), 1pt lit rim",
-        "purpose": "App buttons, the state button and primary capsules."
-      },
-      {
-        "name": "glass-plain",
-        "value": ".glassEffect(.regular)",
-        "purpose": "Readiness chip, gear, overflow menu, PC tiles."
-      },
-      {
-        "name": "glass-interactive",
-        "value": ".glassEffect(.regular.interactive())",
-        "purpose": "The hotkey recorder and overflow menu."
+        "name": "logo-halo",
+        "value": "0 0 24px rgba(58,160,255,0.35)",
+        "purpose": "The app icon on the idle screen only; repeats the logo's own halo."
       }
     ],
     "motion": [
       {
-        "name": "state-snappy",
-        "value": ".snappy(duration: 0.3, extraBounce: 0.1)",
-        "purpose": "State changes, the state button appearing, the toast, the banner."
+        "name": "grow",
+        "value": "0.42s cubic-bezier(0.2, 0.9, 0.25, 1)",
+        "purpose": "The PC grows from the desk screen to fill the window. Instant under Reduce Motion."
       },
       {
-        "name": "press",
-        "value": ".snappy(duration: 0.15), scale 0.985",
-        "purpose": "Any primary control pressed."
+        "name": "shrink",
+        "value": "0.38s cubic-bezier(0.2, 0.9, 0.25, 1)",
+        "purpose": "The PC returns to the desk screen, still running. Instant under Reduce Motion."
       },
       {
-        "name": "connect-hold",
-        "value": "400 ms",
-        "purpose": "A connect that lands inside the hold shows nothing."
+        "name": "hover-ring",
+        "value": "snappy 0.2s (bezel), snappy 0.18s (cover)",
+        "purpose": "Gold ring, cover lift and scale on hover."
       },
       {
-        "name": "reduce-motion",
-        "value": "accessibilityReduceMotion",
-        "purpose": "Extra bounce 0, slides become fades, no pulses or bounces."
+        "name": "state",
+        "value": "snappy 0.3s, extra bounce 0.1 (0 under Reduce Motion)",
+        "purpose": "Readiness chip and connect banner state changes."
+      },
+      {
+        "name": "window-buttons",
+        "value": "hidden while the PC fills the window; shown while the pointer is in the top 28pt",
+        "purpose": "The PC's corner stays the PC's."
       }
     ],
     "breakpoints": [
       {
-        "name": "launcher",
-        "value": "580px"
+        "name": "window-min",
+        "value": "640x600pt"
       },
       {
-        "name": "settings-min",
-        "value": "680px"
+        "name": "window-ideal",
+        "value": "1040x780pt"
       }
     ]
   },
   "components": [
     {
-      "name": "App Buttons",
-      "kind": "button",
-      "refersTo": "app-button",
-      "description": "The launcher's main actions: each app is a violet button that streams it.",
-      "html": "<div style=\"display:grid;grid-template-columns:1fr 1fr;gap:10px;width:532px;max-width:100%\"><button class=\"ds-app\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" aria-hidden=\"true\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"12\" rx=\"2\"/><path d=\"M9 20h6M12 16v4\"/></svg><span class=\"ds-app-name\">Desktop</span><span class=\"ds-app-play\"><svg viewBox=\"0 0 16 16\" width=\"12\" height=\"12\" aria-hidden=\"true\"><path d=\"M4 2.5v11l9-5.5z\" fill=\"currentColor\"/></svg></span></button><button class=\"ds-app\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><path d=\"M7 8h10a4 4 0 0 1 3.9 4.9l-.9 3.6a2 2 0 0 1-3.4.9L14 15h-4l-2.6 2.4a2 2 0 0 1-3.4-.9l-.9-3.6A4 4 0 0 1 7 8z\"/><path d=\"M8 10.5v3M6.5 12h3\"/></svg><span class=\"ds-app-name\">Steam Big Picture</span><span class=\"ds-app-play\"><svg viewBox=\"0 0 16 16\" width=\"12\" height=\"12\" aria-hidden=\"true\"><path d=\"M4 2.5v11l9-5.5z\" fill=\"currentColor\"/></svg></span></button></div>",
-      "css": ".ds-app { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 0 16px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.22); background: linear-gradient(to bottom right, #7D1BB3 0%, #580D82 100%); color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.30); transition: transform 0.15s cubic-bezier(0.2, 0.9, 0.3, 1.1); font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif; font-size: 13px; font-weight: 700; text-align: left; } .ds-app-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ds-app-play { display: inline-flex; opacity: 0.75; } .ds-app:hover { filter: brightness(1.06); } .ds-app:active { transform: scale(0.985); } .ds-app:focus-visible { outline: 3px solid rgba(107,15,158,0.5); outline-offset: 2px; } .ds-app:disabled { opacity: 0.55; }"
-    },
-    {
-      "name": "State Button",
-      "kind": "button",
-      "refersTo": "stream-button",
-      "description": "Appears under the app buttons only when the PC needs something else: Wake and Connect, Connecting… (the cancel), Back to Stream, Pair Again….",
-      "html": "<button class=\"ds-state\"><span>Wake and Connect</span></button>",
-      "css": ".ds-state { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; max-width: 532px; min-height: 46px; padding: 12px 22px; border-radius: 9999px; border: 1px solid rgba(255,255,255,0.22); background: linear-gradient(to bottom right, #7D1BB3 0%, #580D82 100%); color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.30); transition: transform 0.15s cubic-bezier(0.2, 0.9, 0.3, 1.1); font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif; font-size: 17px; font-weight: 600; } .ds-state:hover { filter: brightness(1.06); } .ds-state:active { transform: scale(0.985); } .ds-state:focus-visible { outline: 3px solid rgba(107,15,158,0.5); outline-offset: 2px; }"
-    },
-    {
-      "name": "PC Header",
+      "name": "Desk Screen",
       "kind": "custom",
-      "refersTo": "pc-header",
-      "description": "The launcher's title: the PC glyph in violet, the name (a menu when more than one PC is paired) with the specs under it, and the readiness chip.",
-      "html": "<header class=\"ds-head\"><span class=\"ds-head-glyph\"><svg viewBox=\"0 0 24 24\" width=\"30\" height=\"30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" aria-hidden=\"true\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"12\" rx=\"2\"/><path d=\"M9 20h6M12 16v4\"/></svg></span><div class=\"ds-head-title\"><button class=\"ds-head-name\" aria-label=\"PC\">Den PC <svg viewBox=\"0 0 16 16\" width=\"12\" height=\"12\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"M4 6l4 4 4-4\"/></svg></button><p class=\"ds-head-spec\">4K · 120 Hz · HDR · 150 Mbps</p></div><span class=\"ds-chip\" role=\"status\"><span class=\"ds-chip-dot\"></span>Ready · 5 ms<span class=\"ds-chip-route\"><svg viewBox=\"0 0 16 16\" width=\"9\" height=\"9\" aria-hidden=\"true\"><path d=\"M9 1 3 9h4l-1 6 6-8H8z\" fill=\"currentColor\"/></svg></span></span></header>",
-      "css": ".ds-head { display: flex; align-items: center; gap: 14px; width: 532px; max-width: 100%; font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif; } .ds-head-glyph { display: inline-flex; color: #6B0F9E; } .ds-head-title { flex: 1; min-width: 0; } .ds-head-name { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: none; background: none; font: inherit; font-size: 22px; font-weight: 600; color: rgba(0,0,0,0.85); } .ds-head-name svg { color: rgba(0,0,0,0.5); } .ds-head-name:focus-visible { outline: 3px solid rgba(107,15,158,0.5); outline-offset: 2px; } .ds-head-spec { margin: 2px 0 0; font-size: 13px; color: rgba(0,0,0,0.5); } .ds-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 9999px; background: rgba(255,255,255,0.38); backdrop-filter: blur(24px) saturate(1.8); -webkit-backdrop-filter: blur(24px) saturate(1.8); box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.6), 0 1px 3px rgba(0,0,0,0.08); font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif; font-size: 10px; font-weight: 500; color: rgba(0,0,0,0.85); white-space: nowrap; } .ds-chip-dot { width: 7px; height: 7px; border-radius: 50%; background: #28CD41; } .ds-chip-route { color: rgba(0,0,0,0.5); display: inline-flex; }"
+      "refersTo": "desk-screen",
+      "description": "The PC's screen in its glass bezel: the one raised object and the primary action. Gold ring on hover.",
+      "html": "<button class=\"ds-desk\" aria-label=\"zephyr-citadel screen\"><span class=\"ds-desk-screen\"><span class=\"ds-desk-logo\"></span><span class=\"ds-desk-title\">Desktop</span><span class=\"ds-desk-detail\">Click to open your PC</span></span></button>",
+      "css": ".ds-desk { display:block; width:320px; padding:5px; border:none; border-radius:17px; background:rgba(255,255,255,0.55); backdrop-filter:blur(20px); box-shadow:inset 0 1px 0 rgba(255,255,255,0.6), 0 10px 18px rgba(0,0,0,0.18); outline:2px solid transparent; outline-offset:0; cursor:pointer; transition:outline-color 0.2s; font-family:-apple-system, 'SF Pro Text', system-ui, sans-serif; } .ds-desk:hover, .ds-desk:focus-visible { outline-color:#C9700F; } .ds-desk-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; aspect-ratio:16/10; background:#000; border-radius:12px; box-shadow:inset 0 0 0 1px rgba(255,255,255,0.12); } .ds-desk-logo { width:40px; height:40px; border-radius:10px; background:radial-gradient(circle, #0b0a18 40%, #05050a); box-shadow:0 0 24px rgba(58,160,255,0.35); border:1.5px solid #ff9a3c; } .ds-desk-title { color:#fff; font-size:17px; font-weight:600; } .ds-desk-detail { color:rgba(255,255,255,0.6); font-size:12px; }"
+    },
+    {
+      "name": "Status Row",
+      "kind": "custom",
+      "refersTo": "pc-name",
+      "description": "PC name and spec line, the blue Running label, and the readiness chip on the trailing edge.",
+      "html": "<div class=\"ds-status\"><div><div class=\"ds-status-name\">zephyr-citadel</div><div class=\"ds-status-spec\">2560 × 1600 · 60 Hz · 52 Mbps</div></div><span class=\"ds-running\"><i></i>Running Farthest Frontier</span><span class=\"ds-chip\"><i></i>Ready</span></div>",
+      "css": ".ds-status { display:flex; align-items:baseline; gap:14px; width:420px; font-family:-apple-system, 'SF Pro Text', system-ui, sans-serif; } .ds-status-name { font-size:17px; font-weight:600; color:rgba(0,0,0,0.85); } .ds-status-spec { font-size:13px; color:rgba(0,0,0,0.5); margin-top:3px; } .ds-running { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:500; color:#3AA0FF; } .ds-running i { width:7px; height:7px; border-radius:50%; background:#3AA0FF; } .ds-chip { margin-left:auto; display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:9999px; font-size:10px; font-weight:500; background:rgba(255,255,255,0.6); backdrop-filter:blur(16px); box-shadow:inset 0 0 0 0.5px rgba(0,0,0,0.08); } .ds-chip i { width:7px; height:7px; border-radius:50%; background:#28CD41; }"
     },
     {
       "name": "Readiness Chip",
       "kind": "chip",
       "refersTo": "readiness-chip",
-      "description": "A glass capsule stating whether the PC is ready, with a status dot and the route glyph.",
-      "html": "<span class=\"ds-chip\" role=\"status\"><span class=\"ds-chip-dot\"></span>Ready · 5 ms<span class=\"ds-chip-route\"><svg viewBox=\"0 0 16 16\" width=\"9\" height=\"9\" aria-hidden=\"true\"><path d=\"M9 1 3 9h4l-1 6 6-8H8z\" fill=\"currentColor\"/></svg></span></span>",
-      "css": ".ds-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 9999px; background: rgba(255,255,255,0.38); backdrop-filter: blur(24px) saturate(1.8); -webkit-backdrop-filter: blur(24px) saturate(1.8); box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.6), 0 1px 3px rgba(0,0,0,0.08); font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif; font-size: 10px; font-weight: 500; color: rgba(0,0,0,0.85); white-space: nowrap; } .ds-chip-dot { width: 7px; height: 7px; border-radius: 50%; background: #28CD41; } .ds-chip-route { color: rgba(0,0,0,0.5); display: inline-flex; }"
+      "description": "Plain glass capsule: status dot, state in caption medium.",
+      "html": "<span class=\"ds-chip\"><i></i>Streaming</span>",
+      "css": ".ds-chip { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:9999px; font-family:-apple-system, 'SF Pro Text', system-ui, sans-serif; font-size:10px; font-weight:500; color:rgba(0,0,0,0.85); background:rgba(255,255,255,0.6); backdrop-filter:blur(16px); box-shadow:inset 0 0 0 0.5px rgba(0,0,0,0.08); } .ds-chip i { width:7px; height:7px; border-radius:50%; background:#28CD41; }"
     },
     {
-      "name": "Spec Line",
+      "name": "Cover Tile",
+      "kind": "card",
+      "refersTo": "cover-tile",
+      "description": "A game's own 2:3 cover. Gold ring, lift and 1.03 scale on hover.",
+      "html": "<button class=\"ds-cover\"><span class=\"ds-cover-art\"></span><span class=\"ds-cover-name\">Farthest Frontier</span></button>",
+      "css": ".ds-cover { display:flex; flex-direction:column; gap:6px; width:100px; padding:0; border:none; background:none; cursor:pointer; text-align:left; font-family:-apple-system, 'SF Pro Text', system-ui, sans-serif; } .ds-cover-art { width:100px; height:150px; border-radius:9px; background:linear-gradient(160deg,#7aa6c9,#c9a24b 60%,#4f6b2f); outline:2px solid transparent; transition:transform 0.18s, box-shadow 0.18s, outline-color 0.18s; } .ds-cover:hover .ds-cover-art, .ds-cover:focus-visible .ds-cover-art { outline-color:#C9700F; transform:scale(1.03); box-shadow:0 6px 10px rgba(0,0,0,0.35); } .ds-cover-name { font-size:10px; font-weight:500; color:rgba(0,0,0,0.85); min-height:2.4em; }"
+    },
+    {
+      "name": "Cover Tile, On Screen",
+      "kind": "card",
+      "refersTo": "cover-tile-on-screen",
+      "description": "The game running on the PC: blue ring and blue name.",
+      "html": "<button class=\"ds-cover-live\"><span class=\"ds-cover-live-art\"></span><span class=\"ds-cover-live-name\">Palworld</span></button>",
+      "css": ".ds-cover-live { display:flex; flex-direction:column; gap:6px; width:100px; padding:0; border:none; background:none; cursor:pointer; text-align:left; font-family:-apple-system, 'SF Pro Text', system-ui, sans-serif; } .ds-cover-live-art { width:100px; height:150px; border-radius:9px; background:linear-gradient(160deg,#5aa0e0,#9fd27a 60%,#3a5f9a); outline:2px solid #3AA0FF; } .ds-cover-live-name { font-size:10px; font-weight:500; color:#3AA0FF; min-height:2.4em; }"
+    },
+    {
+      "name": "Cover Fallback",
+      "kind": "card",
+      "refersTo": "cover-tile",
+      "description": "A game with no art yet: blue-to-gold gradient with the app's symbol in white.",
+      "html": "<span class=\"ds-cover-fallback\"><svg width=\"30\" height=\"30\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"2\" y=\"7\" width=\"20\" height=\"11\" rx=\"5\"/><path d=\"M7 11v3M5.5 12.5h3M16 12h.01M18 14h.01\"/></svg></span>",
+      "css": ".ds-cover-fallback { display:flex; align-items:center; justify-content:center; width:100px; height:150px; border-radius:9px; background:linear-gradient(135deg, rgba(58,160,255,0.55), rgba(201,112,15,0.45)); }"
+    },
+    {
+      "name": "Game Shelf",
       "kind": "custom",
-      "refersTo": null,
-      "description": "Facts, not controls: one secondary line under the PC name, separated by middle dots.",
-      "html": "<p class=\"ds-spec\">4K · 120 Hz · HDR · 150 Mbps</p>",
-      "css": ".ds-spec { margin: 0; font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif; font-size: 13px; font-weight: 400; color: rgba(0,0,0,0.5); }"
+      "refersTo": "game-shelf",
+      "description": "One plain glass panel holding the cover row; the trailing edge fades when it scrolls.",
+      "html": "<div class=\"ds-shelf\"><span></span><span></span><span></span><span></span></div>",
+      "css": ".ds-shelf { display:flex; gap:14px; padding:12px 14px; width:380px; overflow:hidden; border-radius:18px; background:rgba(255,255,255,0.55); backdrop-filter:blur(20px); box-shadow:inset 0 0 0 0.5px rgba(0,0,0,0.06); -webkit-mask-image:linear-gradient(90deg,#000 90%,transparent); mask-image:linear-gradient(90deg,#000 90%,transparent); } .ds-shelf span { flex:none; width:100px; height:150px; border-radius:9px; background:linear-gradient(160deg,#4b5c66,#8a9aa4); }"
     },
     {
-      "name": "Hotkey Recorder",
-      "kind": "input",
-      "refersTo": "hotkey-recorder",
-      "description": "A glass capsule showing a chord in key notation; recording tints it violet with a 2pt accent ring.",
-      "html": "<div class=\"ds-keys\"><button class=\"ds-key\">⌃Q</button><button class=\"ds-key ds-key-recording\" aria-pressed=\"true\">⌃…</button></div>",
-      "css": ".ds-keys { display: flex; gap: 12px; } .ds-key { min-width: 80px; min-height: 22px; padding: 4px 12px; border: 2px solid transparent; border-radius: 9999px; background: rgba(255,255,255,0.38); backdrop-filter: blur(24px) saturate(1.8); -webkit-backdrop-filter: blur(24px) saturate(1.8); box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.6), 0 1px 3px rgba(0,0,0,0.08); font-family: ui-monospace, 'SF Mono', monospace; font-size: 13px; font-weight: 500; color: rgba(0,0,0,0.85); transition: background 0.2s, border-color 0.2s; } .ds-key:hover { background: rgba(255,255,255,0.52); } .ds-key:focus-visible { outline: 3px solid rgba(107,15,158,0.5); outline-offset: 2px; } .ds-key-recording { background: rgba(107,15,158,0.22); border-color: #6B0F9E; color: #6B0F9E; }"
+      "name": "Settings Button",
+      "kind": "button",
+      "refersTo": "settings-button",
+      "description": "Gear in a 26pt interactive glass circle on the title-bar line.",
+      "html": "<button class=\"ds-gear\" aria-label=\"Settings\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z\"/></svg></button>",
+      "css": ".ds-gear { display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border:none; border-radius:50%; color:rgba(0,0,0,0.85); background:rgba(255,255,255,0.6); backdrop-filter:blur(16px); box-shadow:inset 0 0 0 0.5px rgba(0,0,0,0.1); cursor:pointer; transition:transform 0.15s, background 0.15s; } .ds-gear:hover { background:rgba(255,255,255,0.85); } .ds-gear:active { transform:scale(0.94); } .ds-gear:focus-visible { outline:2px solid #C9700F; outline-offset:2px; }"
     },
     {
       "name": "Connect Banner",
       "kind": "custom",
       "refersTo": "connect-banner",
-      "description": "The one filled status surface: faint red glass and a 1pt red stroke, at the top, only when a connection fails.",
-      "html": "<div class=\"ds-banner\" role=\"alert\"><span class=\"ds-banner-text\">Couldn't reach Den PC. Make sure it's awake and on the same network.</span><button class=\"ds-banner-close\" aria-label=\"Dismiss error\"><svg viewBox=\"0 0 16 16\" width=\"10\" height=\"10\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" aria-hidden=\"true\"><path d=\"M4 4l8 8M12 4l-8 8\"/></svg></button></div>",
-      "css": ".ds-banner { display: flex; align-items: center; gap: 10px; max-width: 532px; padding: 10px 14px; border: 1px solid #FF3B30; border-radius: 12px; background: rgba(255,59,48,0.12); backdrop-filter: blur(24px) saturate(1.8); -webkit-backdrop-filter: blur(24px) saturate(1.8); font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif; font-size: 12px; color: rgba(0,0,0,0.85); } .ds-banner-text { flex: 1; } .ds-banner-close { display: inline-flex; padding: 4px; border: none; background: none; color: rgba(0,0,0,0.5); border-radius: 6px; } .ds-banner-close:hover { background: rgba(0,0,0,0.06); } .ds-banner-close:focus-visible { outline: 3px solid rgba(107,15,158,0.5); outline-offset: 2px; }"
-    },
-    {
-      "name": "Stream-Ended Toast",
-      "kind": "custom",
-      "refersTo": "stream-ended-toast",
-      "description": "An understated thin-material capsule with a hairline, stating the session ended and its receipt.",
-      "html": "<div class=\"ds-toast\" role=\"status\"><strong>Stream ended</strong><span>2h 12m · 12 ms median</span></div>",
-      "css": ".ds-toast { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 18px; border: 0.5px solid rgba(0,0,0,0.08); border-radius: 9999px; background: rgba(246,246,246,0.72); backdrop-filter: blur(24px) saturate(1.8); -webkit-backdrop-filter: blur(24px) saturate(1.8); box-shadow: 0 4px 8px rgba(0,0,0,0.12); font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif; } .ds-toast strong { font-size: 12px; font-weight: 500; color: rgba(0,0,0,0.85); } .ds-toast span { font-size: 10px; color: rgba(0,0,0,0.5); }"
+      "description": "Failure only: glass tinted red at 0.12 with a 1pt red stroke.",
+      "html": "<div class=\"ds-banner\"><span class=\"ds-banner-icon\">!</span><span class=\"ds-banner-text\">zephyr-citadel did not answer.</span><button class=\"ds-banner-btn\">Try Again</button></div>",
+      "css": ".ds-banner { display:flex; align-items:center; gap:12px; padding:10px 14px; width:400px; border-radius:12px; background:rgba(255,59,48,0.12); box-shadow:inset 0 0 0 1px #FF3B30; font-family:-apple-system, 'SF Pro Text', system-ui, sans-serif; } .ds-banner-icon { display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:4px; background:#FF3B30; color:#fff; font-size:12px; font-weight:700; } .ds-banner-text { flex:1; font-size:12px; font-weight:500; color:rgba(0,0,0,0.85); } .ds-banner-btn { padding:3px 10px; border:none; border-radius:9999px; font-size:11px; background:rgba(255,255,255,0.7); cursor:pointer; } .ds-banner-btn:hover { background:#fff; } .ds-banner-btn:focus-visible { outline:2px solid #C9700F; outline-offset:2px; }"
     }
   ],
   "narrative": {
-    "northStar": "The Other Room",
-    "overview": "The gaming PC lives in another room, and Glimmer is the doorway to it. The interface is a quiet Mac surface that says one thing at a time: this PC is ready, and here are its apps, one click from playing. Everything that isn't that sentence belongs to macOS: its materials, its type, its controls, its menus. The only thing Glimmer brings of its own is Eclipse Violet, and it appears only where you act.\n\nSurfaces are tactile, but taste comes first. The things you can press feel like objects: Liquid Glass that refracts what sits behind the window, a soft downward shadow, a slight give when pressed (scale 0.985). Everything else stays flat: facts, labels, explanations and status sit as plain text on the glass, with no chrome. Depth marks what can be pressed or what floats above the window, never decoration.\n\nThe launcher is one sheet of frosted glass, sized to its content. The PC's name is its title and its switcher, the specs sit under the name, and each app is a violet button that streams it. There is no card inside the window: the window is the surface. Four looks have been tried and rejected: a neutral grey card (the \"grey blob\"), a narrow centred column in a wide card, a washed-out mauve card (the accent at low opacity over grey reads dusty), and a dark violet card lit from below, which read as flashy. The app icon is final and is not redrawn, recoloured or reinterpreted.",
+    "northStar": "The PC on the Desk",
+    "overview": "Event Horizon's Home is one Mac window with your PC on its desk. The PC is a black screen in a glass bezel, and that screen is the main control. Click it and the same screen grows to fill the window. Press ⌘W and it shrinks back onto the desk, still running. Under the screen sit the PC's name, its state and a glass shelf of its games.\n\nThe window belongs to macOS. It uses the system window background, a hidden title bar, SF Pro and system controls. Event Horizon adds two colours from its logo. Gold is for what you press. Blue is for what is live on the PC. The game covers are the only large fields of colour, and they come from the games, not from Event Horizon.\n\nThe stream engine underneath is Glimmer, an open-source Swift engine. Glimmer is an engine credit only. It is not a look, and it is not a name on any surface.",
     "keyCharacteristics": [
-      "One brand hue, Eclipse Violet, used only where you act: the app buttons, the state button and a primary capsule.",
-      "The launcher is one sheet of frosted Liquid Glass with no card inside it.",
-      "Liquid Glass and soft black shadows only on things you can press or that float.",
-      "SF system text styles throughout; footnote-size secondary text does the explaining.",
-      "Continuous (squircle) corners, concentric where one shape sits in another.",
-      "Windows sized to their content; no empty space, no stretched columns.",
-      "Motion is snappy and short, and every pulse or bounce respects Reduce Motion."
+      "One raised object: the PC's screen in a glass bezel. Everything else is flat or plain glass.",
+      "Gold (the accent) marks what you can press: a 2pt ring on hover.",
+      "Blue marks what is live: the Running label, its dot and the on-screen cover.",
+      "The screen is always black. The PC's own picture or the idle face sits on it.",
+      "Game covers at 2:3 are the only colour fields.",
+      "The grow and shrink between Home and the PC is one continuous move.",
+      "System window background, system type, system controls."
     ],
     "rules": [
       {
-        "name": "The One Violet Rule",
-        "body": "Eclipse Violet is the only brand hue. There is no secondary or tertiary accent, and violet never marks status.",
+        "name": "The Press Gold, Live Blue Rule",
+        "body": "Gold means \"you can press this\". Blue means \"this runs on the PC now\". Never swap them, and never use either for health.",
         "section": "colors"
       },
       {
-        "name": "The Violet Acts Rule",
-        "body": "Violet fills only what acts: the app buttons, the state button and a primary capsule; elsewhere it is a tint on a glyph. Never put a violet or grey slab behind content; the glass is the surface.",
-        "section": "colors"
-      },
-      {
-        "name": "The Dot, Not Fill Rule",
-        "body": "Status colours appear as a small dot (6 to 7pt), a glyph or a line of text, never as a filled surface. The one exception is the connect-failure banner: glass with a faint red tint (0.12) and a 1pt red stroke, where the stroke carries the severity.",
+        "name": "The Covers Are the Colour Rule",
+        "body": "Event Horizon paints no colour slabs. Large fields of colour come only from the PC's picture and the games' cover art.",
         "section": "colors"
       },
       {
         "name": "The System Voice Rule",
-        "body": "Use text styles, not point sizes. Fixed sizes are allowed only for SF Symbol glyph sizing and the empty state's display line.",
+        "body": "Use text styles, not point sizes. Fixed sizes are only for SF Symbol glyphs (the gear at 13pt, a fallback cover glyph at 30pt) and the empty pairing state's 26pt headline.",
         "section": "typography"
       },
       {
-        "name": "The Footnote Explains Rule",
-        "body": "An explanation sits in footnote-size secondary text inside the control's own label, directly under its title, never as a loose paragraph elsewhere in the pane.",
-        "section": "typography"
-      },
-      {
-        "name": "The Sized-to-Content Rule",
-        "body": "Windows are exactly as big as their contents. No `minHeight` floor, no `maxWidth: .infinity` and no trailing `Spacer` on the launcher column; prove a geometry change with the osascript window check in CONTRIBUTING.",
+        "name": "The One Width Rule",
+        "body": "The status row, the shelf and any row under the screen line up with the bezel's edges. Nothing under the screen is wider than it.",
         "section": "layout"
       },
       {
-        "name": "The No Empty Aisles Rule",
-        "body": "A narrow column centred in a wide container reads as wasted space. Fill the width with structure (a header row, a grid) or narrow the container.",
+        "name": "The Screen Takes the Room Rule",
+        "body": "When the window grows, the screen grows. The rows under it keep their natural height.",
         "section": "layout"
       },
       {
-        "name": "The Press, Not Pose Rule",
-        "body": "Depth (glass, shadow or scale) marks something you can press or something floating above the window. Facts and labels sit flat on the glass.",
-        "section": "elevation"
-      },
-      {
-        "name": "The One Light Rule",
-        "body": "Every shadow is black, at 12 to 20% opacity, offset downward. No coloured glows, no inner shadows, no upward light.",
+        "name": "The One Raised Object Rule",
+        "body": "Only the bezel is raised at rest. Anything else that lifts does so only in answer to the pointer.",
         "section": "elevation"
       },
       {
         "name": "The Concentric Rule",
-        "body": "Inner radius = outer radius − inset. If a shape's corner doesn't follow its parent's, change the inset or the radius until it does.",
+        "body": "Inner radius = outer radius − inset. The bezel's radius is the screen's radius plus its 5pt inset.",
         "section": "shapes"
       }
     ],
     "dos": [
-      "Do build every custom look as a style on a real control (a `ButtonStyle` on a `Button`, glass on a `Button`), keeping native focus, keyboard and VoiceOver behaviour.",
-      "Do keep violet to what acts: the app buttons, the state button, a primary capsule, and the PC glyph as a tint.",
-      "Do group plain-glass siblings in one `GlassEffectContainer` with spacing equal to the layout gap, and never wrap filled controls in one: it composites the glass over their labels.",
-      "Do nest radii concentrically wherever one shape sits inside another.",
-      "Do animate state with `.snappy` (0.3 to 0.35s, extra bounce 0.1). Under Reduce Motion the extra bounce is 0, slides become fades, and every pulse and bounce is off.",
-      "Do use the `display` glyph for a PC, everywhere a PC is drawn.",
-      "Do disable (55% opacity) rather than hide the app buttons while a stream is running.",
-      "Do explain in footnote secondary text inside the control's label."
+      "Do make the PC's screen the primary action. Any new way into the PC grows the same screen.",
+      "Do keep gold for what you press and blue for what is live.",
+      "Do build every custom look as a style on a real control (`Button`, `SettingsLink`), so focus, keyboard and VoiceOver stay native.",
+      "Do use the system window background and system text styles.",
+      "Do line up every row under the screen with the bezel's edges.",
+      "Do nest radii concentrically, and use continuous corners.",
+      "Do honour Reduce Motion in the grow, the shrink, hovers and pulses.",
+      "Do let the games' own cover art carry the colour on the shelf."
     ],
     "donts": [
-      "Don't put a slab behind the launcher's content: a grey card reads as a blob, a pale violet one as dust and a dark violet one as flashy. The window is the surface.",
-      "Don't centre a narrow column in a wide container, or add a flexible frame to the launcher column; fill the width with structure or narrow the window.",
-      "Don't redraw, recolour or reinterpret the app icon, and don't introduce a second brand hue.",
-      "Don't style facts as controls: no chips, pills or glass behind the spec line, addresses or static key notation.",
-      "Don't use coloured shadows, glows or upward light, and don't use colour fills for status.",
-      "Don't draw a control from a shape with a tap gesture, or reach for web views or cross-platform UI.",
+      "Don't give anything but the bezel a resting shadow or a raised look.",
+      "Don't use blue for something you press, or gold for something that is running.",
+      "Don't put colour slabs, gradients or tinted cards behind Home's content. The only gradient is a cover's fallback tile.",
+      "Don't add a toolbar to the main window. Full screen is all PC.",
+      "Don't open the PC in a second window. The PC opens in this window.",
+      "Don't use a coloured glow, except the logo's own halo on the idle screen.",
+      "Don't redraw, recolour or reinterpret the app icon (the three-body figure-eight orbit).",
+      "Don't show \"Glimmer\" anywhere a person reads, except the engine credit.",
       "Don't use em dashes, emoji, exclamation marks, or \"host\" or \"server\" in anything a person reads."
     ]
   }

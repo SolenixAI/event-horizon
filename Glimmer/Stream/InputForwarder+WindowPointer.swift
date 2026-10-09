@@ -174,23 +174,34 @@ extension InputForwarder {
         guard isReady, isWindowMode || usesAbsolutePointer, let window, let view = inputView else { return }
         let viewPoint = view.convert(window.mouseLocationOutsideOfEventStream, from: nil)
         guard view.bounds.contains(viewPoint) else { return }
-        guard let point = PointerMapping.streamPoint(
+        guard let mapped = PointerMapping.streamPoint(
             viewPoint: viewPoint,
             viewSize: view.bounds.size,
             streamPixelSize: streamPixelSize
         ) else { return }
+        let point = PointerMapping.awayFromCorners(mapped)
         let rc = backend?.sendMousePosition(
             x: point.x, y: point.y, refW: point.refW, refH: point.refH) ?? -2
         record("LiSendMousePositionEvent(capture-sync)", rc)
     }
 
+    /// Wake the PC's display: a one-pixel move and back, the smallest input
+    /// that resets its idle timer. Home calls it so the desk never shows a
+    /// screen the PC has blanked.
+    func wakeHostDisplay() {
+        guard isReady, let backend else { return }
+        record("LiSendMouseMoveEvent(wake)", backend.sendMouseMove(dx: 1, dy: 0))
+        record("LiSendMouseMoveEvent(wake)", backend.sendMouseMove(dx: -1, dy: 0))
+    }
+
     func sendAbsolutePointer(for event: NSEvent, in view: NSView) {
         guard isReady, sendsAbsolutePointer else { return }
-        guard let point = PointerMapping.streamPoint(
+        guard let mapped = PointerMapping.streamPoint(
             viewPoint: view.convert(event.locationInWindow, from: nil),
             viewSize: view.bounds.size,
             streamPixelSize: streamPixelSize
         ) else { return }
+        let point = PointerMapping.awayFromCorners(mapped)
         let rc = backend?.sendMousePosition(
             x: point.x, y: point.y, refW: point.refW, refH: point.refH) ?? -2
         record("LiSendMousePositionEvent", rc)

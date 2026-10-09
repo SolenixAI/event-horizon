@@ -431,11 +431,19 @@ final class AWDLHelperManager: ObservableObject {
         heartbeatTask = Task { @MainActor in
             var tick = 0
             var lastLogged: UInt64 = 0
+            var misses = 0
             while !Task.isCancelled {
                 downRequested = true
                 let down = await operations.setDown(true, "stream")
                 guard !Task.isCancelled else { break }
                 suppressing = down
+                // A daemon that refuses us (an unsigned build fails its code
+                // requirement) will refuse every second: stop asking this stream.
+                misses = down ? 0 : misses + 1
+                if misses >= 3 {
+                    Diag.notice("AWDL helper did not answer 3 times - awdl0 left to macOS for this stream", "Stream")
+                    break
+                }
                 // Pull the contention gauge every five ticks, with a breadcrumb on change.
                 if tick % 5 == 0, let count = await operations.count() {
                     guard !Task.isCancelled else { break }

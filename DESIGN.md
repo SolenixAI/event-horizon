@@ -1,468 +1,382 @@
 ---
-name: Glimmer
+name: Event Horizon
 description:
-  A Mac-native Sunshine client that makes the PC in the other room feel plugged
-  into the Mac.
+  A Mac app around your gaming PC. The PC is a live screen on the desk inside
+  one native window; a click grows it to fill the window.
 colors:
-  eclipse-violet: "#6B0F9E"
-  eclipse-violet-night: "#A847E0"
+  horizon-gold: "#C9700F"
+  horizon-gold-night: "#F08A24"
+  horizon-blue: "#3AA0FF"
+  screen-black: "#000000"
+  window-day: "#FFFFFF"
+  window-night: "#1E1E1E"
+  label: "#000000D9"
+  secondary-label: "#00000080"
   ready-green: "#28CD41"
   caution-orange: "#FF9500"
   fault-red: "#FF3B30"
-  default-yellow: "#FFCC00"
-  label: "#000000D9"
-  secondary-label: "#00000080"
-  tertiary-label: "#0000003F"
 typography:
-  display:
-    fontFamily: "SF Pro Display, -apple-system, system-ui, sans-serif"
-    fontSize: "26px"
-    fontWeight: 700
-    letterSpacing: "-0.4px"
   pc-name:
-    fontFamily: "SF Pro Display, -apple-system, system-ui, sans-serif"
-    fontSize: "22px"
-    fontWeight: 600
-  headline:
     fontFamily: "SF Pro Display, -apple-system, system-ui, sans-serif"
     fontSize: "17px"
     fontWeight: 600
-  title:
-    fontFamily: "SF Pro Text, -apple-system, system-ui, sans-serif"
-    fontSize: "15px"
-    fontWeight: 400
+  screen-title:
+    fontFamily: "SF Pro Display, -apple-system, system-ui, sans-serif"
+    fontSize: "17px"
+    fontWeight: 600
   body:
     fontFamily: "SF Pro Text, -apple-system, system-ui, sans-serif"
     fontSize: "13px"
     fontWeight: 400
-  button:
+  callout:
     fontFamily: "SF Pro Text, -apple-system, system-ui, sans-serif"
-    fontSize: "13px"
-    fontWeight: 700
-  label:
+    fontSize: "12px"
+    fontWeight: 400
+  running:
     fontFamily: "SF Pro Text, -apple-system, system-ui, sans-serif"
     fontSize: "12px"
     fontWeight: 500
   caption:
     fontFamily: "SF Pro Text, -apple-system, system-ui, sans-serif"
     fontSize: "10px"
-    fontWeight: 400
+    fontWeight: 500
 rounded:
-  chip: "6px"
-  control: "8px"
-  tile: "10px"
-  inset: "12px"
-  app-button: "14px"
-  pc-tile: "16px"
+  cover: "9px"
+  screen: "12px"
+  panel: "12px"
+  bezel: "17px"
+  shelf: "18px"
   capsule: "9999px"
 spacing:
-  hairline: "2px"
-  xs: "4px"
-  sm: "8px"
-  gutter: "10px"
-  md: "12px"
-  lg: "16px"
-  margin: "24px"
+  xs: "3px"
+  bezel: "5px"
+  sm: "6px"
+  md: "10px"
+  row: "14px"
+  section: "16px"
+  shelf-gap: "18px"
+  window-x: "32px"
+  window-top: "38px"
 components:
-  app-button:
-    backgroundColor: "{colors.eclipse-violet}"
-    textColor: "#FFFFFF"
-    typography: "{typography.button}"
-    rounded: "{rounded.app-button}"
-    padding: "0 16px"
-    height: "60px"
-  stream-button:
-    backgroundColor: "{colors.eclipse-violet}"
-    textColor: "#FFFFFF"
-    typography: "{typography.headline}"
-    rounded: "{rounded.capsule}"
-    padding: "12px 22px"
-    height: "46px"
-  pc-header:
+  desk-screen:
+    backgroundColor: "{colors.screen-black}"
+    rounded: "{rounded.screen}"
+  desk-bezel:
+    rounded: "{rounded.bezel}"
+    padding: "5px"
+  pc-name:
     textColor: "{colors.label}"
     typography: "{typography.pc-name}"
+  spec-line:
+    textColor: "{colors.secondary-label}"
+    typography: "{typography.body}"
+  running-label:
+    textColor: "{colors.horizon-blue}"
+    typography: "{typography.running}"
   readiness-chip:
     textColor: "{colors.label}"
+    typography: "{typography.caption}"
     rounded: "{rounded.capsule}"
     padding: "4px 10px"
-  pc-tile:
+  game-shelf:
+    rounded: "{rounded.shelf}"
+    padding: "12px 14px"
+  cover-tile:
     textColor: "{colors.label}"
-    rounded: "{rounded.pc-tile}"
-    padding: "16px"
-  hotkey-recorder:
-    textColor: "{colors.label}"
-    typography: "{typography.body}"
+    typography: "{typography.caption}"
+    rounded: "{rounded.cover}"
+  cover-tile-on-screen:
+    textColor: "{colors.horizon-blue}"
+  settings-button:
     rounded: "{rounded.capsule}"
-    padding: "4px 12px"
-    width: "80px"
-    height: "22px"
-  hotkey-recorder-recording:
-    textColor: "{colors.eclipse-violet}"
+    size: "26px"
   connect-banner:
     textColor: "{colors.label}"
-    rounded: "{rounded.inset}"
+    typography: "{typography.callout}"
+    rounded: "{rounded.panel}"
     padding: "10px 14px"
-  stream-ended-toast:
-    textColor: "{colors.label}"
-    typography: "{typography.label}"
-    rounded: "{rounded.capsule}"
-    padding: "8px 18px"
 ---
 
-# Design System: Glimmer
+# Design System: Event Horizon
 
 ## Overview
 
-**Creative North Star: "The Other Room"**
+**Creative North Star: "The PC on the Desk"**
 
-The gaming PC lives in another room, and Glimmer is the doorway to it. The
-interface is a quiet Mac surface that says one thing at a time: this PC is
-ready, and here are its apps, one click from playing. Everything that isn't that
-sentence belongs to macOS: its materials, its type, its controls, its menus. The
-only thing Glimmer brings of its own is Eclipse Violet, and it appears only
-where you act.
+Event Horizon's Home is one Mac window with your PC on its desk. The PC is a
+black screen in a glass bezel, and that screen is the main control. Click it and
+the same screen grows to fill the window. Press ⌘W and it shrinks back onto the
+desk, still running. Under the screen sit the PC's name, its state and a glass
+shelf of its games.
 
-Surfaces are tactile, but taste comes first. The things you can press feel like
-objects: Liquid Glass that refracts what sits behind the window, a soft downward
-shadow, a slight give when pressed (scale 0.985). Everything else stays flat:
-facts, labels, explanations and status sit as plain text on the glass, with no
-chrome. Depth marks what can be pressed or what floats above the window, never
-decoration.
+The window belongs to macOS. It uses the system window background, a hidden
+title bar, SF Pro and system controls. Event Horizon adds two colours from its
+logo. Gold is for what you press. Blue is for what is live on the PC. The game
+covers are the only large fields of colour, and they come from the games, not
+from Event Horizon.
 
-The launcher is one sheet of frosted glass, sized to its content. The PC's name
-is its title and its switcher, the specs sit under the name, and each app is a
-violet button that streams it. There is no card inside the window: the window is
-the surface. Four looks have been tried and rejected: a neutral grey card (the
-"grey blob"), a narrow centred column in a wide card, a washed-out mauve card
-(the accent at low opacity over grey reads dusty), and a dark violet card lit
-from below, which read as flashy. The app icon is final and is not redrawn,
-recoloured or reinterpreted.
+The stream engine underneath is Glimmer, an open-source Swift engine. Glimmer
+is an engine credit only. It is not a look, and it is not a name on any
+surface.
 
 **Key Characteristics:**
 
-- One brand hue, Eclipse Violet, used only where you act: the app buttons, the
-  state button and a primary capsule.
-- The launcher is one sheet of frosted Liquid Glass with no card inside it.
-- Liquid Glass and soft black shadows only on things you can press or that
-  float.
-- SF system text styles throughout; footnote-size secondary text does the
-  explaining.
-- Continuous (squircle) corners, concentric where one shape sits in another.
-- Windows sized to their content; no empty space, no stretched columns.
-- Motion is snappy and short, and every pulse or bounce respects Reduce Motion.
+- One raised object: the PC's screen in a glass bezel. Everything else is flat
+  or plain glass.
+- Gold (the accent) marks what you can press: a 2pt ring on hover.
+- Blue marks what is live: the Running label, its dot and the on-screen cover.
+- The screen is always black. The PC's own picture or the idle face sits on it.
+- Game covers at 2:3 are the only colour fields.
+- The grow and shrink between Home and the PC is one continuous move.
+- System window background, system type, system controls.
 
 ## Colors
 
-One saturated violet on frosted glass, with the status colours that macOS
-already uses.
+Two logo colours on a plain system window, with the macOS status colours.
 
 ### Primary
 
-- **Eclipse Violet** (#6B0F9E light, oklch(41.7% 0.203 308)): the accent colour
-  of the app (`AccentColor`). The surface of the launcher's app buttons and its
-  state button, the menu bar panel's primary button, "Pair a PC…" in the empty
-  state and the pair sheet's main action. As a tint: the PC glyph in the
-  launcher's header, switches, focus rings and the pairing glyph.
-- **Eclipse Violet, night** (#A847E0 dark, oklch(59.5% 0.227 310)): the same
-  accent in dark appearance, lifted so it reads against dark glass without
-  glowing.
+- **Horizon Gold** (light) and **Horizon Gold, night** (dark): the app's
+  `AccentColor`, from the logo's warm ring. It is the hover ring on the bezel
+  and on a cover, the tint of system controls, and the gold half of a cover's
+  fallback gradient.
 
-The primary surface is the accent itself, opaque: lightened with 10% white at
-the top left and deepened with 18% black at the bottom right, under Liquid Glass
-tinted with the accent at 0.15, with a 1pt white rim fading from 30% to 2% top
-to bottom.
+### Secondary
+
+- **Horizon Blue**: the logo's cool ring (`Color.horizonBlue`). It marks what
+  is live on the PC: the Running label and its 7pt dot, the ring and name of the
+  cover that is on screen, the soft halo behind the logo on the idle screen, and
+  the blue half of a cover's fallback gradient.
 
 ### Neutral
 
-- **Label** (#000000D9, white at 85% in dark): primary text: PC names, app
-  names, button labels.
-- **Secondary Label** (#00000080, white at 55% in dark): explanations, the spec
-  line, trailing play glyphs, addresses.
-- **Tertiary Label** (#0000003F, white at 25% in dark): the quietest facts, such
-  as "Last played".
-- Backgrounds are glass and system materials rather than colours: frosted Liquid
-  Glass for the launcher window, thin material on Settings, sheets and the
-  toast, quaternary fills for inset panels.
+- **Screen Black**: the PC's screen, in light and dark appearance alike.
+- **Window, day** and **Window, night**: the system window background
+  (`windowBackgroundColor`), as sampled in the captures. Use the system colour,
+  never a hard-coded value.
+- **Label** and **Secondary Label**: the system label colours. The PC name and
+  cover names use the label. The spec line uses the secondary label. On the
+  black screen, text is white, and the detail line is 60% white.
 
 ### Status
 
-- **Ready Green** (#28CD41, system green): the ready dot on the readiness chip
-  and in the menu bar panel, and a healthy controller battery.
-- **Caution Orange** (#FF9500, system orange): the readiness dot while
-  connecting or when the PC needs attention, and a low controller battery.
-- **Fault Red** (#FF3B30, system red): the connect-failure banner's stroke and
-  tint, and errors in the log viewer.
-- **Default Yellow** (#FFCC00, system yellow): the star that marks the default
-  PC.
+- **Ready Green**, **Caution Orange** and **Fault Red** are the system colours.
+  They appear only as the readiness chip's 7pt dot and as the connect banner's
+  red stroke and faint red tint.
 
 ### Named Rules
 
-**The One Violet Rule.** Eclipse Violet is the only brand hue. There is no
-secondary or tertiary accent, and violet never marks status.
+**The Press Gold, Live Blue Rule.** Gold means "you can press this". Blue means
+"this runs on the PC now". Never swap them, and never use either for health.
 
-**The Violet Acts Rule.** Violet fills only what acts: the app buttons, the
-state button and a primary capsule; elsewhere it is a tint on a glyph. Never put
-a violet or grey slab behind content; the glass is the surface.
-
-**The Dot, Not Fill Rule.** Status colours appear as a small dot (6 to 7pt), a
-glyph or a line of text, never as a filled surface. The one exception is the
-connect-failure banner: glass with a faint red tint (0.12) and a 1pt red stroke,
-where the stroke carries the severity.
+**The Covers Are the Colour Rule.** Event Horizon paints no colour slabs. Large
+fields of colour come only from the PC's picture and the games' cover art.
 
 ## Typography
 
-**Display Font:** SF Pro Display (the system font) **Body Font:** SF Pro Text
-(the system font) **Label/Mono Font:** SF Mono via `.monospaced()`, only for
-addresses and key notation
+**Font:** SF Pro, the system font, through system text styles only.
 
-**Character:** Only the system font, set with the built-in text styles, so that
-Glimmer reads at the same sizes as Finder and System Settings and scales with
-the user's text size.
+**Character:** Home reads like a first-party Mac app. It uses the same text
+styles as Finder and System Settings, and it scales with the user's text size.
 
 ### Hierarchy
 
-- **Display** (bold 700, 26pt, tracking -0.4): the empty state's headline only
-  ("Let's find your gaming PC").
-- **PC name** (semibold 600, 22pt, the title style): the launcher's title.
-- **Headline** (semibold 600, 17pt, the title2 style): the state button's label.
-- **Title** (regular 400, 15pt, the title3 style): the empty state's supporting
-  line and the few section titles outside a Form.
-- **Body** (regular 400, 13pt): the spec line under the PC name, Settings rows,
-  menu items and form labels.
-- **Button** (bold 700, 13pt, the headline style): the app buttons' names.
-- **Label** (medium 500, 12pt, the callout style): the toast's title.
-- **Caption** (regular 400, 10pt, the footnote and caption styles): the
-  explanatory line under a toggle, the readiness chip (in medium weight), and
-  the "Last played" line.
+- **PC name** (semibold, title2): the PC's name under the screen, on the
+  leading edge.
+- **Screen title** (semibold, title2, white): the idle face's line on the
+  screen ("Desktop", "<PC> is asleep", "Opening <game>…").
+- **Body** (regular, body, secondary): the spec line under the PC name. Facts
+  are joined by " · ".
+- **Callout** (regular, callout): the screen's detail line ("Click to open your
+  PC") and the permission row's sentence.
+- **Running** (medium, callout, blue): "Running <game>".
+- **Caption** (medium, caption): cover names, with two lines reserved, and the
+  readiness chip's label.
 
 ### Named Rules
 
 **The System Voice Rule.** Use text styles, not point sizes. Fixed sizes are
-allowed only for SF Symbol glyph sizing and the empty state's display line.
-
-**The Footnote Explains Rule.** An explanation sits in footnote-size secondary
-text inside the control's own label, directly under its title, never as a loose
-paragraph elsewhere in the pane.
+only for SF Symbol glyphs (the gear at 13pt, a fallback cover glyph at 30pt)
+and the empty pairing state's 26pt headline.
 
 ## Layout
 
-The launcher is a content-sized window of frosted Liquid Glass: its column ends
-in `.fixedSize(horizontal: false, vertical: true)`, and the window is 580pt
-wide, 532pt of content in 24pt side margins. The title bar holds the traffic
-lights on the leading edge and the Settings gear on the trailing edge. Under it,
-16pt apart: a failure banner when there is one; the header (the PC glyph, the
-PC's name with the spec line under it, a flexible gap and the readiness chip); a
-two-column grid of app buttons with 10pt gutters; the state button, only when
-the PC needs something other than a stream; and the "Last played" footer. The
-grid shows at most four cells; beyond four apps, the fourth is a menu of the
-rest.
+Home is one column inside the window: 32pt side margins, 38pt from the top (the
+title-bar line) and 22pt at the bottom. The window's minimum size is 640 by
+600pt. Its ideal size is 1040 by 780pt, and it resizes freely.
 
-Settings is a standard split view (sidebar plus a grouped Form) in its own
-window, with a minimum size of 680 by 540pt. The menu bar panel is 300pt wide.
+The screen takes the space that is left (it has layout priority). It keeps the
+PC's aspect ratio, 16:10 by default. The rows under it are exactly as wide as
+the bezel: the screen's width plus 10pt. In order: the status row, 16pt below
+the screen; the game shelf, 18pt below that; and the controller permission row,
+12pt below the shelf, only when it is needed.
 
-The spacing rhythm is 8pt: 8 and 10 are the everyday gaps, 16 and 24 separate
-groups and frame the window, and 2, 4 and 6 are fine steps inside a control.
+The status row puts the PC name and the spec line on the leading edge, 3pt
+apart. The Running label follows 14pt after them, then a flexible gap, then the
+readiness chip on the trailing edge. A connect banner, when there is one, sits
+above the screen with 10pt below it.
+
+The shelf is as wide as its covers when they fit, aligned to the leading edge.
+When they do not fit, it takes the bezel's width and scrolls sideways, and its
+last 10% fades out to show that there is more. Cover width follows the desk:
+about nine across, from 100 to 150pt, 14pt apart.
+
+The Settings gear sits on the title-bar line, 10pt in from the trailing edge,
+across from the window buttons. There is no toolbar, so full screen is all PC.
 
 ### Named Rules
 
-**The Sized-to-Content Rule.** Windows are exactly as big as their contents. No
-`minHeight` floor, no `maxWidth: .infinity` and no trailing `Spacer` on the
-launcher column; prove a geometry change with the osascript window check in
-CONTRIBUTING.
+**The One Width Rule.** The status row, the shelf and any row under the screen
+line up with the bezel's edges. Nothing under the screen is wider than it.
 
-**The No Empty Aisles Rule.** A narrow column centred in a wide container reads
-as wasted space. Fill the width with structure (a header row, a grid) or narrow
-the container.
+**The Screen Takes the Room Rule.** When the window grows, the screen grows.
+The rows under it keep their natural height.
 
 ## Elevation & Depth
 
-Glimmer is tactile but restrained, with depth reserved for surfaces that respond
-to touch or float over the window. Liquid Glass (`.glassEffect`) is the primary
-depth cue. The launcher window itself is frosted Liquid Glass, see-through
-enough to show colour behind it and blurred enough that text behind turns to
-colour. On it: the app buttons and the state button on the primary surface,
-plain glass on the readiness chip, the gear and the overflow menu, and plain
-glass on the PC tiles in Settings. The refraction and colour behind the glass
-come from the desktop showing through, not from a gradient to remove. Shadows
-are black, soft and always cast downward.
+The window is flat. There is one raised object: the bezel around the PC's
+screen. It is regular Liquid Glass, 5pt wide, with a 1pt light catch on its top
+edge that fades out by its middle (60% white in light, 28% in dark). In light
+appearance it also casts a soft black shadow. In dark appearance it casts none,
+and the light catch alone lifts it.
+
+Everything else is plain glass with no shadow: the shelf, the readiness chip,
+the gear and the banner. A cover gets a shadow only while the pointer is on it.
 
 ### Shadow Vocabulary
 
-- **Button lift** (black 18%, radius 12, y 4): the app buttons, the state button
-  and every primary capsule.
-- **Icon lift** (black 20%, radius 10, y 4): the app icon on the About pane.
-- **Toast float** (black 12%, radius 8, y 4): the "Stream ended" toast.
+- **Bezel lift** (black 18%, radius 18, y 10; light appearance only): the
+  bezel.
+- **Cover lift** (black 35%, radius 10, y 6; hover only): a cover under the
+  pointer, with a 1.03 scale.
+- **Logo halo** (Horizon Blue 35%, radius 24, no offset): the app icon on the
+  idle screen. It repeats the halo that the logo itself carries. It is used
+  nowhere else.
 
 ### Named Rules
 
-**The Press, Not Pose Rule.** Depth (glass, shadow or scale) marks something you
-can press or something floating above the window. Facts and labels sit flat on
-the glass.
-
-**The One Light Rule.** Every shadow is black, at 12 to 20% opacity, offset
-downward. No coloured glows, no inner shadows, no upward light.
+**The One Raised Object Rule.** Only the bezel is raised at rest. Anything else
+that lifts does so only in answer to the pointer.
 
 ## Shapes
 
-Every corner is continuous (a squircle), never circular. Radii nest where one
-shape sits inside another (the menu bar panel's cards, the pair sheet's panels).
-Capsules mark a single action or a single state (the state button, the readiness
-chip, the toast, the gear). Rounded rectangles mark containers and the app
-buttons: 6pt for glyph chips in the sidebar and menu bar, 8pt for small controls
-and badges, 10pt for the pair sheet's rows, 12pt for inset panels, 14pt for the
-launcher's app buttons and 16pt for PC tiles. Borders are hairline strokes at
-0.5pt and low opacity, used only where material alone would disappear (the
-toast, the empty state's medallion); the primary surface carries a 1pt lit rim.
-Heavier strokes carry state: 1pt red on the failure banner, a 2pt accent ring on
-a recording hotkey.
+Every corner is continuous (a squircle). The radii nest: the 12pt screen sits
+5pt inside the 17pt bezel. When the PC grows to fill the window, the screen's
+corner goes to 0, and the window's own corner frames it. Covers are 2:3 with
+9pt corners. The shelf is 18pt. Inset rows (the banner, the permission row) are
+12pt. The readiness chip is a capsule, and the gear is a circle.
+
+Rings carry state: a 2pt ring on the bezel or on a cover. It is gold on hover
+and blue on the cover that is on screen. The screen has a 1pt edge at 12% white,
+so its black stays separate from a dark bezel.
 
 ### Named Rules
 
-**The Concentric Rule.** Inner radius = outer radius − inset. If a shape's
-corner doesn't follow its parent's, change the inset or the radius until it
-does.
+**The Concentric Rule.** Inner radius = outer radius − inset. The bezel's
+radius is the screen's radius plus its 5pt inset.
 
 ## Components
 
-### Buttons
+### Desk Screen (signature)
 
-Tactile and confident: the things on screen that ask to be pressed.
+- **What it is:** a real `Button` that is the PC's screen. It is black, at the
+  PC's aspect ratio, inside the glass bezel.
+- **Idle face:** the app icon (84pt) with its blue halo, a white title and a
+  60% white detail line, centred. While Event Horizon waits, a large progress
+  spinner takes the icon's place.
+- **Live:** the PC's stream sits exactly on the screen's frame, with 12pt
+  corners, and keeps running while Home shows.
+- **Hover:** a 2pt gold ring on the bezel, with a snappy 0.2s fade.
+- **Accessibility:** "<PC> screen", with the state as its value and the action
+  as its hint.
 
-- **App buttons (`AppTileStyle`):** the launcher's main actions. 60pt tall with
-  a 14pt radius, a 20pt glyph, the app name in bold headline, and a play glyph
-  trailing at 75%, all white on the primary surface. One click streams that app,
-  and Return streams the Start with app while the PC is ready. The app that is
-  launching or streaming carries its own state, with the readiness chip as the
-  status: during a slow connect or a reconnect its play glyph becomes a spinner
-  and a click or Escape is the way out; while its stream window is hidden it
-  stays violet, reads “Back to Stream” in place of its play glyph, and a click
-  or Return goes back to the stream. The other app buttons dim while a stream
-  exists.
-- **State button (`StreamButtonStyle`):** a capsule at least 46pt tall, with
-  22pt of horizontal and 12pt of vertical padding, white title2 semibold label.
-  It appears under the app buttons only when the PC needs something other than a
-  stream: Wake and Connect and Pair Again…, and Connecting… or Back to Stream
-  for a stream with no app button of its own, from the overflow menu, the menu
-  bar or Shortcuts. A fast connect shows nothing: both wait out a 400ms hold.
-  The same style is the menu bar panel's primary button, "Pair a PC…" and the
-  pair sheet's main action.
-- **Pressed:** scales to 0.985 over a 0.15s snappy spring; no colour change.
-  Disabled drops to 55% opacity.
-- **Secondary:** standard AppKit and SwiftUI buttons (bordered, borderless or
-  plain) with no custom style. "Pair a PC…" in Settings is a standard button
-  with a plus glyph.
+### Grow and Shrink (signature motion)
 
-### Chips
+- **Grow:** the stream surface moves from the screen's frame to the whole
+  window in 0.42s on a fast-out curve (0.2, 0.9, 0.25, 1). Then its corner goes
+  to 0.
+- **Shrink:** it moves back onto the desk in 0.38s on the same curve, with 12pt
+  corners.
+- **Window buttons:** while the PC fills the window, close, minimise and zoom
+  step aside. They come back while the pointer is in the top 28pt strip, as in
+  QuickTime.
+- **Reduce Motion:** the surface jumps to its frame with no animation.
 
-- **Readiness chip:** a glass capsule with 4 by 10pt of padding, a 7pt status
-  dot, a caption-medium label and an optional 9pt route glyph (a cable plug for
-  wired, Wi-Fi arcs for wireless). The dot pulses while your own stream is live,
-  unless Reduce Motion is on.
-- **Spec line:** not a chip. Resolution, refresh rate and codec are a single
-  line of body text in secondary colour under the PC's name, separated by middle
-  dots, so nothing that is a fact looks pressable.
+### Status Row
 
-### PC Header
+- The PC name with the spec line under it, then the Running label in blue with
+  its 7pt dot (hidden for the Desktop), and the readiness chip on the trailing
+  edge. A right-click opens the PC's menu.
 
-- The launcher's title: the `display` glyph at 30pt in the accent, the PC's name
-  in title semibold with the spec line under it, and the readiness chip on the
-  trailing edge. With more than one PC paired, the name is a menu with a chevron
-  that lists the PCs with a checkmark on the selected one. Right-click opens the
-  PC's own menu (rename, codec, Wake on LAN, unpair).
+### Readiness Chip
 
-### Cards / Containers
+- A plain glass capsule with 10 by 4pt of padding: a 7pt status dot, the state
+  in caption medium and, when ready, a quiet route glyph (Wi-Fi or Ethernet) in
+  secondary. The dot pulses while connecting, unless Reduce Motion is on.
 
-- **Corner Style:** 16pt for PC tiles in Settings; 12pt for inset panels. The
-  launcher has no card: the window is the surface.
-- **Background:** plain glass or quaternary fill.
-- **Border:** none.
-- **Internal Padding:** 16pt.
+### Game Shelf
+
+- One plain glass panel (18pt corners) with 12 by 14pt of padding. It holds the
+  PC's games as a row of cover tiles. The Desktop is not on the shelf, because
+  the screen is the Desktop.
+
+### Cover Tile
+
+- A real `Button`: the game's own 2:3 art with 9pt corners, and the name under
+  it in caption medium on two reserved lines.
+- **Hover:** a 2pt gold ring, a 1.03 scale and the cover lift, with a snappy
+  0.18s animation.
+- **On screen:** a 2pt blue ring and a blue name. The same source drives this
+  and the Running label, so they always agree.
+- **Launching:** a progress spinner over the cover.
+- **No art yet:** a blue-to-gold gradient (55% and 45%) with the app's SF
+  Symbol in white.
+
+### Settings Button
+
+- The gear SF Symbol (13pt medium) in a 26pt interactive glass circle on the
+  title-bar line. It is a `SettingsLink`, so ⌘, works too.
 
 ### Connect Banner
 
-- Sits at the top of the launcher only when a connection fails: the shared
-  failure copy, a borderless dismiss button, 10 by 14pt of padding, glass tinted
-  red at 0.12 with a 1pt red stroke at 12pt radius. It slides in from the top
-  and appears at once, never behind a delay.
+- It sits above the screen only when a connection fails: a warning glyph, the
+  error in callout medium, a glass action button and a dismiss button. Glass
+  tinted red at 0.12, with a 1pt red stroke and 12pt corners. It slides in from
+  the top, and it fades under Reduce Motion.
 
-### PC Tiles (Settings)
+### Controller Permission Row
 
-- The `display` glyph on a colour picked by hashing the PC's ID, the name in
-  headline, the address in caption monospaced, and "Last played" in tertiary.
-  The PC's apps appear as up to three plain secondary glyphs, not buttons. Plain
-  glass at 16pt. The yellow star alone marks the default PC.
-
-### Inputs / Fields
-
-- **Style:** standard system text fields, pickers, toggles and steppers in a
-  grouped Form. No custom field chrome.
-- **Hotkey recorder:** an interactive glass capsule, at least 80 by 22pt,
-  showing the chord in body medium monospaced text. While recording, the glass
-  takes an accent tint (0.22), a 2pt accent ring and accent text; a rejected
-  chord explains itself in a line underneath and recording stays open. A saved
-  chord is announced to VoiceOver, and VoiceOver's own keys pass through.
-- **Static key notation:** fixed chords appear as plain monospaced secondary
-  text, not as badges, because they cannot be pressed.
-
-### Navigation
-
-- **Settings sidebar:** the standard source list, each row with an SF Symbol on
-  a 6pt coloured glyph chip.
-- **Stream menu:** in the main menu bar: Stream, Mini Player and Stop Streaming,
-  then the PCs with a checkmark on the selected one and ⌘1 to ⌘9. The PCs lock
-  while a stream is running.
-- **Toolbar:** only the Settings gear, on the trailing edge; the PC switcher is
-  the header's name.
-- **Menu bar panel:** 300pt wide, with cards on 12pt quaternary fill, each
-  titled in headline with its value in secondary on the right, the way Tahoe's
-  own panels are. The PC card has no title: the PC's name is the title. Big
-  numbers are title semibold with monospaced digits; the chart draws bandwidth
-  in the accent, latency in secondary and frames in green, with orange for a
-  short second. The footer holds an "Open Glimmer" plain button, a glass gear
-  for Settings and a "…" menu with "Check for Updates…" and "Quit Glimmer".
-
-### Stream-Ended Toast
-
-- A thin-material capsule with a 0.5pt hairline, "Stream ended" in callout
-  medium and an optional receipt line in caption secondary. It slides down from
-  the top edge (fades under Reduce Motion), stays 2 seconds (4 with a receipt)
-  and is announced to VoiceOver.
+- A quiet plain-glass row (12pt corners) under the shelf. It shows only when a
+  controller needs Input Monitoring: a controller glyph, one sentence, "Allow…"
+  and a borderless "Not Now". It is never an alert.
 
 ## Do's and Don'ts
 
 ### Do:
 
-- **Do** build every custom look as a style on a real control (a `ButtonStyle`
-  on a `Button`, glass on a `Button`), keeping native focus, keyboard and
-  VoiceOver behaviour.
-- **Do** keep violet to what acts: the app buttons, the state button, a primary
-  capsule, and the PC glyph as a tint.
-- **Do** group plain-glass siblings in one `GlassEffectContainer` with spacing
-  equal to the layout gap, and never wrap filled controls in one: it composites
-  the glass over their labels.
-- **Do** nest radii concentrically wherever one shape sits inside another.
-- **Do** animate state with `.snappy` (0.3 to 0.35s, extra bounce 0.1). Under
-  Reduce Motion the extra bounce is 0, slides become fades, and every pulse and
-  bounce is off.
-- **Do** use the `display` glyph for a PC, everywhere a PC is drawn.
-- **Do** disable (55% opacity) rather than hide the app buttons while a stream
-  is running.
-- **Do** explain in footnote secondary text inside the control's label.
+- **Do** make the PC's screen the primary action. Any new way into the PC grows
+  the same screen.
+- **Do** keep gold for what you press and blue for what is live.
+- **Do** build every custom look as a style on a real control (`Button`,
+  `SettingsLink`), so focus, keyboard and VoiceOver stay native.
+- **Do** use the system window background and system text styles.
+- **Do** line up every row under the screen with the bezel's edges.
+- **Do** nest radii concentrically, and use continuous corners.
+- **Do** honour Reduce Motion in the grow, the shrink, hovers and pulses.
+- **Do** let the games' own cover art carry the colour on the shelf.
 
 ### Don't:
 
-- **Don't** put a slab behind the launcher's content: a grey card reads as a
-  blob, a pale violet one as dust and a dark violet one as flashy. The window is
-  the surface.
-- **Don't** centre a narrow column in a wide container, or add a flexible frame
-  to the launcher column; fill the width with structure or narrow the window.
-- **Don't** redraw, recolour or reinterpret the app icon, and don't introduce a
-  second brand hue.
-- **Don't** style facts as controls: no chips, pills or glass behind the spec
-  line, addresses or static key notation.
-- **Don't** use coloured shadows, glows or upward light, and don't use colour
-  fills for status.
-- **Don't** draw a control from a shape with a tap gesture, or reach for web
-  views or cross-platform UI.
+- **Don't** give anything but the bezel a resting shadow or a raised look.
+- **Don't** use blue for something you press, or gold for something that is
+  running.
+- **Don't** put colour slabs, gradients or tinted cards behind Home's content.
+  The only gradient is a cover's fallback tile.
+- **Don't** add a toolbar to the main window. Full screen is all PC.
+- **Don't** open the PC in a second window. The PC opens in this window.
+- **Don't** use a coloured glow, except the logo's own halo on the idle screen.
+- **Don't** redraw, recolour or reinterpret the app icon (the three-body
+  figure-eight orbit).
+- **Don't** show "Glimmer" anywhere a person reads, except the engine credit.
 - **Don't** use em dashes, emoji, exclamation marks, or "host" or "server" in
   anything a person reads.

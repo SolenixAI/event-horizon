@@ -63,8 +63,8 @@ Manager and Mac shortcuts stay the user's, while the PC feels local.
 - Built on Glimmer (GPL-3): Event Horizon's source must be open when distributed; it
   is unsandboxed, so the Mac App Store is not an option as-is.
 - Unsigned local builds cannot use the Wi-Fi (AWDL) helper; signed builds need
-  the Apple Developer Program (undecided).
-- Business model (2026-10-09): $29 one-time, 14-day trial, a year of updates; sold direct, not the Mac App Store (GPL-3).
+  the Apple Developer Program. Decided 2026-10-09: unsigned downloads are acceptable for now; Developer ID signing comes after the first 4 sales.
+- Business model (2026-10-09): $20 one-time, 14-day trial, a year of updates; friends with a Mac and a PC get free licence keys; sold direct through Stripe, not the Mac App Store (GPL-3).
 - The product's name is Event Horizon (2026-10-09).
 
 ## Brand Commitments

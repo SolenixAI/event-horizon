@@ -295,6 +295,11 @@ public final class InputForwarder {
     /// proven C path, so behavior is identical to the prior inline LiSend*.
     var backend: StreamingBackend?
 
+    /// While Home shows the PC on the desk: a slow tick and an app-activation
+    /// observer that keep the PC's display awake (InputForwarder+Lifecycle.swift).
+    var homeKeepAwake: Timer?
+    var homeActivationObserver: NSObjectProtocol?
+
     /// Set the backend the forwarder uses. Called by StreamSession right after
     /// `attach(to:)`.
     public func setBackend(_ backend: StreamingBackend) {

@@ -87,7 +87,7 @@ struct StreamMenu: View {
 // MARK: - Connect surface
 
 /// The primary controls' surface: the accent lifted toward white at the top left and
-/// deepened at the bottom right, opaque, so the app buttons and Stream are the violet on screen.
+/// deepened at the bottom right, opaque, so the app buttons and Stream carry the accent.
 @MainActor
 var accentSurfaceGradient: LinearGradient {
     LinearGradient(colors: [Color.accentColor.mix(with: .white, by: 0.10), Color.accentColor.mix(with: .black, by: 0.18)],

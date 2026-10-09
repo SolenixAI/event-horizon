@@ -113,9 +113,9 @@ struct GlimmerApp: App {
                 // connect surface's real width (its .horizontal padding): a floor
                 // below it leaves the window a range to be dragged through.
                 .frame(minWidth: 580, maxWidth: .infinity, maxHeight: .infinity)
-                // Frosted Liquid Glass is the launcher's surface: see-through enough to show
-                // colour behind it, blurred enough that text behind turns to colour.
-                .containerBackground(for: .window) { Color.clear.glassEffect(.regular, in: .rect) }
+                // The system window background, as first-party apps use: the glass
+                // bezel and shelf are the raised objects on it, in light and dark.
+                .containerBackground(for: .window) { Color(nsColor: .windowBackgroundColor) }
         }
         .windowStyle(.hiddenTitleBar)
         // Event Horizon: the PC opens inside this window, so it grows to the stream and the

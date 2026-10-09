@@ -91,6 +91,24 @@ struct WindowPointerTests {
         #expect(topRight == PointerMapping.StreamPoint(x: 1919, y: 0, refW: 1920, refH: 1080))
     }
 
+    /// The PC's hot corners (KDE Overview, Windows' Show Desktop) fire when the
+    /// pointer touches a corner pixel. A Mac pointer that crosses the window's
+    /// corner must not reach them; edges and everything else pass unchanged.
+    @Test func keepsThePointerOffTheCornerPixels() {
+        let size = (refW: Int16(1920), refH: Int16(1080))
+        func point(_ x: Int16, _ y: Int16) -> PointerMapping.StreamPoint {
+            PointerMapping.StreamPoint(x: x, y: y, refW: size.refW, refH: size.refH)
+        }
+        #expect(PointerMapping.awayFromCorners(point(0, 0)) == point(3, 0))
+        #expect(PointerMapping.awayFromCorners(point(1919, 0)) == point(1916, 0))
+        #expect(PointerMapping.awayFromCorners(point(2, 1079)) == point(3, 1079))
+        #expect(PointerMapping.awayFromCorners(point(1917, 1078)) == point(1916, 1078))
+        // An edge away from a corner (a taskbar at the bottom) is untouched.
+        #expect(PointerMapping.awayFromCorners(point(960, 1079)) == point(960, 1079))
+        #expect(PointerMapping.awayFromCorners(point(0, 540)) == point(0, 540))
+        #expect(PointerMapping.awayFromCorners(point(3, 3)) == point(3, 3))
+    }
+
     /// The middle of the view is the middle of the stream at any scale - the
     /// property that makes the host cursor track this Mac's cursor.
     @Test func mapsTheCentreAtAnyWindowSize() {

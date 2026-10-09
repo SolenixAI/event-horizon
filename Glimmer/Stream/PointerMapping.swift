@@ -80,6 +80,23 @@ enum PointerMapping {
             refW: Int16(clamping: Int(refW)), refH: Int16(clamping: Int(refH)))
     }
 
+    /// The PC's hot corners fire on the corner pixels. A point within
+    /// `cornerGuard` pixels of a corner moves sideways, just out of it, so a
+    /// Mac pointer crossing the window's corner never opens the PC's Overview
+    /// or Show Desktop. Edges stay reachable (a taskbar, a menu bar).
+    static let cornerGuard: Int16 = 3
+
+    static func awayFromCorners(_ point: StreamPoint) -> StreamPoint {
+        let last = (x: point.refW - 1, y: point.refH - 1)
+        let nearTopOrBottom = point.y < cornerGuard || point.y > last.y - cornerGuard
+        guard nearTopOrBottom else { return point }
+        let x: Int16
+        if point.x < cornerGuard { x = cornerGuard }
+        else if point.x > last.x - cornerGuard { x = last.x - cornerGuard }
+        else { return point }
+        return StreamPoint(x: x, y: point.y, refW: point.refW, refH: point.refH)
+    }
+
     /// Clamp into `0 ... upperBound`. NaN (only reachable from a degenerate
     /// input the guard above already rejects) lands on 0 rather than
     /// propagating into the Int conversion, which would trap.

@@ -100,11 +100,40 @@ extension InputForwarder {
         if let window, let view = inputView, window.firstResponder === view {
             window.makeFirstResponder(nil)
         }
+        keepHostAwakeAtHome()
     }
 
     /// Back from Home: keys and the pointer go to the PC again.
     func resumeFromHome() {
+        stopKeepingHostAwake()
         installFirstResponder()
+    }
+
+    /// Home shows the PC live, so its display must not blank: wake it now,
+    /// every two minutes while Event Horizon is in front, and the moment the
+    /// user comes back to the app.
+    private func keepHostAwakeAtHome() {
+        stopKeepingHostAwake()
+        wakeHostDisplay()
+        homeKeepAwake = Timer.scheduledTimer(withTimeInterval: 120, repeats: true) { _ in
+            MainActor.assumeIsolated { [weak self] in
+                if NSApp.isActive { self?.wakeHostDisplay() }
+            }
+        }
+        homeActivationObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main
+        ) { _ in
+            MainActor.assumeIsolated { [weak self] in self?.wakeHostDisplay() }
+        }
+    }
+
+    func stopKeepingHostAwake() {
+        homeKeepAwake?.invalidate()
+        homeKeepAwake = nil
+        if let token = homeActivationObserver {
+            NotificationCenter.default.removeObserver(token)
+            homeActivationObserver = nil
+        }
     }
 
     /// Apply first-responder to our StreamInputView. Called by StreamWindow
@@ -152,6 +181,7 @@ extension InputForwarder {
     }
 
     public func detach() {
+        stopKeepingHostAwake()
         // Raise every held key/button/modifier so a mid-press teardown can't
         // leave the host with phantom-held input.
         raiseAllHeldInputs(reason: "stream teardown")

@@ -108,6 +108,7 @@ extension StreamWindow {
         embeddedSurface?.setTransparentCursorEnabled(false)
         hideCaptureHint()
         releaseStreamAspect()
+        setWindowButtonsTucked(false)
         placeSurfaceOnDesk(rounded: true, animate: true)
         onHomeChanged?(true)
         log.info("Home shown - the PC keeps running on the desk")
@@ -146,6 +147,7 @@ extension StreamWindow {
             surface.frame = host.bounds
             surface.autoresizingMask = [.width, .height]
             self?.setSurfaceCorner(0)
+            self?.setWindowButtonsTucked(true)
         }
         guard animate, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else { finish(); return }
         NSAnimationContext.runAnimationGroup({ ctx in
@@ -171,6 +173,25 @@ extension StreamWindow {
         }
     }
 
+    /// The PC fills the window: the close, minimise and zoom buttons step
+    /// aside so the PC's own corner is the PC's (QuickTime does the same).
+    /// They come back while the pointer is in the window's top strip.
+    func setWindowButtonsTucked(_ tucked: Bool) {
+        let buttons: [NSButton] = [.closeButton, .miniaturizeButton, .zoomButton]
+            .compactMap { window.standardWindowButton($0) }
+        buttons.forEach { $0.isHidden = tucked }
+        titlebarReveal?.removeFromSuperview()
+        titlebarReveal = nil
+        guard tucked, let host = embeddedSurface?.superview else { return }
+        let strip = TitlebarRevealView { inside in buttons.forEach { $0.isHidden = !inside } }
+        let height: CGFloat = 28
+        strip.frame = NSRect(x: 0, y: host.isFlipped ? 0 : host.bounds.height - height,
+                             width: host.bounds.width, height: height)
+        strip.autoresizingMask = host.isFlipped ? [.width, .maxYMargin] : [.width, .minYMargin]
+        host.addSubview(strip, positioned: .above, relativeTo: embeddedSurface)
+        titlebarReveal = strip
+    }
+
     private func setSurfaceCorner(_ radius: CGFloat) {
         displayLayer.cornerRadius = radius
         displayLayer.masksToBounds = radius > 0
@@ -180,6 +201,7 @@ extension StreamWindow {
     /// the surface out of the main window. Home is already underneath.
     func closeEmbedded() {
         Self.homeShowing = false
+        setWindowButtonsTucked(false)
         if let token = deskFrameObserver {
             NotificationCenter.default.removeObserver(token)
             deskFrameObserver = nil
@@ -238,4 +260,30 @@ extension StreamWindow {
     func releaseStreamAspect() {
         window.resizeIncrements = NSSize(width: 1, height: 1)
     }
+}
+
+/// An invisible strip that only watches the pointer: clicks pass straight
+/// through to the PC underneath.
+private final class TitlebarRevealView: NSView {
+    private let onInside: @MainActor (Bool) -> Void
+
+    init(onInside: @escaping @MainActor (Bool) -> Void) {
+        self.onInside = onInside
+        super.init(frame: .zero)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        trackingAreas.forEach(removeTrackingArea)
+        addTrackingArea(NSTrackingArea(rect: .zero, options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
+                                       owner: self, userInfo: nil))
+    }
+
+    override func mouseEntered(with event: NSEvent) { onInside(true) }
+    override func mouseExited(with event: NSEvent) { onInside(false) }
 }

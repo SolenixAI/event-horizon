@@ -19,25 +19,30 @@ extension Color {
 
 struct DeskHome: View {
     @Environment(AppModel.self) private var model
+    /// The bezel's width: the status row and the shelf line up with it.
+    @State private var deskWidth: CGFloat = 0
 
     var body: some View {
         VStack(spacing: 0) {
             ConnectBanner()
                 .padding(.bottom, 10)
             if let host = model.selectedHost {
-                DeskScreen(host: host)
+                DeskScreen(host: host, width: $deskWidth)
                     .layoutPriority(1)
-                DeskStatus(host: host)
-                    .padding(.top, 16)
-                let games = model.shelfApps(of: host)
-                if !games.isEmpty {
-                    GameShelf(host: host, games: games)
-                        .padding(.top, 18)
+                Group {
+                    DeskStatus(host: host)
+                        .padding(.top, 16)
+                    let games = model.shelfApps(of: host)
+                    if !games.isEmpty {
+                        GameShelf(host: host, games: games, deskWidth: deskWidth)
+                            .padding(.top, 18)
+                    }
+                    if model.hidPermissionPadName != nil {
+                        ControllerPermissionRow()
+                            .padding(.top, 12)
+                    }
                 }
-                if model.hidPermissionPadName != nil {
-                    ControllerPermissionRow()
-                        .padding(.top, 12)
-                }
+                .frame(width: deskWidth > 0 ? deskWidth : nil)
             }
         }
         .padding(.horizontal, 32)
@@ -45,19 +50,21 @@ struct DeskHome: View {
         .padding(.bottom, 22)
         .frame(minWidth: 640, idealWidth: 1040, maxWidth: .infinity,
                minHeight: 600, idealHeight: 780, maxHeight: .infinity)
-        // No toolbar, so full screen is all PC; Settings lives on Home (and ⌘,).
+        // No toolbar, so full screen is all PC; Settings (and ⌘,) sits on the
+        // title-bar line, across from the window buttons.
         .overlay(alignment: .topTrailing) {
             SettingsLink {
                 Image(systemName: "gearshape")
-                    .font(.system(size: 15, weight: .medium))
-                    .frame(width: 32, height: 32)
+                    .font(.system(size: 13, weight: .medium))
+                    .frame(width: 26, height: 26)
             }
             .buttonStyle(.plain)
             .glassEffect(.regular.interactive(), in: .circle)
             .help("Settings")
             .accessibilityLabel("Settings")
-            .padding(.top, 10)
-            .padding(.trailing, 12)
+            .padding(.top, 1)
+            .padding(.trailing, 10)
+            .ignoresSafeArea(.container, edges: .top)
         }
         .task(id: model.selectedHost?.id) {
             guard let host = model.selectedHost else { return }
@@ -72,7 +79,9 @@ struct DeskHome: View {
 /// while Home shows; without a stream it says what a click will do.
 private struct DeskScreen: View {
     let host: Host
+    @Binding var width: CGFloat
     @Environment(AppModel.self) private var model
+    @Environment(\.colorScheme) private var colorScheme
     @State private var hovering = false
 
     private var aspect: CGFloat {
@@ -107,11 +116,18 @@ private struct DeskScreen: View {
                     .glassEffect(.regular, in: .rect(cornerRadius: 17))
             }
             .overlay {
+                // Light catching the bezel's top edge, so it reads as raised on a
+                // dark window too.
+                RoundedRectangle(cornerRadius: 17, style: .continuous)
+                    .strokeBorder(LinearGradient(colors: [.white.opacity(colorScheme == .dark ? 0.28 : 0.6), .white.opacity(0)],
+                                                 startPoint: .top, endPoint: .center), lineWidth: 1)
+            }
+            .overlay {
                 RoundedRectangle(cornerRadius: 17, style: .continuous)
                     .strokeBorder(Color.accentColor, lineWidth: 2)
                     .opacity(hovering ? 1 : 0)
             }
-            .shadow(color: .black.opacity(0.22), radius: 18, y: 10)
+            .shadow(color: .black.opacity(colorScheme == .dark ? 0 : 0.18), radius: 18, y: 10)
         }
         .buttonStyle(.plain)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -121,7 +137,9 @@ private struct DeskScreen: View {
         .onGeometryChange(for: CGRect.self) { proxy in
             proxy.frame(in: .global)
         } action: { box in
-            StreamWindow.deskFrame = Self.screenRect(box: box, aspect: aspect)
+            let screen = Self.screenRect(box: box, aspect: aspect)
+            StreamWindow.deskFrame = screen
+            width = screen.width + 10
         }
         .help(helpText)
         .accessibilityLabel("\(host.displayName) screen")
@@ -149,12 +167,18 @@ private struct DeskScreen: View {
         case .wake: return ("moon.zzz", "\(host.displayName) is asleep", "Click to wake it and open the Desktop", false)
         case .waking: return ("", "Waking \(host.displayName)…", "Click to stop waiting", true)
         case .pairAgain: return ("lock.trianglebadge.exclamationmark", "Pair again", "\(host.displayName) has a new certificate", false)
-        default: return ("cursorarrow.click.2", "Desktop", "Click to open your PC", false)
+        default:
+            if let running = model.runningAppName(on: host) {
+                return ("cursorarrow.click.2", running, "Running on your PC · Click to open it", false)
+            }
+            return ("cursorarrow.click.2", "Desktop", "Click to open your PC", false)
         }
     }
 
+    /// No tooltip while the PC fills the window: this view is under it.
     private var helpText: String {
-        model.isStreaming && model.nativeStreamBackgrounded ? "Back to your PC" : stateLine.detail
+        guard model.isStreaming else { return stateLine.detail }
+        return model.nativeStreamBackgrounded ? "Back to your PC" : ""
     }
 
     private var idleFace: some View {
@@ -196,7 +220,8 @@ private struct DeskStatus: View {
                     .lineLimit(1)
                 SpecChipsRow()
             }
-            if let running = model.runningAppName(on: host) {
+            if let running = model.appOnScreen(on: host),
+               running.caseInsensitiveCompare("Desktop") != .orderedSame {
                 RunningLabel(name: running)
             }
             Spacer(minLength: 12)
@@ -229,27 +254,43 @@ private struct RunningLabel: View {
 private struct GameShelf: View {
     let host: Host
     let games: [LibraryApp]
+    let deskWidth: CGFloat
     @Environment(AppModel.self) private var model
 
+    /// Covers grow with the desk: about nine across, never smaller than 100 pt.
+    private var coverWidth: CGFloat { min(max((deskWidth - 28) / 9 - 14, 100), 150) }
+
     var body: some View {
-        ScrollView(.horizontal) {
-            HStack(alignment: .top, spacing: 14) {
-                ForEach(games) { app in
-                    CoverTile(host: host, app: app)
+        // As wide as its covers when they fit, else the desk's width and scrolling.
+        ViewThatFits(in: .horizontal) {
+            row
+            ScrollView(.horizontal) { row }
+                .scrollIndicators(.never)
+                // The trailing covers fade out: there is more shelf to scroll to.
+                .mask {
+                    LinearGradient(stops: [.init(color: .black, location: 0.9), .init(color: .clear, location: 1)],
+                                   startPoint: .leading, endPoint: .trailing)
                 }
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
         }
-        .scrollIndicators(.never)
         .glassEffect(.regular, in: .rect(cornerRadius: 18))
-        .frame(height: 196)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var row: some View {
+        HStack(alignment: .top, spacing: 14) {
+            ForEach(games) { app in
+                CoverTile(host: host, app: app, width: coverWidth)
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
     }
 }
 
 private struct CoverTile: View {
     let host: Host
     let app: LibraryApp
+    let width: CGFloat
     @Environment(AppModel.self) private var model
     @State private var hovering = false
 
@@ -258,16 +299,13 @@ private struct CoverTile: View {
         return model.lastLaunchAttempt?.app.id == app.id
     }
 
-    private var isOnScreen: Bool {
-        model.isStreaming && model.lastLaunchAttempt?.app.id == app.id
-            || model.runningAppName(on: host) == app.name
-    }
+    private var isOnScreen: Bool { model.appOnScreen(on: host) == app.name }
 
     var body: some View {
         Button { model.openFromShelf(app, on: host) } label: {
             VStack(alignment: .leading, spacing: 6) {
                 cover
-                    .frame(width: 100, height: 150)
+                    .frame(width: width, height: width * 1.5)
                     .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
                     .overlay {
                         RoundedRectangle(cornerRadius: 9, style: .continuous)
@@ -279,12 +317,15 @@ private struct CoverTile: View {
                             ProgressView().controlSize(.regular).environment(\.colorScheme, .dark)
                         }
                     }
+                    .shadow(color: .black.opacity(hovering ? 0.35 : 0), radius: 10, y: 6)
                     .scaleEffect(hovering ? 1.03 : 1)
                 Text(app.name)
                     .font(.caption.weight(.medium))
                     .foregroundStyle(isOnScreen ? Color.horizonBlue : .primary)
-                    .lineLimit(1)
-                    .frame(width: 100, alignment: .leading)
+                    .lineLimit(2, reservesSpace: true)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(width: width, alignment: .leading)
             }
         }
         .buttonStyle(.plain)

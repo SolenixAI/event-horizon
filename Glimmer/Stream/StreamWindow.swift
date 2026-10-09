@@ -276,6 +276,8 @@ public final class StreamWindow {
 
     /// Embedded: the desk frame moved (window resized while Home shows).
     var deskFrameObserver: NSObjectProtocol?
+    /// The top strip that brings the window buttons back while the PC fills the window.
+    var titlebarReveal: NSView?
 
     /// Embedded: Home came or went. The session tells the launcher; unlike
     /// `onBackgroundedChanged` the picture keeps presenting, because Home

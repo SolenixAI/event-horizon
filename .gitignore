@@ -110,3 +110,6 @@ scripts/telem-client.sh
 # Python bytecode
 __pycache__/
 .impeccable/questions/
+
+# Live captures of a real PC screen: private, never published
+.impeccable/review/captures/
