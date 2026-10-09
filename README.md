@@ -37,7 +37,7 @@ network. Diagnostics are off by default and stay on your Mac.
 ## Install
 
 **Mac:** macOS 26 or later on Apple Silicon. There is no download yet: build it
-from source (below). Signed downloads come with the first release.
+from source (below). Downloads come with the first release.
 
 **PC:** the companion lives in [`companion/`](companion/); its first release is
 coming. Until then, set up Sunshine by hand with
