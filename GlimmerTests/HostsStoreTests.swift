@@ -121,7 +121,21 @@ struct HostsStoreTests {
     }
 
     /// With the launcher closed a second miss lands up to two cycles (interval, 2 s
-    /// tolerance, 2 s probe) after the last good status. It's still held; a third shows Asleep.
+    /// tolerance, 2 s probe) after the last good status: still fresh, so it is held.
+    /// Pure, on a fixed clock: the exact two-cycle boundary.
+    @MainActor @Test func aSecondMissTwoCyclesLateStillHoldsTheGoodStatus() {
+        let cycle = AppModel.idleHostStatusPollSeconds + 2 + 2
+        let now = Date(timeIntervalSinceReferenceDate: 1_000_000)
+        let live = HostLiveStatus(hostID: "tower", state: .idle, rttMs: 3, sunshineVersion: nil,
+                                  capturedAt: now.addingTimeInterval(-2 * cycle))
+        let holds = AppModel.holdsGoodStatus(live: live, provenAwake: nil, hostID: "tower", now: now)
+        #expect(holds)
+        #expect(!AppModel.missPublishesAsleep(streak: 2, holdsGoodStatus: holds, macHasRoute: true))
+    }
+
+    /// The same through the real poll: a second miss is held, a third shows Asleep.
+    /// One cycle back, not two, so a busy test pool's main-actor wait (seen at 30 s on
+    /// CI) cannot push the sample past its 60 s freshness; the boundary is tested above.
     @MainActor @Test func theClosedLauncherPollHoldsASecondMiss() async {
         let model = AppModel()
         model.selectedHost = Self.host("tower", address: "192.0.2.10")
@@ -129,7 +143,7 @@ struct HostsStoreTests {
         defer { model.hostPolling.movedHostSearch?.cancel() }
         let cycle = AppModel.idleHostStatusPollSeconds + 2 + 2
         model.hostLiveStatus = HostLiveStatus(hostID: "tower", state: .idle, rttMs: 3, sunshineVersion: nil,
-                                              capturedAt: Date().addingTimeInterval(-2 * cycle))
+                                              capturedAt: Date().addingTimeInterval(-cycle))
         model.hostUnreachableStreak = 1
         _ = await model.pollHostStatusOnce(for: "tower", appListFor: nil,
                                            probe: { _, _, _ in .unreachable }, macHasRoute: true)

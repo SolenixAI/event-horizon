@@ -35,16 +35,20 @@ fn is_admin() -> bool {
         .is_ok_and(|o| o.status.success())
 }
 
-/// Install everything. Asks Windows for admin once if it does not have it.
-pub async fn install(config_dir: &Path) -> Result<(), String> {
+/// Install everything. Asks Windows for admin once if it does not have it;
+/// the companion itself always starts as the person, never elevated.
+pub async fn install(config_dir: &Path, elevated_child: bool) -> Result<(), String> {
     let exe = std::env::current_exe().map_err(|e| e.to_string())?;
     if !is_admin() {
-        // One UAC prompt; the elevated copy does the work and we wait for it.
+        // One UAC prompt; the elevated copy installs, then we start the companion.
+        // WaitForExit waits for that copy only (Start-Process -Wait would also
+        // wait for every process it starts).
         let script = format!(
-            "Start-Process -Verb RunAs -Wait -FilePath '{}' -ArgumentList install",
+            "$p = Start-Process -Verb RunAs -PassThru -FilePath '{}' -ArgumentList 'install','--elevated'; $p.WaitForExit(); exit $p.ExitCode",
             exe.display()
         );
-        return run("powershell", &["-NoProfile", "-Command", &script]);
+        run("powershell", &["-NoProfile", "-Command", &script])?;
+        return start(&installed_path()?);
     }
 
     let sunshine = sunshine_dir().join("sunshine.exe");
@@ -100,10 +104,8 @@ pub async fn install(config_dir: &Path) -> Result<(), String> {
     .map_err(|e| e.to_string())?;
 
     // The companion lives in the user's apps folder and starts at login.
-    let home = PathBuf::from(std::env::var_os("LOCALAPPDATA").ok_or("LOCALAPPDATA is not set")?)
-        .join("Event Horizon");
-    std::fs::create_dir_all(&home).map_err(|e| e.to_string())?;
-    let installed = home.join("event-horizon-companion.exe");
+    let installed = installed_path()?;
+    std::fs::create_dir_all(installed.parent().expect("a folder")).map_err(|e| e.to_string())?;
     if installed != exe {
         let _ = run(
             "taskkill",
@@ -157,12 +159,29 @@ pub async fn install(config_dir: &Path) -> Result<(), String> {
         ],
     )?;
 
-    // Start it now, detached from this installer.
+    // Run by an admin directly (no UAC hop): start it now. The elevated
+    // child leaves that to its unelevated parent.
+    if elevated_child {
+        Ok(())
+    } else {
+        start(&installed)
+    }
+}
+
+fn installed_path() -> Result<PathBuf, String> {
+    let local = std::env::var_os("LOCALAPPDATA").ok_or("LOCALAPPDATA is not set")?;
+    Ok(PathBuf::from(local)
+        .join("Event Horizon")
+        .join("event-horizon-companion.exe"))
+}
+
+/// Start the companion detached, so this installer can exit.
+fn start(installed: &Path) -> Result<(), String> {
     use std::os::windows::process::CommandExt;
     const DETACHED_PROCESS: u32 = 0x0000_0008;
-    Command::new(&installed)
+    Command::new(installed)
         .creation_flags(DETACHED_PROCESS)
         .spawn()
-        .map_err(|e| format!("start the companion: {e}"))?;
-    Ok(())
+        .map(|_| ())
+        .map_err(|e| format!("start the companion: {e}"))
 }

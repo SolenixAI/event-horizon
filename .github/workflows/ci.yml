@@ -49,7 +49,9 @@ jobs:
         run: cargo build --release
       - name: Install (as a person would, by running the companion's installer)
         run: |
-          $p = Start-Process ./target/release/event-horizon-companion.exe -ArgumentList install -Wait -PassThru -RedirectStandardError install-err.txt
+          # WaitForExit waits for the installer only, not the companion it starts.
+          $p = Start-Process ./target/release/event-horizon-companion.exe -ArgumentList install -PassThru -RedirectStandardError install-err.txt
+          $p.WaitForExit()
           Get-Content install-err.txt -ErrorAction SilentlyContinue
           if ($p.ExitCode -ne 0) { throw "install ended with $($p.ExitCode)" }
       - name: Sunshine is installed and running

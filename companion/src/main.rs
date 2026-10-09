@@ -27,9 +27,10 @@ async fn main() {
     // `install`: turn this PC into an Event Horizon host.
     #[cfg(windows)]
     if args.get(1).map(String::as_str) == Some("install") {
-        let result = event_horizon_companion::os::windows::install(&dir).await;
+        let elevated_child = args.iter().any(|a| a == "--elevated");
+        let result = event_horizon_companion::os::windows::install(&dir, elevated_child).await;
         // One message at the end (not on CI, where nobody can click it).
-        if std::env::var_os("CI").is_none() {
+        if std::env::var_os("CI").is_none() && !elevated_child {
             let text = match &result {
                 Ok(()) => "This PC is ready. Open Event Horizon on your Mac.".to_string(),
                 Err(e) => format!("Setup stopped: {e}"),
