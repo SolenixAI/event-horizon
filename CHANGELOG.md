@@ -5,6 +5,9 @@
 - A new Mac's first stream fills the window and the full-screen Space. The
   default size now stops below the camera notch, so there is no black bar at
   the top and no gap at the edges.
+- A PC that reinstalled Sunshine replaces its old entry on Home, instead of
+  showing a second one that needs trust again. Its custom name and settings
+  carry over.
 
 ## 2026.10.4 - 2026-10-03
 

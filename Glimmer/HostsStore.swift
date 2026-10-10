@@ -227,10 +227,12 @@ extension AppModel {
     /// its slot on a re-pair and appending one otherwise. `apps` come from /applist.
     func saveHost(uuid: String, hostname: String, address: String,
                   serverCertPEM: String?, appVersion: String?,
-                  apps: [PairedApp], macAddress: String? = nil) throws {
+                  apps: [PairedApp], macAddress: String? = nil,
+                  defaults: UserDefaults = .standard) throws {
         // Commit the file pin first so a failed write cannot leave a conflicting hint.
         if let pem = serverCertPEM { try PinnedCertStore.store(pem: pem, forHostID: uuid) }
-        let defaults = UserDefaults.standard
+        let superseded = Self.retireSupersededSlots(
+            hostname: hostname, address: address, keeping: uuid, defaults: defaults)
         let prefix = "hosts.\(saveSlot(for: uuid, defaults: defaults))"
         defaults.set(hostname, forKey: "\(prefix).hostname")
         defaults.set(uuid, forKey: "\(prefix).uuid")
@@ -243,6 +245,11 @@ extension AppModel {
         if let mac = WakeOnLAN.normalizeMac(macAddress) {
             defaults.set(mac, forKey: "\(prefix).mac")
         }
+        // A reinstalled PC keeps the custom name and settings it had, unless this slot has its own.
+        for (key, value) in superseded?.settings ?? [:] where defaults.object(forKey: "\(prefix).\(key)") == nil {
+            defaults.set(value, forKey: "\(prefix).\(key)")
+        }
+        if let last = superseded?.lastConnected { defaults.set(last, forKey: "glimmer.lastConnected.\(uuid)") }
         // Don't clobber a user's custom name on re-pair.
         if defaults.object(forKey: "\(prefix).customname") == nil {
             defaults.set(false, forKey: "\(prefix).customname")
@@ -273,6 +280,58 @@ extension AppModel {
         let appended = count + 1
         defaults.set(appended, forKey: "hosts.size")
         return appended
+    }
+
+    /// A saved PC at this address and hostname under another uuid was reinstalled, so its
+    /// Sunshine has a new identity. Clears each such slot with its pinned certificate and
+    /// last connection, and returns the first slot's name and settings to carry over.
+    nonisolated private static func retireSupersededSlots(
+        hostname: String, address: String, keeping uuid: String, defaults: UserDefaults
+    ) -> (settings: [String: Any], lastConnected: Date?)? {
+        let count = defaults.integer(forKey: "hosts.size")
+        guard count > 0 else { return nil }
+        var carried: (settings: [String: Any], lastConnected: Date?)?
+        for i in 1...count {
+            let prefix = "hosts.\(i)"
+            let slotUUID = defaults.string(forKey: "\(prefix).uuid") ?? ""
+            let addresses = [defaults.string(forKey: "\(prefix).localaddress"),
+                             defaults.string(forKey: "\(prefix).manualaddress")]
+            guard !slotUUID.isEmpty, slotUUID != uuid,
+                  defaults.string(forKey: "\(prefix).hostname") == hostname,
+                  addresses.contains(address) else { continue }
+            if carried == nil {
+                var settings: [String: Any] = [:]
+                for key in ["customname", "name", "wol"] {
+                    settings[key] = defaults.object(forKey: "\(prefix).\(key)")
+                }
+                carried = (settings, defaults.object(forKey: "glimmer.lastConnected.\(slotUUID)") as? Date)
+            }
+            defaults.removeObject(forKey: "glimmer.lastConnected.\(slotUUID)")
+            PinnedCertStore.delete(forHostID: slotUUID)
+            clearSlot(i, defaults: defaults)
+        }
+        return carried
+    }
+
+    /// Wipes one `hosts.N` slot, its apps included. The hole stays so other indices don't move.
+    nonisolated static func clearSlot(_ index: Int, defaults: UserDefaults) {
+        let prefix = "hosts.\(index)"
+        let appsCount = defaults.integer(forKey: "\(prefix).apps.size")
+        if appsCount > 0 {
+            for j in 1...appsCount {
+                for sub in ["name", "id", "hdr", "hidden"] {
+                    defaults.removeObject(forKey: "\(prefix).apps.\(j).\(sub)")
+                }
+            }
+        }
+        // `mac` and `wol` are slot-indexed too: a new host paired
+        // into a recycled slot must not inherit the old wake target.
+        for key in ["hostname", "uuid", "name", "customname",
+                    "localaddress", "manualaddress",
+                    "srvcert", "appversion", "gfeversion", "apps.size",
+                    "mac", "wol", "lunadevice"] {
+            defaults.removeObject(forKey: "\(prefix).\(key)")
+        }
     }
 
     /// Rewrite one slot's `apps.N.*` block: clear the stale higher-index
@@ -465,23 +524,7 @@ extension AppModel {
                 let hostname = defaults.string(forKey: "hosts.\(i).hostname") ?? ""
                 // Match by UUID; fall back to hostname for pre-UUID migrations.
                 guard uuid == host.id || (uuid.isEmpty && hostname == host.id) else { continue }
-                let prefix = "hosts.\(i)"
-                let appsCount = defaults.integer(forKey: "\(prefix).apps.size")
-                if appsCount > 0 {
-                    for j in 1...appsCount {
-                        for sub in ["name", "id", "hdr", "hidden"] {
-                            defaults.removeObject(forKey: "\(prefix).apps.\(j).\(sub)")
-                        }
-                    }
-                }
-                // `mac` and `wol` are slot-indexed too: a new host paired
-                // into a recycled slot must not inherit the old wake target.
-                for key in ["hostname", "uuid", "name", "customname",
-                            "localaddress", "manualaddress",
-                            "srvcert", "appversion", "gfeversion", "apps.size",
-                            "mac", "wol", "lunadevice"] {
-                    defaults.removeObject(forKey: "\(prefix).\(key)")
-                }
+                Self.clearSlot(i, defaults: defaults)
                 // Leave the hole; `loadHosts` skips empty slots and other
                 // hosts' indices stay stable. (No break - wipe duplicates too.)
             }
