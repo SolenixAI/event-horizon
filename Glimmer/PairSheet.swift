@@ -14,10 +14,22 @@ import AppKit
 import Network
 import SwiftUI
 
+/// The onboarding's hooks: the pairing steps report what happened and the flow moves on.
+struct EmbeddedPairing {
+    let chose: () -> Void
+    let paired: () -> Void
+    let back: () -> Void
+    let next: () -> Void
+}
+
 struct PairSheet: View {
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dismiss) private var dismiss
+    /// Set by the first-launch pass: no title, no window level, and the flow's own steps.
+    var embedded: EmbeddedPairing?
+    /// Set once the person has read the Mac-side explanation. Nothing is sent to the PC before it.
+    @State private var pairingConfirmed = false
     @State private var hostnameOrIP: String
     /// The name discovery listed the PC under; nil for a typed address.
     @State private var pcName: String?
@@ -36,12 +48,13 @@ struct PairSheet: View {
 
     /// A typed address or a PC to pair again jumps straight to the PIN step,
     /// dialling what a stream dials; with neither the sheet starts on the chooser.
-    init(initialAddress: String = "", repairing host: Host? = nil) {
+    init(initialAddress: String = "", repairing host: Host? = nil, embedded: EmbeddedPairing? = nil) {
         let address = host.map(AppModel.routeAddress) ?? initialAddress
         _hostnameOrIP = State(initialValue: address)
         _pcName = State(initialValue: host?.displayName)
         _chosen = State(initialValue: !address.isEmpty)
         _rePairName = State(initialValue: host?.displayName)
+        self.embedded = embedded
     }
 
     /// The host we're pairing with, whitespace-trimmed. Empty means the user
@@ -60,9 +73,11 @@ struct PairSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
-            Text(Self.title(paired: paired, chosen: chosen, rePairName: rePairName))
-                .font(.title2.bold())
-                .contentTransition(.opacity)
+            if embedded == nil {
+                Text(Self.title(paired: paired, chosen: chosen, rePairName: rePairName))
+                    .font(.title2.bold())
+                    .contentTransition(.opacity)
+            }
 
             if paired {
                 successBody
@@ -71,6 +86,7 @@ struct PairSheet: View {
                     hostnameOrIP = addr
                     pcName = name
                     chosen = true
+                    embedded?.chose()
                 })
             } else {
                 pinBody
@@ -78,11 +94,11 @@ struct PairSheet: View {
 
             footer
         }
-        .padding(28)
-        .frame(width: 480)
+        .padding(embedded == nil ? 28 : 0)
+        .frame(width: embedded == nil ? 480 : nil, alignment: .leading)
         // Float above all other Event Horizon windows so the PIN being read off isn't
-        // hidden behind the launcher or Settings. Reverts on dismiss.
-        .background(FloatingWindowLevel())
+        // hidden behind the launcher or Settings. Reverts on dismiss. Not in the pass.
+        .background { if embedded == nil { FloatingWindowLevel() } }
         .onDisappear { cancelPairing() }
     }
 
@@ -113,10 +129,30 @@ struct PairSheet: View {
             // No auto-dismiss: the success screen shows Done / "Stream Now" buttons,
             // and a 900ms auto-close made them unclickable. The user dismisses it.
             selectPairedHost()
+            embedded?.paired()
         }
     }
 
+    /// Before anything is sent to the PC, the Mac says what the PC will show and
+    /// what to click. Then the code screen starts the pairing.
     @ViewBuilder private var pinBody: some View {
+        if pairingConfirmed {
+            pairStage
+        } else {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Event Horizon shows a code here. If \(pcLabel) runs the companion, it shows the same code. "
+                    + "Check that the two match, then click Allow on \(pcLabel).")
+                    .font(.callout)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("Without the companion, you enter a code in Sunshine on \(pcLabel) instead.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    @ViewBuilder private var pairStage: some View {
         VStack(alignment: .leading, spacing: 10) {
             if let code = model.companionCode {
                 // The PC made this code. The person checks it matches before Allow;
@@ -180,32 +216,44 @@ struct PairSheet: View {
     @ViewBuilder private var footer: some View {
         HStack {
             if paired {
-                Button("Done") { dismiss() }
-                    .keyboardShortcut(.cancelAction)
-                Spacer()
-                Button("Stream Now") {
-                    selectPairedHost()
-                    model.streamDefaultApp()
-                    dismiss()
+                if let embedded {
+                    Spacer()
+                    Button("Continue") { embedded.next() }
+                        .keyboardShortcut(.defaultAction)
+                        .buttonStyle(StreamButtonStyle())
+                } else {
+                    Button("Done") { dismiss() }
+                        .keyboardShortcut(.cancelAction)
+                    Spacer()
+                    Button("Stream Now") {
+                        selectPairedHost()
+                        model.streamDefaultApp()
+                        dismiss()
+                    }
+                    .keyboardShortcut(.defaultAction)
+                    .buttonStyle(StreamButtonStyle())
                 }
-                .keyboardShortcut(.defaultAction)
-                .buttonStyle(StreamButtonStyle())
             } else if !chosen {
                 Spacer()
-                Button("Cancel") { cancelPairing(); dismiss() }
-                    .keyboardShortcut(.cancelAction)
+                if let embedded {
+                    Button("Back") { embedded.back() }
+                } else {
+                    Button("Cancel") { cancelPairing(); dismiss() }
+                        .keyboardShortcut(.cancelAction)
+                }
             } else {
                 Spacer()
-                Button("Back") {
-                    cancelPairing()
-                    chosen = false
-                    rePairName = nil
-                    pin = ""
+                Button("Back") { backToChooser(); embedded?.back() }
+                if embedded == nil {
+                    Button("Cancel") { cancelPairing(); dismiss() }
+                        .keyboardShortcut(.cancelAction)
                 }
-                Button("Cancel") { cancelPairing(); dismiss() }
-                    .keyboardShortcut(.cancelAction)
-                // Pairing starts with the code; a retry gets a fresh one.
-                if pairingFailed {
+                if !pairingConfirmed {
+                    Button("Continue") { pairingConfirmed = true }
+                        .keyboardShortcut(.defaultAction)
+                        .buttonStyle(StreamButtonStyle())
+                } else if pairingFailed {
+                    // Pairing starts with the code; a retry gets a fresh one.
                     Button("Try Again") {
                         pin = model.generatePairingPIN()
                         startPairing()
@@ -215,6 +263,14 @@ struct PairSheet: View {
                 }
             }
         }
+    }
+
+    private func backToChooser() {
+        cancelPairing()
+        chosen = false
+        rePairName = nil
+        pin = ""
+        pairingConfirmed = false
     }
 
     private func startPairing() {
@@ -258,6 +314,9 @@ private struct HostChooser: View {
     /// or guest networks). Swaps the spinner copy and auto-reveals the manual
     /// field so the user isn't stranded on a permanent "Looking for PCs...".
     @State private var discoveryStalled = false
+    /// 0 until the person presses Continue on the explanation; then it counts up, and each
+    /// bump restarts discovery (the app coming back to the front after a Local Network denial).
+    @State private var discoveryRun = 0
 
     private static let localNetworkSettings =
         URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_LocalNetwork")
@@ -268,19 +327,19 @@ private struct HostChooser: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            // Up-front explanation for macOS's Local Network prompt, in the same
-            // spirit as the raw-HID one on the launcher: the `.task` below
-            // starts mDNS the moment this view renders, so the system dialog can
-            // land within a second of the sheet opening. Rendered FIRST, in the
-            // same body pass that arms discovery, so the reason is already on
-            // screen when the prompt arrives - not somewhere behind it.
+            // The explanation comes before the Local Network prompt: discovery
+            // starts only on Continue, so the reason is already on screen.
             Text("Event Horizon looks for PCs running Sunshine on your local network; "
                 + "macOS will ask to allow that.")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            if denied {
+            if discoveryRun == 0 {
+                Button("Continue") { discoveryRun = 1 }
+                    .keyboardShortcut(.defaultAction)
+                    .buttonStyle(StreamButtonStyle())
+            } else if denied {
                 deniedNotice
             } else if found.isEmpty && !showManual && !discoveryStalled {
                 // Spinner only while still actively looking. The stalled nudge is
@@ -323,7 +382,7 @@ private struct HostChooser: View {
                 }
             }
 
-            if showManual {
+            if discoveryRun > 0, showManual {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Name or address")
                         .font(.subheadline.weight(.medium))
@@ -343,7 +402,7 @@ private struct HostChooser: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-            } else {
+            } else if discoveryRun > 0 {
                 Button {
                     showManual = true
                 } label: {
@@ -354,7 +413,8 @@ private struct HostChooser: View {
                 .foregroundStyle(.tint)
             }
         }
-        .task {
+        .task(id: discoveryRun) {
+            guard discoveryRun > 0 else { return }
             // Stream discovered hosts until the view goes away. HostDiscovery
             // is an actor; start() is actor-isolated so we await it, then
             // consume the stream for this run.
@@ -367,12 +427,16 @@ private struct HostChooser: View {
         }
         // Bonjour-hostile-network nudge: after ~7s with nothing found and the
         // user not already in the manual field, surface the fallback path.
-        .task {
+        .task(id: discoveryRun) {
+            guard discoveryRun > 0 else { return }
             try? await Task.sleep(nanoseconds: 7_000_000_000)
             if !Task.isCancelled, found.isEmpty, !showManual {
                 discoveryStalled = true
                 showManual = true
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            if denied { discoveryRun += 1 }
         }
     }
 

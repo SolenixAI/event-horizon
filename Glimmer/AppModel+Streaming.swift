@@ -21,7 +21,21 @@ extension AppModel {
     /// Event Horizon never asks. Whatever runs on the PC gives way: the engine cancels
     /// it and launches the chosen app, so the same app or another one is one tap.
     func requestStream(app: LibraryApp, on host: Host, resume: ResumeRule = .never) {
-        stream(app: app, on: host, takeoverAuthorized: true, resume: resume)
+        guard CompanionTokens.token(forHost: host.id) == nil, !Self.companionAskDeclined(host.id),
+              let address = host.manualAddress ?? host.localAddress else {
+            stream(app: app, on: host, takeoverAuthorized: true, resume: resume)
+            return
+        }
+        // A Mac paired before the companion has no token. If the PC runs the companion,
+        // hold the stream until the person has read what the PC will ask on Home.
+        Task { @MainActor in
+            let present = await CompanionClient(address: address, pinned: nil).isPresent()
+            if present {
+                companionAskStream = (app, host)
+            } else {
+                stream(app: app, on: host, takeoverAuthorized: true, resume: resume)
+            }
+        }
     }
 
     /// The app a launch would quit: nil when the PC is free, and `.some(nil)`

@@ -65,6 +65,11 @@ enum LoginItemManager {
         minimized ? SMAppService.loginItem(identifier: helperBundleID) : SMAppService.mainApp
     }
 
+    /// The registration state of whichever service the saved intent uses, read now.
+    static func currentStatus(minimized: Bool) -> SMAppService.Status {
+        activeService(minimized: minimized).status
+    }
+
     static func isRegistered(_ status: SMAppService.Status) -> Bool {
         status == .enabled || status == .requiresApproval
     }

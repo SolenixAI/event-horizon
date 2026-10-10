@@ -12,6 +12,17 @@
   macOS permissions carry over.
 - The download is named `Event-Horizon-2026.10.8.dmg`, and the release is
   titled Event Horizon.
+- A first launch walks you through setup in one window: find your PC, pair it,
+  choose the optional permissions, then stream. Each permission is explained
+  before macOS asks for it, and you can skip any of them.
+- Wake no longer asks for notification permission when you click it. The
+  question comes in setup, with its reason, and Settings › General › Permissions
+  can grant it later.
+- A Mac paired before the PC companion asks before its first stream. Event
+  Horizon says what the PC will ask, and the PC is asked only after you click
+  Allow.
+- The Wi-Fi helper offer comes back each time you open Event Horizon until you
+  turn it on or choose Don't ask again.
 
 ## 2026.10.7 - 2026-10-12
 

@@ -111,6 +111,10 @@ struct GeneralPane: View {
                     }
                 }
             }
+            Section("Permissions") {
+                // The same live rail as the first-launch pass: each item reads macOS on every visit.
+                PermissionRail(includesLoginItem: true)
+            }
             Section {
                 // Picker sourced from the selected host's announced app
                 // list (Sunshine's `applist`). "Desktop" is always

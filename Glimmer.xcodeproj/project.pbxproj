@@ -7,6 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		800CA7098E4B447498BF01B2 /* OnboardingFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E794099C50545519F707DCD /* OnboardingFlow.swift */; };
+		DBF0268508F541DE84B6033D /* OnboardingRail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41F0D500FE094808A789E19F /* OnboardingRail.swift */; };
+		99C34EB9C7FD41DBA2D5BD2F /* OnboardingLiveSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DBE16BC8CBA4730B258CC43 /* OnboardingLiveSource.swift */; };
+		7A180E9416684C8A81EE3CEF /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A21CE90B60B492DAC799624 /* OnboardingView.swift */; };
+		8F8ACCE10F4E4A9DA6C42ED5 /* PermissionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD9815CADA24FF291907B84 /* PermissionCard.swift */; };
+		D175B6524A3A454DBABE4686 /* OnboardingFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC7398882BB744358FE5132A /* OnboardingFlowTests.swift */; };
+		BC7B12E4E59E46B2885B9079 /* OnboardingRailTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 296861F56EE24CD498CD47CB /* OnboardingRailTests.swift */; };
 		DEC0DE202609258300000003 /* AWDLHelperManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202609258300000004 /* AWDLHelperManagerTests.swift */; };
 		DEC0DE202609258300000001 /* Protocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202609258300000002 /* Protocol.swift */; };
 		DEC0DE202609253700000001 /* AWDLHelperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202609253700000002 /* AWDLHelperTests.swift */; };
@@ -446,6 +453,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		8E794099C50545519F707DCD /* OnboardingFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Onboarding/OnboardingFlow.swift; sourceTree = "<group>"; };
+		41F0D500FE094808A789E19F /* OnboardingRail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Onboarding/OnboardingRail.swift; sourceTree = "<group>"; };
+		6DBE16BC8CBA4730B258CC43 /* OnboardingLiveSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Onboarding/OnboardingLiveSource.swift; sourceTree = "<group>"; };
+		6A21CE90B60B492DAC799624 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Onboarding/OnboardingView.swift; sourceTree = "<group>"; };
+		6BD9815CADA24FF291907B84 /* PermissionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Onboarding/PermissionCard.swift; sourceTree = "<group>"; };
+		BC7398882BB744358FE5132A /* OnboardingFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingFlowTests.swift; sourceTree = "<group>"; };
+		296861F56EE24CD498CD47CB /* OnboardingRailTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingRailTests.swift; sourceTree = "<group>"; };
 		DEC0DE202609258300000004 /* AWDLHelperManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AWDLHelperManagerTests.swift; sourceTree = "<group>"; };
 		DEC0DE202609258300000002 /* Protocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../helper/Protocol.swift; sourceTree = "<group>"; };
 		DEC0DE202609253700000002 /* AWDLHelperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AWDLHelperTests.swift; sourceTree = "<group>"; };
@@ -944,6 +958,11 @@
 				A10000012 /* ContentView.swift */,
 				A10000017 /* SettingsView.swift */,
 				A1000009B /* PairSheet.swift */,
+				8E794099C50545519F707DCD /* OnboardingFlow.swift */,
+				41F0D500FE094808A789E19F /* OnboardingRail.swift */,
+				6DBE16BC8CBA4730B258CC43 /* OnboardingLiveSource.swift */,
+				6A21CE90B60B492DAC799624 /* OnboardingView.swift */,
+				6BD9815CADA24FF291907B84 /* PermissionCard.swift */,
 				A100030B /* ContainerMigration.swift */,
 				F0A0D17A0000000000000016 /* DataFolderMigration.swift */,
 				A100010B /* TroubleshootingPane.swift */,
@@ -1247,6 +1266,8 @@
 			children = (
 				DEC0DE202609253700000002 /* AWDLHelperTests.swift */,
 				DEC0DE202609258300000004 /* AWDLHelperManagerTests.swift */,
+				BC7398882BB744358FE5132A /* OnboardingFlowTests.swift */,
+				296861F56EE24CD498CD47CB /* OnboardingRailTests.swift */,
 				DEC0DE202609258000000002 /* TestConcurrency.swift */,
 				DEC0DE202609256700000004 /* AWDLStreamLease.swift */,
 				DEC0DE202609253700000004 /* Protocol.swift */,
@@ -1494,6 +1515,11 @@
 				A10000002 /* ContentView.swift in Sources */,
 				A10000005 /* SettingsView.swift in Sources */,
 				A1000009A /* PairSheet.swift in Sources */,
+				800CA7098E4B447498BF01B2 /* OnboardingFlow.swift in Sources */,
+				DBF0268508F541DE84B6033D /* OnboardingRail.swift in Sources */,
+				99C34EB9C7FD41DBA2D5BD2F /* OnboardingLiveSource.swift in Sources */,
+				7A180E9416684C8A81EE3CEF /* OnboardingView.swift in Sources */,
+				8F8ACCE10F4E4A9DA6C42ED5 /* PermissionCard.swift in Sources */,
 				A100030A /* ContainerMigration.swift in Sources */,
 				F0A0D17A0000000000000015 /* DataFolderMigration.swift in Sources */,
 				A100010A /* TroubleshootingPane.swift in Sources */,
@@ -1787,6 +1813,8 @@
 			files = (
 				DEC0DE202609253700000001 /* AWDLHelperTests.swift in Sources */,
 				DEC0DE202609258300000003 /* AWDLHelperManagerTests.swift in Sources */,
+				D175B6524A3A454DBABE4686 /* OnboardingFlowTests.swift in Sources */,
+				BC7B12E4E59E46B2885B9079 /* OnboardingRailTests.swift in Sources */,
 				DEC0DE202609258000000001 /* TestConcurrency.swift in Sources */,
 				DEC0DE202609256700000005 /* AWDLStreamLease.swift in Sources */,
 				DEC0DE202609253700000003 /* Protocol.swift in Sources */,

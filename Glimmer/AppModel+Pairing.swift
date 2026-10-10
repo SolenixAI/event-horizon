@@ -29,34 +29,76 @@ extension AppModel {
         companionLeaseTask = nil
     }
 
-    /// A PC that runs the companion stays awake while this Mac streams: the
-    /// lease is renewed every 30 s and lapses 90 s after the stream ends. A
-    /// Mac paired before the companion asks for its token once (Allow on the
-    /// PC, which the person sees in the stream), never pairing Sunshine again.
+    /// A PC that runs the companion stays awake while this Mac streams: the lease
+    /// is renewed every 30 s and lapses 90 s after the stream ends. The token comes
+    /// from pairing, or from Allow on Home before the first stream (see below).
     private func startCompanionLease() {
         companionLeaseTask?.cancel()
         companionLeaseTask = nil
         guard let host = lastLaunchAttempt?.host,
-              let address = host.manualAddress ?? host.localAddress else { return }
-        let hostID = host.id
-        let companion = CompanionClient(address: address, pinned: CompanionTokens.fingerprint(forHost: hostID))
+              let address = host.manualAddress ?? host.localAddress,
+              let token = CompanionTokens.token(forHost: host.id) else { return }
+        let companion = CompanionClient(address: address, pinned: CompanionTokens.fingerprint(forHost: host.id))
         companionLeaseTask = Task {
-            var token = CompanionTokens.token(forHost: hostID)
-            if token == nil, await companion.isPresent() {
-                let macID = (try? await IdentityManager.shared.uniqueID()) ?? NetworkClient.pairingDeviceName
-                if let asked = await companion.ask(macID: macID, macName: NetworkClient.pairingDeviceName, pin: nil),
-                   case .paired(let fresh) = await companion.answer(ticket: asked.ticket),
-                   let fingerprint = companion.fingerprint {
-                    CompanionTokens.save(fresh, fingerprint: fingerprint, forHost: hostID)
-                    token = fresh
-                }
-            }
-            guard let token else { return }
             while !Task.isCancelled {
                 if await companion.lease(token: token) == .refused { return }
                 try? await Task.sleep(for: CompanionClient.leaseInterval)
             }
         }
+    }
+
+    /// Allow on Home: the PC makes a code, which Home shows, and the PC's own Allow
+    /// completes it. Then the held stream starts with the lease.
+    func allowCompanionAndStream() {
+        guard let held = companionAskStream else { return }
+        companionAskFailed = false
+        Task { @MainActor in
+            guard await pairCompanion(host: held.host) != nil else {
+                companionAskFailed = true
+                return
+            }
+            companionAskStream = nil
+            stream(app: held.app, on: held.host, takeoverAuthorized: true)
+        }
+    }
+
+    /// Stream without it on Home: the held stream starts, the PC is not kept awake,
+    /// and this PC is not asked again.
+    func streamWithoutCompanion() {
+        guard let held = companionAskStream else { return }
+        companionAskStream = nil
+        companionAskFailed = false
+        Self.declineCompanionAsk(held.host)
+        stream(app: held.app, on: held.host, takeoverAuthorized: true)
+    }
+
+    /// The companion's half of a first pairing: its code (shown on Home while it waits),
+    /// then its answer at the PC. The token is saved only when the PC says yes.
+    private func pairCompanion(host: Host) async -> String? {
+        guard let address = host.manualAddress ?? host.localAddress else { return nil }
+        let companion = CompanionClient(address: address, pinned: nil)
+        let macID = (try? await IdentityManager.shared.uniqueID()) ?? NetworkClient.pairingDeviceName
+        guard let asked = await companion.ask(macID: macID, macName: NetworkClient.pairingDeviceName, pin: nil) else {
+            return nil
+        }
+        companionCode = asked.code
+        defer { companionCode = nil }
+        guard case .paired(let fresh) = await companion.answer(ticket: asked.ticket),
+              let fingerprint = companion.fingerprint else { return nil }
+        CompanionTokens.save(fresh, fingerprint: fingerprint, forHost: host.id)
+        return fresh
+    }
+
+    private static let companionDeclinedKey = "companionAskDeclinedHosts"
+
+    /// A Mac that chose Stream without it is not asked again for that PC.
+    static func companionAskDeclined(_ hostID: String) -> Bool {
+        (UserDefaults.standard.stringArray(forKey: companionDeclinedKey) ?? []).contains(hostID)
+    }
+
+    static func declineCompanionAsk(_ host: Host) {
+        let ids = Set(UserDefaults.standard.stringArray(forKey: companionDeclinedKey) ?? []).union([host.id])
+        UserDefaults.standard.set(ids.sorted(), forKey: companionDeclinedKey)
     }
 
     // MARK: Pairing
