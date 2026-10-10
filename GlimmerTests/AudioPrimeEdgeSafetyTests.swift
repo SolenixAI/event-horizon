@@ -43,6 +43,8 @@ struct AudioPrimeEdgeSafetyTests {
     @Test func playFailuresAreSpacedWithoutConsumingEngineRestartRetries() throws {
         let decoder = AudioDecoder()
         defer { decoder.shutdown() }
+        // A pinned clock: the spacing gate is decided by the clock, never by how long the run took.
+        decoder.primeEdgeNowNanos = { 1_000_000_000 }
         let format = try #require(AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 2))
         let source = AVAudioPlayerNode()
         decoder.engine.attach(source)
@@ -86,23 +88,20 @@ struct AudioPrimeEdgeSafetyTests {
         let decoder = AudioDecoder()
         defer { decoder.shutdown() }
         let format = try #require(AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 2))
+        decoder.primeEdgeNowNanos = { 1_000_000_000 }
         decoder.stateLock.lock()
         decoder.audioMeterLock.lock()
         decoder.meterSampleRate = 48_000
         decoder.framesScheduled = 48_000
         decoder.playoutTargetMs = 40
         decoder.audioMeterLock.unlock()
-        let errorsBefore = LogStore.shared.snapshot().filter {
-            $0.category == "Stream.Audio" && $0.message.contains("at prime edge FAILED")
-        }.count
+        // The failure line is written once, on the edge that arms the streak. Each
+        // decoder owns its streak, so this reads it without a process-wide log count.
+        #expect(!decoder.primeEdgeFailureStreak)
         #expect(!decoder.startPlayoutAtPrimeEdge())
         let firstRetry = decoder.primeEdgeRetryAtNanos
         let retriesAfterFirst = decoder.engineRestartRetries
         #expect(!decoder.startPlayoutAtPrimeEdge())
-        let errorsAfter = LogStore.shared.snapshot().filter {
-            $0.category == "Stream.Audio" && $0.message.contains("at prime edge FAILED")
-        }.count
-        #expect(errorsAfter - errorsBefore == 1)
         #expect(decoder.engineRestartRetries == 1)
         #expect(decoder.engineRestartRetries == retriesAfterFirst)
         #expect(decoder.primeEdgeRetryAtNanos == firstRetry)

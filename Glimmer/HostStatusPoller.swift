@@ -114,15 +114,16 @@ extension AppModel {
 
     /// Hold a recent answer or established stream through transient misses. At cold start,
     /// delaying Asleep without evidence would hide the wake controls behind Checking.
-    func publishUnreachable(hostID: String, expectedHostID: String) async {
+    func publishUnreachable(hostID: String, expectedHostID: String,
+                            clock: @Sendable () -> Date = { Date() }) async {
         guard !Task.isCancelled, !hostPollingPausedForSleep else { return }
         hostUnreachableStreak += 1
         let holds = Self.holdsGoodStatus(live: hostLiveStatus, provenAwake: hostPolling.provenAwake,
-                                         hostID: hostID, now: Date())
+                                         hostID: hostID, now: clock())
         guard Self.missPublishesAsleep(streak: hostUnreachableStreak, holdsGoodStatus: holds,
                                       macHasRoute: true) else { return }
         await publishLiveStatus(HostLiveStatus(
-            hostID: hostID, state: .asleep, rttMs: nil, sunshineVersion: nil, capturedAt: Date()
+            hostID: hostID, state: .asleep, rttMs: nil, sunshineVersion: nil, capturedAt: clock()
         ), expectedHostID: expectedHostID)
     }
 
@@ -132,7 +133,8 @@ extension AppModel {
     func pollHostStatusOnce(
         for expectedHostID: String, appListFor: Int?,
         probe: @Sendable (String, Int, Int) async -> HostReachability.Outcome = HostReachability.measureRTT,
-        macHasRoute: Bool? = nil, publishMiss: ((String, String) async -> Void)? = nil
+        macHasRoute: Bool? = nil, publishMiss: ((String, String) async -> Void)? = nil,
+        clock: @Sendable () -> Date = { Date() }
     ) async -> (appListFor: Int?, noPath: Bool) {
         // Snapshot the host on MainActor so we can hand its address etc.
         // off to the background work without crossing the actor boundary
@@ -160,7 +162,7 @@ extension AppModel {
             if let publishMiss {
                 await publishMiss(snap.id, expectedHostID)
             } else {
-                await publishUnreachable(hostID: snap.id, expectedHostID: expectedHostID)
+                await publishUnreachable(hostID: snap.id, expectedHostID: expectedHostID, clock: clock)
             }
             guard !Task.isCancelled, !hostPollingPausedForSleep else { return (appListFor, false) }
             if !wasAsleep, hostLiveStatus?.hostID == snap.id, hostLiveStatus?.state == .asleep,

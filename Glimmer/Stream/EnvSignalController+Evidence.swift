@@ -103,7 +103,7 @@ extension EnvSignalController {
             window.retransmit &+= totals.retransmit &- prev.retransmit
         }
         prevGapTotals = totals
-        let datagramUs = RtpVideoQueue.lastDatagramUs.load(ordering: .relaxed)
+        let datagramUs = latestDatagramUs()
         if let prev = prevDatagramUs, datagramUs > prev { window.videoArrived = true }
         prevDatagramUs = datagramUs
         // Recv-jitter is a LIVE gauge (last-writer-wins), not a monotonic total -

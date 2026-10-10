@@ -7,6 +7,7 @@
 
 import Foundation
 import Network
+import os
 import Testing
 @testable import Glimmer
 
@@ -475,27 +476,34 @@ struct StreamPathMTUTests {
         #expect(harvestedCount >= RttSampler.minPreLaunchSamples)
     }
 
-    @Test func unreachablePortWaitsOnlyToTheCap() async throws {
+    /// The window waits for its cap and no longer: the cap is armed at the requested length and
+    /// fires on its own, so the window ends by the cap, not by the 200-attempt loop.
+    @Test(.timeLimit(.minutes(1))) func unreachablePortWaitsOnlyToTheCap() async throws {
         try await Task(priority: .high) {
             let port = try #require(LoopbackPort(listening: false))
             let sampler = RttSampler(host: "127.0.0.1", port: port.port, maxAttempts: 200)
-            let start = ContinuousClock.now
+            let armedMs = OSAllocatedUnfairLock<Int?>(initialState: nil)
+            sampler.scheduleWindowCap = { _, maxWaitMs, release in
+                armedMs.withLock { $0 = maxWaitMs }
+                release()
+            }
             await sampler.awaitPreLaunchWindow(maxWaitMs: 150)
-            let waited = ContinuousClock.now - start
-            #expect(waited >= .milliseconds(100) && waited < .seconds(5))
+            #expect(armedMs.withLock { $0 } == 150)
             #expect(sampler.harvest() == nil)
         }.value
     }
 
     /// A PC that refuses every handshake used to keep the loop sampling for the
     /// life of the process. Out of attempts, it stops and lets launch go.
-    @Test func refusedPortStopsAfterItsAttempts() async throws {
+    /// The cap is armed but never fires, so the window can only end when the attempts run out.
+    @Test(.timeLimit(.minutes(1))) func refusedPortStopsAfterItsAttempts() async throws {
         try await Task(priority: .high) {
             let port = try #require(LoopbackPort(listening: false))
             let sampler = RttSampler(host: "127.0.0.1", port: port.port, maxAttempts: 2)
-            let start = ContinuousClock.now
+            let armedMs = OSAllocatedUnfairLock<Int?>(initialState: nil)
+            sampler.scheduleWindowCap = { _, maxWaitMs, _ in armedMs.withLock { $0 = maxWaitMs } }
             await sampler.awaitPreLaunchWindow(maxWaitMs: 60_000)
-            #expect(ContinuousClock.now - start < .seconds(5))
+            #expect(armedMs.withLock { $0 } == 60_000)
             #expect(sampler.harvest() == nil)
         }.value
     }

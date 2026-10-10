@@ -430,6 +430,8 @@ public final class AudioDecoder: @unchecked Sendable {
     /// Guarded by stateLock; reset for each session.
     var primeEdgeRetryAtNanos: UInt64 = 0
     var primeEdgeFailureStreak = false
+    /// The clock the prime-edge spacing reads. Tests pin it; production reads uptime.
+    var primeEdgeNowNanos: @Sendable () -> UInt64 = { DispatchTime.now().uptimeNanoseconds }
 
     /// `AVAudioEngineConfigurationChange` observer token (held so `shutdown()`
     /// can remove it). On a mid-stream output-device/format change AVAudioEngine

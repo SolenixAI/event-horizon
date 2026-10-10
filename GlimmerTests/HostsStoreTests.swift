@@ -134,22 +134,25 @@ struct HostsStoreTests {
     }
 
     /// The same through the real poll: a second miss is held, a third shows Asleep.
-    /// One cycle back, not two, so a busy test pool's main-actor wait (seen at 30 s on
-    /// CI) cannot push the sample past its 60 s freshness; the boundary is tested above.
+    /// The poll reads a pinned clock, one cycle back from it, so the sample's age is exact
+    /// and no main-actor wait between the test and the poll can age it past freshness.
     @MainActor @Test func theClosedLauncherPollHoldsASecondMiss() async {
         let model = AppModel()
         model.selectedHost = Self.host("tower", address: "192.0.2.10")
         model.hostStatusTask?.cancel()
         defer { model.hostPolling.movedHostSearch?.cancel() }
         let cycle = AppModel.idleHostStatusPollSeconds + 2 + 2
+        let now = Date(timeIntervalSinceReferenceDate: 1_000_000)
         model.hostLiveStatus = HostLiveStatus(hostID: "tower", state: .idle, rttMs: 3, sunshineVersion: nil,
-                                              capturedAt: Date().addingTimeInterval(-cycle))
+                                              capturedAt: now.addingTimeInterval(-cycle))
         model.hostUnreachableStreak = 1
         _ = await model.pollHostStatusOnce(for: "tower", appListFor: nil,
-                                           probe: { _, _, _ in .unreachable }, macHasRoute: true)
+                                           probe: { _, _, _ in .unreachable }, macHasRoute: true,
+                                           clock: { now })
         #expect(model.hostLiveStatus?.state == .idle)
         _ = await model.pollHostStatusOnce(for: "tower", appListFor: nil,
-                                           probe: { _, _, _ in .unreachable }, macHasRoute: true)
+                                           probe: { _, _, _ in .unreachable }, macHasRoute: true,
+                                           clock: { now })
         #expect(model.hostLiveStatus?.state == .asleep)
     }
 
