@@ -63,6 +63,6 @@ jobs:
           When the PC says it is ready, open Event Horizon on your Mac.
           EOF
           gh release create "${{ github.ref_name }}" --repo "${{ github.repository }}" \
-            --title "PC companion ${{ github.ref_name }}" --latest=false \
+            --title "PC companion ${{ github.ref_name }}" --prerelease --latest=false \
             --notes-file notes.md \
             EventHorizonCompanion-Windows.exe event-horizon-companion-linux-x86_64 SHA256SUMS
