@@ -1,6 +1,6 @@
 # Architecture
 
-Glimmer is a SwiftUI launcher plus a pure-Swift streaming engine, in one
+Event Horizon is a SwiftUI launcher plus a pure-Swift streaming engine, in one
 process. No external player, no linked C streaming library: Sunshine's streaming
 protocol is implemented in Swift under `Glimmer/Stream/Native/` (ported from
 `moonlight-common-c`, GPLv3; see [CREDITS.md](../CREDITS.md)). The only code
@@ -61,18 +61,18 @@ Top-level pieces:
 > verify block instead of CA-validated.
 
 **Command line.** The same binary is the `event-horizon` command. `GlimmerMain`
-(`Glimmer/CLI/`) is the entry point: run as `event-horizon` (the cask's link), or with
-a bare word or `-h`/`--help` as the first argument, it runs `GlimmerCLI`;
-anything else (no arguments, `--launched-at-login`, `-psn_*`, `-NS*`, Xcode and
-test arguments) starts the app. Login, Launch Services, Sparkle and test
-launches depend on that, so any new launch argument the app takes must start
-with a dash. Verbs run headless through the app's own `AppModel`, pairing and
-`NetworkClient` code. `event-horizon stream` opens the app if needed and hands it the
-launch over distributed notifications (`CommandChannel`,
-`AppModel+Commands.swift`), so no stream ever runs in the terminal's process;
-`event-horizon quit` ends the app's own stream from that PC the same way. Run through
-a symlink, the binary re-execs through its real path so `Bundle.main` and the
-defaults domain resolve.
+(`Glimmer/CLI/`) is the entry point: run as `event-horizon` (the cask's link),
+or with a bare word or `-h`/`--help` as the first argument, it runs
+`GlimmerCLI`; anything else (no arguments, `--launched-at-login`, `-psn_*`,
+`-NS*`, Xcode and test arguments) starts the app. Login, Launch Services,
+Sparkle and test launches depend on that, so any new launch argument the app
+takes must start with a dash. Verbs run headless through the app's own
+`AppModel`, pairing and `NetworkClient` code. `event-horizon stream` opens the
+app if needed and hands it the launch over distributed notifications
+(`CommandChannel`, `AppModel+Commands.swift`), so no stream ever runs in the
+terminal's process; `event-horizon quit` ends the app's own stream from that PC
+the same way. Run through a symlink, the binary re-execs through its real path
+so `Bundle.main` and the defaults domain resolve.
 
 **Shortcuts, Siri and Spotlight.** `GlimmerIntents.swift` declares three App
 Intents: Stream from PC, Wake PC and Quit App on PC, with the paired PCs as a
@@ -606,3 +606,20 @@ Debug and never sign.
 Signing and notarization details (the dedicated signing keychain, the notary
 profile, the credentials file) are documented in the Makefile itself and in
 [RELEASE.md](RELEASE.md).
+
+## Choices that look wrong and aren't
+
+Each one has its reason in a code comment or its commit. Undo one only with new
+numbers or a new platform API, never as cleanup.
+
+- **`Glimmer/Stream/CHelpers.h` is the only non-Swift code**: an Objective-C
+  exception guard. AVAudioEngine can raise an NSException mid device change, and
+  Swift can't catch one. Add no other C or Objective-C.
+- **`DatagramBatch` calls `recvmsg_x` through `dlsym`.** It receives video in
+  batches with one syscall, and falls back to `recvfrom` if the symbol is gone.
+- **The FEC kernels in `ReedSolomon.swift` are portable SIMD Swift**, about 2.5×
+  slower than the NEON code they replaced. They only run when packets are lost.
+- **The control channel turns TLS session resumption off**, so every connection
+  re-checks the PC's pinned certificate.
+- **`scripts/sign-bundle.sh` signs inside out.** Never `codesign --deep`: it
+  stamps Glimmer's entitlements onto Sparkle's helpers.
