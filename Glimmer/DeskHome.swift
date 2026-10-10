@@ -195,20 +195,33 @@ private struct DeskScreen: View {
                       width: size.width, height: size.height)
     }
 
-    private var stateLine: (symbol: String, title: String, detail: String, busy: Bool) {
+    private struct StateLine {
+        let symbol: String
+        let title: String
+        let detail: String
+        let busy: Bool
+    }
+
+    private var stateLine: StateLine {
         if model.isStreaming, case .connecting = model.streamPhase {
             let name = model.lastLaunchAttempt?.app.name ?? "Desktop"
-            return ("", "Opening \(name)…", "", true)
+            return StateLine(symbol: "", title: "Opening \(name)…", detail: "", busy: true)
         }
         switch model.menuBarPrimaryAction {
-        case .wake: return ("moon.zzz", "\(host.displayName) is asleep", "Click to wake it and open the Desktop", false)
-        case .waking: return ("", "Waking \(host.displayName)…", "Click to stop waiting", true)
-        case .pairAgain: return ("lock.trianglebadge.exclamationmark", "Pair again", "\(host.displayName) has a new certificate", false)
+        case .wake:
+            return StateLine(symbol: "moon.zzz", title: "\(host.displayName) is asleep",
+                             detail: "Click to wake it and open the Desktop", busy: false)
+        case .waking:
+            return StateLine(symbol: "", title: "Waking \(host.displayName)…", detail: "Click to stop waiting", busy: true)
+        case .pairAgain:
+            return StateLine(symbol: "lock.trianglebadge.exclamationmark", title: "Pair again",
+                             detail: "\(host.displayName) has a new certificate", busy: false)
         default:
             if let running = model.runningAppName(on: host) {
-                return ("cursorarrow.click.2", running, "Running on your PC · Click to open it", false)
+                return StateLine(symbol: "cursorarrow.click.2", title: running,
+                                 detail: "Running on your PC · Click to open it", busy: false)
             }
-            return ("cursorarrow.click.2", "Desktop", "Click to open your PC", false)
+            return StateLine(symbol: "cursorarrow.click.2", title: "Desktop", detail: "Click to open your PC", busy: false)
         }
     }
 
@@ -383,10 +396,15 @@ private struct CoverTile: View {
         .accessibilityHint(isOnScreen ? "Opens it in the window" : "Starts it on \(host.displayName)")
     }
 
+    /// Reads the revision so the cover redraws when its art lands.
+    private var coverImage: NSImage? {
+        _ = model.coverArtRevision
+        return CoverArt.image(hostID: host.id, appID: app.id)
+    }
+
     @ViewBuilder private var cover: some View {
-        let _ = model.coverArtRevision
-        if let image = CoverArt.image(hostID: host.id, appID: app.id) {
-            Image(nsImage: image).resizable().aspectRatio(contentMode: .fill)
+        if let image = coverImage {
+            Image(nsImage: image).resizable().scaledToFill()
         } else {
             ZStack {
                 LinearGradient(colors: [Color.horizonBlue.opacity(0.55), Color.accentColor.opacity(0.45)],

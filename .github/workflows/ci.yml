@@ -17,6 +17,17 @@ jobs:
       - uses: actions/checkout@v5
       - name: Build and test
         run: make test
+  lint:
+    # The strict gate `make verify` runs first, on every PR. It needs no build, so it
+    # reports in about a minute. The hosted macOS image does not ship SwiftLint, so Homebrew installs it.
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Strict SwiftLint
+        run: |
+          brew install swiftlint
+          swiftlint lint --strict
   skills:
     # Every agent skill stays model-invocable: the unlock script must find
     # nothing to change in a commit.

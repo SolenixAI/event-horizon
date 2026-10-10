@@ -91,9 +91,13 @@ enum PointerMapping {
         let nearTopOrBottom = point.y < cornerGuard || point.y > last.y - cornerGuard
         guard nearTopOrBottom else { return point }
         let x: Int16
-        if point.x < cornerGuard { x = cornerGuard }
-        else if point.x > last.x - cornerGuard { x = last.x - cornerGuard }
-        else { return point }
+        if point.x < cornerGuard {
+            x = cornerGuard
+        } else if point.x > last.x - cornerGuard {
+            x = last.x - cornerGuard
+        } else {
+            return point
+        }
         return StreamPoint(x: x, y: point.y, refW: point.refW, refH: point.refH)
     }
 

@@ -189,7 +189,7 @@ final class SpaceLayerView: NSView {
         CATransaction.commit()
     }
 
-    required init?(coder: NSCoder) { return nil }
+    required init?(coder: NSCoder) { nil }
 
     override func layout() {
         super.layout()
@@ -546,8 +546,9 @@ private enum SpaceImages {
         let tile: CGFloat = 128
         // One speck per device pixel, so the dither is as fine as the screen.
         let pixels = Int((tile * scale).rounded())
-        guard let dither = CGContext(data: nil, width: pixels, height: pixels, bitsPerComponent: 8,
-                                     bytesPerRow: 0, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+        guard let space = CGColorSpace(name: CGColorSpace.sRGB),
+              let dither = CGContext(data: nil, width: pixels, height: pixels, bitsPerComponent: 8,
+                                     bytesPerRow: 0, space: space,
                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
         var seed: UInt64 = 0xD1B5_4A32_D192_ED03
         for y in 0..<pixels {
@@ -567,8 +568,9 @@ private enum SpaceImages {
     private static func bitmap(width: CGFloat, height: CGFloat, scale: CGFloat) -> CGContext? {
         let w = Int((width * scale).rounded(.up)), h = Int((height * scale).rounded(.up))
         guard w > 0, h > 0,
+              let space = CGColorSpace(name: CGColorSpace.sRGB),
               let context = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0,
-                                      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                      space: space,
                                       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
         context.scaleBy(x: scale, y: scale)
         return context

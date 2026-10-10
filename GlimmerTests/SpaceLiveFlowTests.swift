@@ -20,15 +20,15 @@ struct SpaceLiveFlowTests {
         #expect(LiveFlowMapping.pulseLapSeconds(rttMs: .nan) == nil)
     }
 
-    @Test func lowLatencyGivesAQuickPulse() {
-        let quick = LiveFlowMapping.pulseLapSeconds(rttMs: 0.5)!
+    @Test func lowLatencyGivesAQuickPulse() throws {
+        let quick = try #require(LiveFlowMapping.pulseLapSeconds(rttMs: 0.5))
         #expect(quick <= 1.1)
         #expect(quick >= LiveFlowMapping.quickLapSeconds)
     }
 
-    @Test func pulseSlowsAsLatencyRises() {
+    @Test func pulseSlowsAsLatencyRises() throws {
         let samples: [Double] = [0, 1, 5, 13, 30, 50, 70, 200]
-        let laps = samples.map { LiveFlowMapping.pulseLapSeconds(rttMs: $0)! }
+        let laps = try samples.map { try #require(LiveFlowMapping.pulseLapSeconds(rttMs: $0)) }
         #expect(zip(laps, laps.dropFirst()).allSatisfy { $0 <= $1 })
         #expect(laps[3] > laps[1])
     }
@@ -57,20 +57,22 @@ struct SpaceLiveFlowTests {
 
     // MARK: Smoothing
 
-    @Test func smoothingStartsAtTheFirstSampleAndEases() {
+    @Test func smoothingStartsAtTheFirstSampleAndEases() throws {
         #expect(LiveFlowMapping.smooth(nil, 10) == 10)
-        #expect(abs(LiveFlowMapping.smooth(10, 20)! - 13.5) < 1e-9)
+        let eased = try #require(LiveFlowMapping.smooth(10, 20))
+        #expect(abs(eased - 13.5) < 1e-9)
         #expect(LiveFlowMapping.smooth(10, nil) == nil)
     }
 
     // MARK: Particle slots are evenly spread for any count
 
-    @Test func slotPhasesStartAtZeroAndSpreadEvenly() {
+    @Test func slotPhasesStartAtZeroAndSpreadEvenly() throws {
         #expect(LiveFlowMapping.slotPhase(0) == 0)
         #expect(LiveFlowMapping.slotPhase(1) == 0.5)
         for count in [2, 3, 4, 8, 16, 24, 36] {
             let phases = (0..<count).map { LiveFlowMapping.slotPhase($0) }.sorted()
-            var largestGap = 1 - phases.last! + phases.first!
+            let first = try #require(phases.first), last = try #require(phases.last)
+            var largestGap = 1 - last + first
             for (a, b) in zip(phases, phases.dropFirst()) { largestGap = max(largestGap, b - a) }
             #expect(largestGap <= 2.5 / Double(count))
         }
@@ -81,9 +83,9 @@ struct SpaceLiveFlowTests {
     private let size = CGSize(width: 1040, height: 780)
     private let bezel = CGRect(x: 99, y: 150, width: 842, height: 520)
 
-    @Test func pathStartsAtTheMacHorizonAndTurnsAtThePCBezel() {
+    @Test func pathStartsAtTheMacHorizonAndTurnsAtThePCBezel() throws {
         let points = SpaceFlowPath.points(size: size, bezel: bezel)
-        let mac = points.first!, pc = points[points.count / 2]
+        let mac = try #require(points.first), pc = points[points.count / 2]
         #expect(abs(mac.y - size.height) < 0.001)
         #expect(mac.x < bezel.minX)
         #expect(abs(pc.x - (bezel.minX - SpaceFlowPath.bezelGap)) < 0.001)
@@ -110,10 +112,10 @@ struct SpaceLiveFlowTests {
     @Test func dotsKeepAClearGapFromTheBezel() {
         let points = SpaceFlowPath.points(size: size, bezel: bezel)
         let clear: CGFloat = 8
-        for p in points {
-            #expect(p.x + SpaceFlowPath.dotRadius <= bezel.minX - clear)
-            #expect(p.x - SpaceFlowPath.dotRadius >= 0)
-            #expect(p.y >= bezel.midY - 0.001 && p.y <= size.height + 0.001)
+        for point in points {
+            #expect(point.x + SpaceFlowPath.dotRadius <= bezel.minX - clear)
+            #expect(point.x - SpaceFlowPath.dotRadius >= 0)
+            #expect(point.y >= bezel.midY - 0.001 && point.y <= size.height + 0.001)
         }
     }
 

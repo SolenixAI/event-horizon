@@ -34,11 +34,12 @@ enum SpaceFlowPath {
         let c1 = CGPoint(x: mac.x * 0.25, y: size.height - (size.height - pc.y) * 0.5)
         let c2 = CGPoint(x: pc.x * 0.35, y: pc.y + (size.height - pc.y) * 0.2)
         let out = (0...halfSamples).map { i -> CGPoint in
-            let t = CGFloat(i) / CGFloat(halfSamples)
-            let u = 1 - t
-            let a = u * u * u, b = 3 * u * u * t, c = 3 * u * t * t, d = t * t * t
-            return CGPoint(x: a * mac.x + b * c1.x + c * c2.x + d * pc.x,
-                           y: a * mac.y + b * c1.y + c * c2.y + d * pc.y)
+            let progress = CGFloat(i) / CGFloat(halfSamples)
+            let remaining = 1 - progress
+            let w0 = remaining * remaining * remaining, w1 = 3 * remaining * remaining * progress
+            let w2 = 3 * remaining * progress * progress, w3 = progress * progress * progress
+            return CGPoint(x: w0 * mac.x + w1 * c1.x + w2 * c2.x + w3 * pc.x,
+                           y: w0 * mac.y + w1 * c1.y + w2 * c2.y + w3 * pc.y)
         }
         // The way back retraces the curve, so the lap is a symmetric round trip.
         return out + out.prefix(halfSamples).reversed()
@@ -48,8 +49,8 @@ enum SpaceFlowPath {
     /// layer's space is (origin at the bottom left).
     static func path(size: CGSize, bezel: CGRect) -> CGPath {
         let path = CGMutablePath()
-        for (i, p) in points(size: size, bezel: bezel).enumerated() {
-            let flipped = CGPoint(x: p.x, y: size.height - p.y)
+        for (i, point) in points(size: size, bezel: bezel).enumerated() {
+            let flipped = CGPoint(x: point.x, y: size.height - point.y)
             if i == 0 { path.move(to: flipped) } else { path.addLine(to: flipped) }
         }
         return path
