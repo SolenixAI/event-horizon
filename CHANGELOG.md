@@ -2,6 +2,8 @@
 
 ## 2026.10.8 - 2026-10-13
 
+- A test build says so: "Test build" shows in its window and on its Dock icon,
+  so it can't be mistaken for Event Horizon itself.
 - Pairing your Mac again no longer locks it out. The PC companion removes the
   Mac's earlier record from Sunshine when the new pairing lands, so Sunshine
   always knows each Mac once and accepts it.
