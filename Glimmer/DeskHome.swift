@@ -19,8 +19,17 @@ extension Color {
 
 struct DeskHome: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.controlActiveState) private var controlActiveState
+    @Environment(\.scenePhase) private var scenePhase
     /// The bezel's width: the status row and the shelf line up with it.
     @State private var deskWidth: CGFloat = 0
+
+    /// The backdrop drifts only while someone can see it move: Reduce Motion
+    /// is off, this window is key and the app is in front, and no PC streams.
+    private var backdropDrifts: Bool {
+        !reduceMotion && controlActiveState == .key && scenePhase == .active && !model.isStreaming
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -50,6 +59,12 @@ struct DeskHome: View {
         .padding(.bottom, 22)
         .frame(minWidth: 640, idealWidth: 1040, maxWidth: .infinity,
                minHeight: 600, idealHeight: 780, maxHeight: .infinity)
+        // Home's surroundings: the deep-space field behind the PC, under the
+        // whole window, title bar included.
+        .background {
+            SpaceBackdrop(drifts: backdropDrifts)
+                .ignoresSafeArea()
+        }
         // No toolbar, so full screen is all PC; Settings (and ⌘,) sits on the
         // title-bar line, across from the window buttons.
         .overlay(alignment: .topTrailing) {
