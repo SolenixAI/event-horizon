@@ -36,12 +36,27 @@ network. Diagnostics are off by default and stay on your Mac.
 
 ## Install
 
-**Mac:** macOS 26 or later on Apple Silicon. There is no download yet: build it
-from source (below). Downloads come with the first release.
+**Mac:** macOS 26 or later on Apple Silicon. There is no download yet. Build
+it from source (below).
 
-**PC:** the companion lives in [`companion/`](companion/); its first release is
-coming. Until then, set up Sunshine by hand with
-[docs/HOST_SETUP.md](docs/HOST_SETUP.md).
+**PC:** Windows or Linux. Get the PC companion from the
+[releases page](https://github.com/SolenixAI/event-horizon/releases). Pick the
+newest release whose tag starts with `companion-v`.
+
+- **Windows:** Download `EventHorizonCompanion-Windows.exe`. Run it. Click
+  Allow when Windows asks. If Windows shows a warning, choose More info, then
+  Run anyway.
+- **Linux:** Download `event-horizon-companion-linux-x86_64`. In its folder,
+  run:
+
+  ```bash
+  chmod +x event-horizon-companion-linux-x86_64 && ./event-horizon-companion-linux-x86_64
+  ```
+
+Wait for "This PC is ready. Open Event Horizon on your Mac." The companion
+installs Sunshine for you. When your Mac asks to pair, click Allow on the PC.
+
+To set up Sunshine by hand instead, follow [docs/HOST_SETUP.md](docs/HOST_SETUP.md).
 
 ## Build
 
