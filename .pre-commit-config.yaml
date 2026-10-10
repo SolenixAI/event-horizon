@@ -16,6 +16,8 @@ repos:
       - id: check-merge-conflict
       - id: check-executables-have-shebangs
       - id: check-shebang-scripts-are-executable
+        # Rust inner attributes (`#![allow(...)]`) start with `#!` but are not shebangs.
+        exclude: '\.rs$'
       - id: check-json
       - id: check-toml
       - id: check-case-conflict
@@ -114,7 +116,11 @@ repos:
       - id: make-test
         name: make test (unit tests)
         description: Run the GlimmerTests suite via xcodebuild before pushing.
-        entry: make test
+        # Git exports GIT_DIR and friends into hooks; SwiftPM's own git checkouts
+        # (Sparkle) would then run against this repository and fail.
+        entry:
+          env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE -u GIT_PREFIX make
+          test
         language: system
         pass_filenames: false
         always_run: true

@@ -316,6 +316,24 @@ async fn unpair_forgets_the_mac_here_and_in_sunshine() {
 }
 
 #[tokio::test]
+async fn pairing_again_leaves_sunshine_one_record_for_the_mac() {
+    let dir = tempfile::tempdir().unwrap();
+    let companion = start(Decision::Allow, dir.path()).await;
+    pair(&companion).await;
+
+    let (status, body) = pair(&companion).await;
+
+    // Sunshine refuses a certificate that more than one record holds, so the
+    // first pairing's record goes as the second one arrives.
+    assert_eq!(status, 200);
+    assert_eq!(*companion.sunshine.unpaired.lock().unwrap(), ["uuid-mac-1"]);
+    // Unpairing later removes the record that is left, and nothing else.
+    let token = body["token"].as_str().unwrap().to_string();
+    assert_eq!(unpair(&companion, Some(&token)).await, 204);
+    assert_eq!(*companion.sunshine.unpaired.lock().unwrap(), ["uuid-mac-1", "uuid-mac-1-2"]);
+}
+
+#[tokio::test]
 async fn unpair_needs_the_macs_own_token() {
     let dir = tempfile::tempdir().unwrap();
     let companion = start(Decision::Allow, dir.path()).await;
