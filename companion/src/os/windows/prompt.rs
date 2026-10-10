@@ -1,5 +1,6 @@
 //! Prompt on Windows: a native Yes/No dialog in front of everything.
 
+use crate::host::spaced;
 use crate::ports::{Decision, Prompt};
 use windows_sys::Win32::UI::WindowsAndMessaging::{
     IDYES, MB_ICONINFORMATION, MB_ICONQUESTION, MB_OK, MB_SETFOREGROUND, MB_TOPMOST, MB_YESNO,
@@ -15,11 +16,7 @@ fn wide(text: &str) -> Vec<u16> {
 
 impl Prompt for Dialog {
     async fn ask_allow(&self, mac_name: &str, code: &str) -> Decision {
-        let detail = if code.is_empty() {
-            "Event Horizon on that Mac will keep this PC awake while it streams.".to_string()
-        } else {
-            format!("Code on your Mac: {code}")
-        };
+        let detail = format!("Check that your Mac shows {}.", spaced(code));
         let text = wide(&format!("Allow {mac_name} to use this PC?\n\n{detail}"));
         let title = wide("Event Horizon");
         tokio::task::spawn_blocking(move || {

@@ -16,19 +16,20 @@ pub const LEASE_TTL: Duration = Duration::from_secs(90);
 
 /// A Mac asking to pair. `pin` is the PIN the Mac gave Sunshine; none means
 /// the Mac is already paired with Sunshine and only needs the companion's
-/// token. `code` is what both screens show, so the person knows the Mac.
+/// token. The Mac's id names its pairing with Sunshine, so it is unique.
 #[derive(Clone, Debug, serde::Deserialize)]
 pub struct PairRequest {
     pub mac_id: String,
     pub mac_name: String,
     #[serde(default)]
     pub pin: Option<String>,
-    pub code: String,
 }
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum PairOutcome {
-    Paired,
+    /// `sunshine_client` is Sunshine's id for the client this pairing added,
+    /// when this request added one (none when the Mac was already paired).
+    Paired { sunshine_client: Option<String> },
     Denied,
     /// Nobody answered at the PC within `PAIR_TIMEOUT`.
     Expired,
@@ -36,6 +37,19 @@ pub enum PairOutcome {
     Replaced,
     /// Allow was clicked, but Sunshine did not take the PIN.
     SunshineDown,
+}
+
+/// The six digits both screens show for one pairing request.
+pub fn new_code() -> String {
+    let mut bytes = [0u8; 4];
+    getrandom::fill(&mut bytes).expect("the OS gives random bytes");
+    format!("{:06}", u32::from_le_bytes(bytes) % 1_000_000)
+}
+
+/// The code as people read it: "123 456". The PC's prompts use it.
+#[cfg(any(target_os = "linux", windows))]
+pub fn spaced(code: &str) -> String {
+    format!("{} {}", &code[..3], &code[3..])
 }
 
 pub struct Host<S, P, A: Awake> {
@@ -79,6 +93,10 @@ impl<S: SunshineApi, P: Prompt, A: Awake> Host<S, P, A> {
         }
     }
 
+    pub fn sunshine(&self) -> &S {
+        &self.sunshine
+    }
+
     /// A connected Mac checks in. The PC stays awake and unlocked until
     /// `LEASE_TTL` after the last check-in from any Mac.
     pub async fn lease(&self, mac_id: &str) {
@@ -99,9 +117,9 @@ impl<S: SunshineApi, P: Prompt, A: Awake> Host<S, P, A> {
         });
     }
 
-    /// Pair a Mac. Nothing happens without a click on Allow at the PC. A
-    /// newer request from the same Mac replaces this one.
-    pub async fn pair(&self, request: PairRequest) -> PairOutcome {
+    /// Pair a Mac under the code the PC shows. Nothing happens without a click
+    /// on Allow at the PC. A newer request from the same Mac replaces this one.
+    pub async fn pair(&self, request: PairRequest, code: String) -> PairOutcome {
         let (replace, replaced) = oneshot::channel();
         if let Some(older) = self
             .pending
@@ -114,7 +132,7 @@ impl<S: SunshineApi, P: Prompt, A: Awake> Host<S, P, A> {
 
         let asked = tokio::time::timeout(
             PAIR_TIMEOUT,
-            self.prompt.ask_allow(&request.mac_name, &request.code),
+            self.prompt.ask_allow(&request.mac_name, &code),
         );
         let answer = tokio::select! {
             answer = asked => answer,
@@ -126,9 +144,15 @@ impl<S: SunshineApi, P: Prompt, A: Awake> Host<S, P, A> {
             Err(_) => PairOutcome::Expired,
             Ok(Decision::Deny) => PairOutcome::Denied,
             Ok(Decision::Allow) => match &request.pin {
-                None => PairOutcome::Paired,
-                Some(pin) => match self.sunshine.submit_pin(&request.mac_name, pin).await {
-                    Ok(()) => PairOutcome::Paired,
+                None => PairOutcome::Paired {
+                    sunshine_client: None,
+                },
+                Some(pin) => match self
+                    .sunshine
+                    .submit_pin(&request.mac_id, &request.mac_name, pin)
+                    .await
+                {
+                    Ok(sunshine_client) => PairOutcome::Paired { sunshine_client },
                     Err(_) => PairOutcome::SunshineDown,
                 },
             },

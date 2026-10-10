@@ -38,17 +38,16 @@ extension AppModel {
         companionLeaseTask = nil
         guard let host = lastLaunchAttempt?.host,
               let address = host.manualAddress ?? host.localAddress else { return }
-        let companion = CompanionClient(address: address)
         let hostID = host.id
+        let companion = CompanionClient(address: address, pinned: CompanionTokens.fingerprint(forHost: hostID))
         companionLeaseTask = Task {
             var token = CompanionTokens.token(forHost: hostID)
             if token == nil, await companion.isPresent() {
-                let macID = try? await IdentityManager.shared.uniqueID()
-                let result = await companion.pair(
-                    macID: macID ?? NetworkClient.pairingDeviceName,
-                    macName: NetworkClient.pairingDeviceName, pin: nil)
-                if case .paired(let fresh) = result {
-                    CompanionTokens.save(fresh, forHost: hostID)
+                let macID = (try? await IdentityManager.shared.uniqueID()) ?? NetworkClient.pairingDeviceName
+                if let asked = await companion.ask(macID: macID, macName: NetworkClient.pairingDeviceName, pin: nil),
+                   case .paired(let fresh) = await companion.answer(ticket: asked.ticket),
+                   let fingerprint = companion.fingerprint {
+                    CompanionTokens.save(fresh, fingerprint: fingerprint, forHost: hostID)
                     token = fresh
                 }
             }
@@ -109,6 +108,7 @@ extension AppModel {
         let attempt = PairingAttempt(address: address)
         pairingAttempt = attempt
         pairingPhase = .idle
+        companionCode = nil
         hostStatusTask?.cancel()
         hostStatusTask = nil
         return attempt
@@ -120,6 +120,7 @@ extension AppModel {
         if pairingAttempt == attempt { pairingAttempt = nil }
         guard pairingAttempt == nil else { return }
         pairingPhase = .idle
+        companionCode = nil
         restartHostStatusPolling()
     }
 
@@ -149,6 +150,20 @@ extension AppModel {
             text = String(text.prefix { $0 != ":" })
         }
         return isValidPCAddress(text) ? text : nil
+    }
+
+    /// The companion's half of a pairing: it makes the code, which the sheet
+    /// shows, and then waits for the answer at the PC.
+    private func companionAnswer(
+        _ companion: CompanionClient, viaCompanion: Bool, macID: String, pin: String
+    ) -> Task<CompanionClient.PairResult, Never> {
+        Task {
+            guard viaCompanion,
+                  let asked = await companion.ask(macID: macID, macName: NetworkClient.pairingDeviceName, pin: pin)
+            else { return .unavailable }
+            self.companionCode = asked.code
+            return await companion.answer(ticket: asked.ticket)
+        }
     }
 
     func pair(attempt: PairingAttempt, pin: String) async -> Host? {
@@ -183,24 +198,26 @@ extension AppModel {
             pairingPhase = .failure(.gameStream)
             return nil
         }
-        // A PC running the companion asks its person to click Allow and hands
-        // Sunshine this PIN itself; without one, the person types it as before.
-        let companion = CompanionClient(address: address)
+        // A companion PC shows its own code and hands Sunshine this PIN. The Mac
+        // names its Sunshine pairing by its id, and trusts the PC's certificate
+        // afresh: the code on both screens is the check.
+        let companion = CompanionClient(address: address, pinned: nil)
+        let viaCompanion = await companion.isPresent()
+        guard (try? checkPairing(attempt)) != nil else { return nil }
+        pairingViaCompanion = viaCompanion
         let macID = (try? await IdentityManager.shared.uniqueID()) ?? NetworkClient.pairingDeviceName
-        let companionAsk = Task { () -> CompanionClient.PairResult in
-            guard await companion.isPresent() else { return .unavailable }
-            self.pairingViaCompanion = true
-            return await companion.pair(macID: macID, macName: NetworkClient.pairingDeviceName, pin: pin)
-        }
+        let companionAsk = companionAnswer(companion, viaCompanion: viaCompanion, macID: macID, pin: pin)
         defer {
             companionAsk.cancel()
             pairingViaCompanion = false
+            companionCode = nil
         }
         do {
             pairingPhase = .awaitingPin
             // Always the full handshake: this /serverinfo came over plain HTTP,
             // so nothing in it proves the PC already trusts this Mac.
-            let paired = try await PairingClient(network: network, server: fetched).pair(pin: pin)
+            let deviceName = viaCompanion ? macID : NetworkClient.pairingDeviceName
+            let paired = try await PairingClient(network: network, server: fetched, deviceName: deviceName).pair(pin: pin)
             try checkPairing(attempt)
             // Neither pairchallenge nor /applist returns a PC identity.
             // A pinned /serverinfo reply must supply it before choosing a saved slot.
@@ -208,8 +225,8 @@ extension AppModel {
             try checkPairing(attempt)
             let apps = await pairingApps(server: verified)
             try checkPairing(attempt)
-            if case .paired(let token) = await companionAsk.value {
-                CompanionTokens.save(token, forHost: verified.uniqueId)
+            if case .paired(let token) = await companionAsk.value, let fingerprint = companion.fingerprint {
+                CompanionTokens.save(token, fingerprint: fingerprint, forHost: verified.uniqueId)
             }
             try saveHost(
                 uuid: verified.uniqueId,
@@ -243,6 +260,21 @@ extension AppModel {
             return apps.map { PairedApp(id: $0.id, name: $0.name, hdr: $0.hdrCapable, hidden: $0.hidden) }
         }
         return [PairedApp(id: 881448767, name: "Desktop", hdr: false, hidden: false)]
+    }
+
+    /// Unpairs a PC. A companion PC forgets this Mac first, then the token goes.
+    /// Returns why the PC could not be reached, or nil when unpaired.
+    func forgetHost(_ host: Host) async -> String? {
+        if let token = CompanionTokens.token(forHost: host.id) {
+            let unreachable = "Couldn't reach \(host.displayName) to forget this Mac. "
+                + "Make sure it's awake and on the same network, then try again."
+            guard let address = host.manualAddress ?? host.localAddress else { return unreachable }
+            let companion = CompanionClient(address: address, pinned: CompanionTokens.fingerprint(forHost: host.id))
+            guard await companion.forget(token: token) == .forgotten else { return unreachable }
+            CompanionTokens.delete(forHost: host.id)
+        }
+        unpair(host)
+        return nil
     }
 
     /// Sunshine's PIN page in this Mac's browser, for a headless PC. Sunshine

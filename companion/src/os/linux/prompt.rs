@@ -2,6 +2,7 @@
 //! (freedesktop Notifications; Plasma shows the buttons). Closing it, or
 //! letting it time out, is Deny.
 
+use crate::host::spaced;
 use crate::ports::{Decision, Prompt};
 use std::collections::HashMap;
 use zbus::blocking::{Connection, Proxy};
@@ -37,11 +38,7 @@ fn ask(mac_name: &str, code: &str) -> zbus::Result<Decision> {
             0u32,
             "video-display",
             format!("Allow {mac_name} to use this PC?"),
-            if code.is_empty() {
-                "Event Horizon on that Mac will keep this PC awake while it streams.".to_string()
-            } else {
-                format!("Code on your Mac: {code}")
-            },
+            format!("Check that your Mac shows {}.", spaced(code)),
             vec!["allow", "Allow", "deny", "Deny"],
             hints,
             120_000i32,

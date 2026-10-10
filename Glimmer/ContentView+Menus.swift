@@ -28,6 +28,7 @@ private struct HostContextMenu: ViewModifier {
     @State private var quitApp: String?
     @State private var showQuitConfirm = false
     @State private var quitFailure: String?
+    @State private var unpairFailure: String?
     private var quitName: String { quitApp ?? "the running app" }
 
     init(host: Host, asButton: Bool) {
@@ -96,10 +97,20 @@ private struct HostContextMenu: ViewModifier {
             isPresented: $showUnpairConfirm,
             titleVisibility: .visible
         ) {
-            Button("Unpair", role: .destructive) { model.unpair(host) }
+            Button("Unpair", role: .destructive) {
+                Task {
+                    unpairFailure = await model.forgetHost(host)
+                }
+            }
             Button("Cancel", role: .cancel) { }
         } message: {
             Text("Event Horizon will forget \(host.displayName). You can pair it again at any time.")
+        }
+        .alert("Couldn't unpair \(host.displayName)", isPresented: Binding(
+            get: { unpairFailure != nil }, set: { if !$0 { unpairFailure = nil } })) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(unpairFailure ?? "")
         }
         // Lands on the PIN step; pairing re-pins the PC's certificate. Settings'
         // PC list has no launcher sheet to hand this to, so it carries its own.

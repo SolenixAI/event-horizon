@@ -34,13 +34,19 @@ pub trait SunshineApi: Send + Sync {
         app: serde_json::Value,
     ) -> impl Future<Output = Result<(), SunshineError>> + Send;
 
-    /// Completes the pairing `mac_name` started with Sunshine, using the PIN
-    /// the Mac chose. Sunshine holds a started pairing for 5 minutes.
+    /// Completes the pairing the Mac started with Sunshine under its id, using
+    /// the PIN the Mac chose, and lists the new client as `mac_name`. Sunshine
+    /// holds a started pairing for 5 minutes. Returns Sunshine's id for the
+    /// client it added, when it can tell which one that is.
     fn submit_pin(
         &self,
+        mac_id: &str,
         mac_name: &str,
         pin: &str,
-    ) -> impl Future<Output = Result<(), SunshineError>> + Send;
+    ) -> impl Future<Output = Result<Option<String>, SunshineError>> + Send;
+
+    /// Removes one paired client. A client Sunshine no longer knows is not an error.
+    fn unpair(&self, client: &str) -> impl Future<Output = Result<(), SunshineError>> + Send;
 }
 
 /// Keeps the PC's display on and its screen unlocked. Dropping the guard
