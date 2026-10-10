@@ -4,7 +4,7 @@
 Usage:
   update-appcast.py <appcast.xml> \
       --short-version 2026.6.4 --version 20260613 \
-      --url https://.../Glimmer-2026.6.4.zip \
+      --url https://.../Event-Horizon-2026.6.4.zip \
       --ed-signature <sig> --length <bytes> \
       [--min-system 26.0] [--release-notes-url URL] [--changelog PATH]
 

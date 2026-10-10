@@ -1,6 +1,6 @@
 #!/usr/bin/swift
 // Renders the DMG window background: a dark neutral gradient with a thin arrow
-// pointing from where Finder draws Glimmer.app to where it draws the
+// pointing from where Finder draws Event Horizon.app to where it draws the
 // /Applications alias. The app icon is deliberately NOT painted here - Finder
 // shows the real icon on top, and a painted copy would double up.
 //
@@ -27,7 +27,7 @@ import ImageIO
 
 let winW: CGFloat = 660
 let winH: CGFloat = 400
-let appX: CGFloat = 165 // centre of the Glimmer.app icon
+let appX: CGFloat = 165 // centre of the Event Horizon.app icon
 let appsX: CGFloat = 495 // centre of the Applications alias
 let iconY: CGFloat = 200 // shared icon centre, from the TOP of the window
 let iconSize: CGFloat = 128

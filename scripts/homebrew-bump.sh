@@ -1,26 +1,29 @@
 #!/bin/bash
 #
-# homebrew-bump.sh - point the Homebrew cask at a published Glimmer release.
-# Downloads the release DMG, computes its sha256 from the real bytes, rewrites
-# version + sha256 in the tap's Casks/glimmer.rb, then commits and pushes.
+# homebrew-bump.sh - point the Homebrew cask at a published Event Horizon release.
+# Downloads the release DMG, computes its sha256 from the real bytes, renders the
+# whole cask (Casks/event-horizon.rb) from the names in this script, records the
+# rename from the old glimmer token, then commits and pushes the tap.
 #
 # Run this AFTER the GitHub release exists (scripts/publish-release.sh uploads
 # it); `make release-publish` calls it as the last step. Safe to re-run: if the
-# cask already matches the published DMG it reports "already current" and makes
+# tap already matches the published DMG it reports "already current" and makes
 # no commit.
 #
 # Usage:  scripts/homebrew-bump.sh [version]     # default: Glimmer/Version.xcconfig
 # Override the repos with RELEASES_REPO / TAP_REPO; relocate the tap checkout
-# with GLIMMER_TAP_CACHE. No secrets: gh for the download, git over SSH to push.
+# with EVENT_HORIZON_TAP_CACHE. No secrets: gh for the download, git over SSH to push.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
 VERSION="${1:-$(sed -n 's/^MARKETING_VERSION = \(.*\)/\1/p' "$HERE/Glimmer/Version.xcconfig" | tr -d ' ')}"
-RELEASES_REPO="${RELEASES_REPO:-Se7enbrc/glimmer}"
-TAP_REPO="${TAP_REPO:-Se7enbrc/homebrew-glimmer}"
-TAP_DIR="${GLIMMER_TAP_CACHE:-$HOME/.cache/glimmer/homebrew-glimmer}"
-CASK="Casks/glimmer.rb"
-DMG="Glimmer-$VERSION.dmg"
+RELEASES_REPO="${RELEASES_REPO:-SolenixAI/event-horizon}"
+TAP_REPO="${TAP_REPO:-SolenixAI/homebrew-event-horizon}"
+TAP_DIR="${EVENT_HORIZON_TAP_CACHE:-$HOME/.cache/event-horizon/homebrew-event-horizon}"
+CASK="Casks/event-horizon.rb"
+OLD_CASK="Casks/glimmer.rb"
+RENAMES="cask_renames.json"
+DMG="Event-Horizon-$VERSION.dmg"
 
 [ -n "$VERSION" ] || { echo "ERR: no version given and none found in Glimmer/Version.xcconfig" >&2; exit 1; }
 
@@ -43,31 +46,79 @@ else
 	git clone --quiet "git@github.com:$TAP_REPO.git" "$TAP_DIR"
 fi
 
-sed -i '' \
-	-e "s|^  version \".*\"$|  version \"$VERSION\"|" \
-	-e "s|^  sha256 \".*\"$|  sha256 \"$SHA\"|" \
-	"$TAP_DIR/$CASK"
+# The whole cask is rendered here, so its names cannot drift from the release
+# names above. The app, the binary and the zap paths follow the product name
+# (Event Horizon), the bundle identifier, and the legacy Glimmer data that
+# PR #29 moves on first launch.
+mkdir -p "$TAP_DIR/Casks"
+cat >"$TMP/event-horizon.rb" <<CASK
+cask "event-horizon" do
+  version "$VERSION"
+  sha256 "$SHA"
 
-# The `glimmer` command is the app binary itself, linked under that name; the
-# app re-execs through the real path. Added once, right after the app stanza.
-BINARY='  binary "#{appdir}/Glimmer.app/Contents/MacOS/Glimmer", target: "glimmer"'
-grep -qxF "$BINARY" "$TAP_DIR/$CASK" || sed -i '' -e "s|^  app \"Glimmer.app\"\$|&\\
-$BINARY|" "$TAP_DIR/$CASK"
+  url "https://github.com/$RELEASES_REPO/releases/download/#{version}/Event-Horizon-#{version}.dmg"
+  name "Event Horizon"
+  desc "Stream games from a PC running Sunshine"
+  homepage "https://solenix.dev/"
 
-# Fail loud rather than pushing a cask the seds didn't actually touch (a renamed
-# stanza or reindent would silently no-op the expressions above).
-grep -q "^  version \"$VERSION\"$" "$TAP_DIR/$CASK" && grep -q "^  sha256 \"$SHA\"$" "$TAP_DIR/$CASK" \
-	&& grep -qxF "$BINARY" "$TAP_DIR/$CASK" || {
-	echo "ERR: $CASK does not carry version $VERSION, that sha256 and the glimmer binary after the rewrite - check its stanza format" >&2
-	exit 1
-}
+  livecheck do
+    url :url
+    strategy :github_latest
+  end
 
-if git -C "$TAP_DIR" diff --quiet -- "$CASK"; then
+  auto_updates true
+  depends_on arch: :arm64
+  depends_on macos: ">= :tahoe"
+
+  app "Event Horizon.app"
+  binary "#{appdir}/Event Horizon.app/Contents/MacOS/Event Horizon", target: "event-horizon"
+
+  # The helpers are SMAppService items macOS owns. Removing their launchd jobs on
+  # every upgrade left the login item broken, so only zap removes them.
+  uninstall quit: "dev.solenix.eventhorizon"
+
+  # Legacy io.ugfugl.Glimmer data is removed too: PR #29 moves it once on first
+  # launch, but a copy that was never opened under this name is still on the Mac.
+  zap launchctl: [
+        "dev.solenix.eventhorizon.helper",
+        "dev.solenix.eventhorizon.LoginHelper",
+        "io.ugfugl.glimmer.helper",
+        "io.ugfugl.Glimmer.LoginHelper",
+      ],
+      trash:     [
+        "~/Library/Application Support/Event Horizon",
+        "~/Library/Application Support/Glimmer",
+        "~/Library/Caches/dev.solenix.eventhorizon",
+        "~/Library/Caches/io.ugfugl.Glimmer",
+        "~/Library/Containers/io.ugfugl.Glimmer",
+        "~/Library/HTTPStorages/dev.solenix.eventhorizon",
+        "~/Library/HTTPStorages/io.ugfugl.Glimmer",
+        "~/Library/Logs/Event Horizon",
+        "~/Library/Logs/Glimmer",
+        "~/Library/Preferences/dev.solenix.eventhorizon.plist",
+        "~/Library/Preferences/io.ugfugl.Glimmer.plist",
+      ]
+end
+CASK
+cp "$TMP/event-horizon.rb" "$TAP_DIR/$CASK"
+
+# cask_renames.json tells `brew update` and `brew upgrade` that the old token
+# now means this cask (Homebrew docs: docs.brew.sh/Rename-A-Formula).
+printf '{\n  "glimmer": "event-horizon"\n}\n' >"$TAP_DIR/$RENAMES"
+if [ -e "$TAP_DIR/$OLD_CASK" ]; then git -C "$TAP_DIR" rm --quiet -- "$OLD_CASK"; fi
+
+# Fail loud rather than pushing a cask that does not parse or does not carry
+# this release's version and checksum.
+ruby -c "$TAP_DIR/$CASK" >/dev/null || { echo "ERR: $CASK is not valid Ruby" >&2; exit 1; }
+grep -qxF "  version \"$VERSION\"" "$TAP_DIR/$CASK" && grep -qxF "  sha256 \"$SHA\"" "$TAP_DIR/$CASK" || {
+	echo "ERR: $CASK does not carry version $VERSION and sha256 $SHA" >&2; exit 1; }
+
+git -C "$TAP_DIR" add -A -- Casks "$RENAMES"
+if git -C "$TAP_DIR" diff --cached --quiet; then
 	echo "✅ Homebrew cask already current at $VERSION - nothing to push."
 	exit 0
 fi
 
-git -C "$TAP_DIR" add "$CASK"
-git -C "$TAP_DIR" commit --quiet -m "glimmer $VERSION"
+git -C "$TAP_DIR" commit --quiet -m "event-horizon $VERSION"
 git -C "$TAP_DIR" push --quiet origin HEAD:main
-echo "✅ Homebrew cask bumped to $VERSION - 'brew install --cask se7enbrc/glimmer/glimmer'."
+echo "✅ Homebrew cask bumped to $VERSION - 'brew install --cask solenixai/event-horizon/event-horizon'."

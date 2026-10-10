@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # publish-release.sh - publish a Sparkle auto-update for the just-built, notarized
-# Glimmer bundle. PROMPT-FREE from any session: the EdDSA key comes from the
+# Event Horizon bundle. PROMPT-FREE from any session: the EdDSA key comes from the
 # signing creds file (scripts/signing-creds.sh), GitHub from the gh token. Called
 # by `make release-publish` AFTER `make dist` (so the bundle is Developer-ID
 # signed, notarized, stapled, and a DMG already exists in <dist-dir>).
@@ -17,10 +17,12 @@ SHORT="$1"; BUILD="$2"; APP="$3"; DIST="$4"; REPO="$5"
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
 CREDS="$HERE/scripts/signing-creds.sh"
 TOOLS="$("$HERE/scripts/sparkle-tools.sh")"
-ZIP="$DIST/Glimmer-$SHORT.zip"
-DMG="$DIST/Glimmer-$SHORT.dmg"
+# Asset names carry no spaces: GitHub rewrites spaces in uploaded asset names, so
+# the name we match and the URL the appcast and the cask point at must be the same.
+ZIP="$DIST/Event-Horizon-$SHORT.zip"
+DMG="$DIST/Event-Horizon-$SHORT.dmg"
 TAG="$SHORT"
-ASSET_URL="https://github.com/$REPO/releases/download/$TAG/Glimmer-$SHORT.zip"
+ASSET_URL="https://github.com/$REPO/releases/download/$TAG/Event-Horizon-$SHORT.zip"
 APPCAST="appcast.xml"
 
 [ -d "$APP" ] || { echo "ERR: app bundle not found at $APP - run via 'make release-publish'" >&2; exit 1; }
@@ -74,14 +76,14 @@ echo "  ✓ signed ($LENGTH bytes)"
 # what the appcast <description> carries - one source of truth, so the GitHub
 # release and Sparkle's "what's new" can never disagree. A version with no
 # section falls back to the old one-line boilerplate rather than shipping empty.
-NOTES="$(mktemp -t glimmer-notes)"
+NOTES="$(mktemp -t event-horizon-notes)"
 trap 'rm -f "$NOTES"' EXIT
 if "$HERE/scripts/changelog.py" --version "$SHORT" --changelog "$HERE/CHANGELOG.md" >"$NOTES" 2>/dev/null \
 	&& [ -s "$NOTES" ]; then
 	echo "  ✓ release notes from CHANGELOG.md ($(wc -l <"$NOTES" | tr -d ' ') lines)"
 else
 	echo "  ! no '## $SHORT' section in CHANGELOG.md - using boilerplate release notes" >&2
-	printf 'Glimmer %s. Auto-updates via Sparkle; the notarized DMG is attached.\n' "$SHORT" >"$NOTES"
+	printf 'Event Horizon %s. Auto-updates via Sparkle; the notarized DMG is attached.\n' "$SHORT" >"$NOTES"
 fi
 printf '\nSource: this repo at tag %s (GPLv3).\n' "$TAG" >>"$NOTES"
 
@@ -113,7 +115,7 @@ if gh release view "$TAG" -R "$REPO" >/dev/null 2>&1; then
 		fi
 	done
 else
-	gh release create "$TAG" "${ASSETS[@]}" -R "$REPO" --target "$HEAD_SHA" --title "Glimmer $SHORT" \
+	gh release create "$TAG" "${ASSETS[@]}" -R "$REPO" --target "$HEAD_SHA" --title "Event Horizon $SHORT" \
 		--notes-file "$NOTES"
 fi
 echo "  ✓ release published"
@@ -132,12 +134,12 @@ else
 	git -C "$HERE" add "$APPCAST"
 	# A pre-commit hook may reformat the machine-written appcast and abort the
 	# first commit; re-stage the fixed file and retry once.
-	if ! git -C "$HERE" commit -m "appcast: Glimmer $SHORT" --quiet; then
+	if ! git -C "$HERE" commit -m "appcast: Event Horizon $SHORT" --quiet; then
 		git -C "$HERE" add "$APPCAST"
-		git -C "$HERE" commit -m "appcast: Glimmer $SHORT" --quiet
+		git -C "$HERE" commit -m "appcast: Event Horizon $SHORT" --quiet
 	fi
 	git -C "$HERE" push --quiet origin HEAD:main
 	echo "  ✓ appcast committed + pushed to main → $(git -C "$HERE" rev-parse --short HEAD)"
 fi
 
-echo "✅ Published Glimmer $SHORT - Sparkle clients see it within a day (or now via Check for Updates...)."
+echo "✅ Published Event Horizon $SHORT - Sparkle clients see it within a day (or now via Check for Updates...)."

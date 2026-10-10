@@ -28,12 +28,12 @@ git switch main && git pull && make release-publish
 `release-publish` signs, notarizes, staples, cuts the DMG, EdDSA-signs a ZIP of
 the bundle, uploads both to the GitHub release, and updates the Sparkle appcast.
 Existing installs pick the update up at their next check (startup, then once a
-day). New installs come from the Releases DMG or the Homebrew cask,
-`brew install --cask se7enbrc/glimmer/glimmer`.
+day). New installs come from the Releases DMG (`Event-Horizon-<version>.dmg`)
+or the Homebrew cask, `brew install --cask solenixai/event-horizon/event-horizon`.
 
 Last, `release-publish` runs `scripts/homebrew-bump.sh` to checksum the
-published DMG and push version and sha256 to the
-[tap](https://github.com/Se7enbrc/homebrew-glimmer). If only that step fails,
+published DMG and push the cask and its rename of the old `glimmer` token to the
+[tap](https://github.com/SolenixAI/homebrew-event-horizon). If only that step fails,
 the release is still live: re-run `make brew-bump`.
 
 Release notes come from `CHANGELOG.md`, so write that section before publishing.

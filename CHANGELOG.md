@@ -10,6 +10,8 @@
   command, which is now `event-horizon` instead of `glimmer`. Run Install
   Command Line Tool… once more to replace the old link. Your PCs, pairings and
   macOS permissions carry over.
+- The download is named `Event-Horizon-2026.10.8.dmg`, and the release is
+  titled Event Horizon.
 
 ## 2026.10.7 - 2026-10-12
 
