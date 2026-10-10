@@ -1,6 +1,8 @@
 //! `play`: open a Steam game for Sunshine, waiting out a pending update.
 
+use event_horizon_companion::play;
 use event_horizon_companion::play::refused_since;
+use std::path::Path;
 
 const LOG: &str = "\
 [2026-10-09 19:00:01] Game process added : AppID 1808500 \"...\"
@@ -24,5 +26,28 @@ fn another_games_refusal_does_not() {
     assert!(
         !refused_since(LOG, "180850", "2026-10-09 20:00:00"),
         "a prefix of another id"
+    );
+}
+
+#[test]
+fn a_flatpak_steam_is_opened_through_flatpak() {
+    let root = Path::new("/home/deck/.var/app/com.valvesoftware.Steam/.local/share/Steam");
+    assert_eq!(
+        play::launch_command(root, "1808500"),
+        [
+            "flatpak",
+            "run",
+            "com.valvesoftware.Steam",
+            "steam://rungameid/1808500"
+        ]
+    );
+}
+
+#[test]
+fn a_native_steam_is_opened_directly() {
+    let root = Path::new("/home/deck/.local/share/Steam");
+    assert_eq!(
+        play::launch_command(root, "1808500"),
+        ["steam", "steam://rungameid/1808500"]
     );
 }
