@@ -67,21 +67,3 @@ struct StreamVolumeSlider: View {
                 set: { model.streamVolume.setLevel($0) })
     }
 }
-
-private extension StreamVolume {
-    /// The speaker glyph for the level, and a slashed one while muted or silent.
-    var symbol: String {
-        if gain == 0 { return "speaker.slash" }
-        switch gain {
-        case ..<0.34: return "speaker.wave.1"
-        case ..<0.67: return "speaker.wave.2"
-        default: return "speaker.wave.3"
-        }
-    }
-
-    /// What VoiceOver says for the level: a percentage, or "Muted".
-    var spokenLevel: String {
-        if isMuted { return "Muted" }
-        return "\(Int((level * 100).rounded())) percent"
-    }
-}

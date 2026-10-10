@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026.10.8 - 2026-10-13
+
+- When the stream's volume or mute changes, a small volume readout shows over
+  the picture for a moment, and VoiceOver announces the new level. The readout
+  never takes clicks or keys.
+
 ## 2026.10.7 - 2026-10-12
 
 - Home has a speaker control beside Ready or Streaming, and the menu bar panel

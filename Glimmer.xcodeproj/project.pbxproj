@@ -42,6 +42,7 @@
 		A100014A /* LogViewerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100014B /* LogViewerView.swift */; };
 		A100015A /* AppModel+Audio.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100015B /* AppModel+Audio.swift */; };
 		5F0A7E1C20261010000000B3 /* StreamVolumeControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F0A7E1C20261010000000B4 /* StreamVolumeControls.swift */; };
+		5F0A7E1C20261010000000E1 /* StreamVolumePresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F0A7E1C20261010000000E2 /* StreamVolumePresentation.swift */; };
 		C17ADE100000000000000003 /* DeskHome.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17ADE100000000000000004 /* DeskHome.swift */; };
 		C17ADE1000000000000000B2 /* SpaceBackdrop.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17ADE1000000000000000B1 /* SpaceBackdrop.swift */; };
 		C17ADE1000000000000000D2 /* SpaceLiveFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17ADE1000000000000000D1 /* SpaceLiveFlow.swift */; };
@@ -280,6 +281,9 @@
 		DEC0DE2026100800000001 /* PointerPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE2026100800000002 /* PointerPolicy.swift */; };
 		DEC0DE202609221400000001 /* InputForwarder+SystemKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202609221400000002 /* InputForwarder+SystemKeys.swift */; };
 		5F0A7E1C20261010000000C1 /* VolumeKeyTap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F0A7E1C20261010000000C2 /* VolumeKeyTap.swift */; };
+		5F0A7E1C2026101000000071 /* StreamWindow+VolumeHUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F0A7E1C2026101000000072 /* StreamWindow+VolumeHUD.swift */; };
+		5F0A7E1C2026101000000091 /* StreamSession+VolumeHUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F0A7E1C2026101000000092 /* StreamSession+VolumeHUD.swift */; };
+		5F0A7E1C20261010000000F1 /* StreamVolumeHUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F0A7E1C20261010000000F2 /* StreamVolumeHUD.swift */; };
 		DEC0DE2026091800000000C3 /* ModifierSides.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE2026091800000000C4 /* ModifierSides.swift */; };
 		DEC0DE840000000000000019 /* StreamWindow+PointerAffordances.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE84000000000000001A /* StreamWindow+PointerAffordances.swift */; };
 		DEC0DE840000000000000009 /* AppModel+RawHID.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE84000000000000000A /* AppModel+RawHID.swift */; };
@@ -375,6 +379,7 @@
 		DEC0DE2026091900000000F1 /* MutedOutputTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE2026091900000000F2 /* MutedOutputTests.swift */; };
 		5F0A7E1C20261010000000A1 /* StreamVolumeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F0A7E1C20261010000000A2 /* StreamVolumeTests.swift */; };
 		5F0A7E1C20261010000000D1 /* VolumeKeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F0A7E1C20261010000000D2 /* VolumeKeyTests.swift */; };
+		5F0A7E1C2026101000000081 /* StreamVolumePresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F0A7E1C2026101000000082 /* StreamVolumePresentationTests.swift */; };
 		DEC0DE2026091900000000FB /* DualSenseDeviceStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE2026091900000000FC /* DualSenseDeviceStateTests.swift */; };
 		DEC0DE2026091900000000F9 /* DualSenseBinderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE2026091900000000FA /* DualSenseBinderTests.swift */; };
 		DEC0DE2026091800000000C1 /* PlayerLEDsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE2026091800000000C2 /* PlayerLEDsTests.swift */; };
@@ -481,6 +486,7 @@
 		A100014B /* LogViewerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogViewerView.swift; sourceTree = "<group>"; };
 		A100015B /* AppModel+Audio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppModel+Audio.swift"; sourceTree = "<group>"; };
 		5F0A7E1C20261010000000B4 /* StreamVolumeControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StreamVolumeControls.swift"; sourceTree = "<group>"; };
+		5F0A7E1C20261010000000E2 /* StreamVolumePresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StreamVolumePresentation.swift"; sourceTree = "<group>"; };
 		C17ADE100000000000000004 /* DeskHome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeskHome.swift; sourceTree = "<group>"; };
 		C17ADE1000000000000000B1 /* SpaceBackdrop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceBackdrop.swift; sourceTree = "<group>"; };
 		C17ADE1000000000000000D1 /* SpaceLiveFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceLiveFlow.swift; sourceTree = "<group>"; };
@@ -728,6 +734,9 @@
 		DEC0DE2026100800000002 /* PointerPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Stream/PointerPolicy.swift"; sourceTree = "<group>"; };
 		DEC0DE202609221400000002 /* InputForwarder+SystemKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Stream/InputForwarder+SystemKeys.swift"; sourceTree = "<group>"; };
 		5F0A7E1C20261010000000C2 /* VolumeKeyTap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Stream/VolumeKeyTap.swift"; sourceTree = "<group>"; };
+		5F0A7E1C2026101000000072 /* StreamWindow+VolumeHUD.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Stream/StreamWindow+VolumeHUD.swift"; sourceTree = "<group>"; };
+		5F0A7E1C2026101000000092 /* StreamSession+VolumeHUD.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Stream/StreamSession+VolumeHUD.swift"; sourceTree = "<group>"; };
+		5F0A7E1C20261010000000F2 /* StreamVolumeHUD.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Stream/StreamVolumeHUD.swift"; sourceTree = "<group>"; };
 		DEC0DE2026091800000000C4 /* ModifierSides.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Stream/ModifierSides.swift"; sourceTree = "<group>"; };
 		DEC0DE84000000000000001A /* StreamWindow+PointerAffordances.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Stream/StreamWindow+PointerAffordances.swift"; sourceTree = "<group>"; };
 		DEC0DE84000000000000000A /* AppModel+RawHID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppModel+RawHID.swift"; sourceTree = "<group>"; };
@@ -824,6 +833,7 @@
 		DEC0DE2026091900000000F2 /* MutedOutputTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MutedOutputTests.swift"; sourceTree = "<group>"; };
 		5F0A7E1C20261010000000A2 /* StreamVolumeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StreamVolumeTests.swift"; sourceTree = "<group>"; };
 		5F0A7E1C20261010000000D2 /* VolumeKeyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "VolumeKeyTests.swift"; sourceTree = "<group>"; };
+		5F0A7E1C2026101000000082 /* StreamVolumePresentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StreamVolumePresentationTests.swift"; sourceTree = "<group>"; };
 		DEC0DE2026091900000000FC /* DualSenseDeviceStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "DualSenseDeviceStateTests.swift"; path = "DualSenseDeviceStateTests.swift"; sourceTree = "<group>"; };
 		DEC0DE2026091900000000FA /* DualSenseBinderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "DualSenseBinderTests.swift"; path = "DualSenseBinderTests.swift"; sourceTree = "<group>"; };
 		DEC0DE2026091800000000C2 /* PlayerLEDsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PlayerLEDsTests.swift"; sourceTree = "<group>"; };
@@ -934,6 +944,7 @@
 				A100014B /* LogViewerView.swift */,
 				A100015B /* AppModel+Audio.swift */,
 				5F0A7E1C20261010000000B4 /* StreamVolumeControls.swift */,
+				5F0A7E1C20261010000000E2 /* StreamVolumePresentation.swift */,
 				C17ADE100000000000000004 /* DeskHome.swift */,
 				C17ADE1000000000000000B1 /* SpaceBackdrop.swift */,
 				C17ADE1000000000000000B3 /* SpaceFlowPath.swift */,
@@ -1028,6 +1039,9 @@
 				DEC0DE2026100800000002 /* PointerPolicy.swift */,
 				DEC0DE202609221400000002 /* InputForwarder+SystemKeys.swift */,
 				5F0A7E1C20261010000000C2 /* VolumeKeyTap.swift */,
+				5F0A7E1C2026101000000072 /* StreamWindow+VolumeHUD.swift */,
+				5F0A7E1C2026101000000092 /* StreamSession+VolumeHUD.swift */,
+				5F0A7E1C20261010000000F2 /* StreamVolumeHUD.swift */,
 				DEC0DE2026091800000000C4 /* ModifierSides.swift */,
 				DEC0DE84000000000000001A /* StreamWindow+PointerAffordances.swift */,
 				DEC0DE84000000000000000A /* AppModel+RawHID.swift */,
@@ -1313,6 +1327,7 @@
 				DEC0DE2026091900000000F2 /* MutedOutputTests.swift */,
 				5F0A7E1C20261010000000A2 /* StreamVolumeTests.swift */,
 				5F0A7E1C20261010000000D2 /* VolumeKeyTests.swift */,
+				5F0A7E1C2026101000000082 /* StreamVolumePresentationTests.swift */,
 				DEC0DE2026091900000000FC /* DualSenseDeviceStateTests.swift */,
 				DEC0DE2026091900000000FA /* DualSenseBinderTests.swift */,
 				DEC0DE2026091800000000C2 /* PlayerLEDsTests.swift */,
@@ -1475,6 +1490,7 @@
 				A100014A /* LogViewerView.swift in Sources */,
 				A100015A /* AppModel+Audio.swift in Sources */,
 				5F0A7E1C20261010000000B3 /* StreamVolumeControls.swift in Sources */,
+				5F0A7E1C20261010000000E1 /* StreamVolumePresentation.swift in Sources */,
 				C17ADE100000000000000003 /* DeskHome.swift in Sources */,
 				C17ADE1000000000000000B2 /* SpaceBackdrop.swift in Sources */,
 				C17ADE1000000000000000B4 /* SpaceFlowPath.swift in Sources */,
@@ -1573,6 +1589,9 @@
 				DEC0DE2026100800000001 /* PointerPolicy.swift in Sources */,
 				DEC0DE202609221400000001 /* InputForwarder+SystemKeys.swift in Sources */,
 				5F0A7E1C20261010000000C1 /* VolumeKeyTap.swift in Sources */,
+				5F0A7E1C2026101000000071 /* StreamWindow+VolumeHUD.swift in Sources */,
+				5F0A7E1C2026101000000091 /* StreamSession+VolumeHUD.swift in Sources */,
+				5F0A7E1C20261010000000F1 /* StreamVolumeHUD.swift in Sources */,
 				DEC0DE2026091800000000C3 /* ModifierSides.swift in Sources */,
 				DEC0DE840000000000000019 /* StreamWindow+PointerAffordances.swift in Sources */,
 				DEC0DE840000000000000009 /* AppModel+RawHID.swift in Sources */,
@@ -1844,6 +1863,7 @@
 				DEC0DE2026091900000000F1 /* MutedOutputTests.swift in Sources */,
 				5F0A7E1C20261010000000A1 /* StreamVolumeTests.swift in Sources */,
 				5F0A7E1C20261010000000D1 /* VolumeKeyTests.swift in Sources */,
+				5F0A7E1C2026101000000081 /* StreamVolumePresentationTests.swift in Sources */,
 				DEC0DE2026091900000000FB /* DualSenseDeviceStateTests.swift in Sources */,
 				DEC0DE2026091900000000F9 /* DualSenseBinderTests.swift in Sources */,
 				DEC0DE2026091800000000C1 /* PlayerLEDsTests.swift in Sources */,

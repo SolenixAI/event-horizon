@@ -129,6 +129,10 @@ final class AppModel {
         didSet {
             streamVolume.save(to: .standard)
             nativeSession?.audioDecoder.setOutputGain(Float(streamVolume.gain))
+            if let session = nativeSession {
+                let volume = streamVolume
+                Task { await session.showVolumeHUD(volume) }
+            }
         }
     }
 

@@ -93,6 +93,7 @@ extension StreamWindow {
     public func close() {
         guard !didClose else { return }
         didClose = true
+        dismissVolumeHUD()
 
         // 1. Display-layer flush is DEFERRED to the fade completion (step 5).
         //    Flushing here (removingDisplayedImage) blanks the layer before the
