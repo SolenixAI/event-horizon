@@ -238,13 +238,17 @@ fn on_kde_wayland_the_screen_unit_runs_krfb_at_the_default_size() {
     let unit = files
         .read(&layout.screen_unit())
         .expect("the unit is written");
-    assert!(unit.contains(
-        "ExecStart=/usr/bin/krfb-virtualmonitor --resolution 2560x1600 --name sunshine-vmon --port 5905 --password deadbeef"
-    ));
+    let krfb = Path::new("/usr/bin").join("krfb-virtualmonitor");
+    let placer = layout.installed_companion();
+    assert!(unit.contains(&format!(
+        "ExecStart={} --resolution 2560x1600 --name sunshine-vmon --port 5905 --password deadbeef",
+        krfb.display()
+    )));
     assert!(unit.contains("Environment=QT_QPA_PLATFORM=wayland"));
-    assert!(unit.contains(
-        "ExecStartPost=-/home/friend/.local/bin/event-horizon-companion place-virtual-screen"
-    ));
+    assert!(unit.contains(&format!(
+        "ExecStartPost=-{} place-virtual-screen",
+        placer.display()
+    )));
 }
 
 #[test]
@@ -296,7 +300,11 @@ fn the_companion_is_copied_before_the_screen_unit_points_at_it() {
 
     let copied = at(
         &cmd.log,
-        "copy /home/friend/Downloads/event-horizon-companion /home/friend/.local/bin/event-horizon-companion",
+        &format!(
+            "copy {} {}",
+            layout.companion.display(),
+            layout.installed_companion().display()
+        ),
     );
     let unit = at(
         &cmd.log,
