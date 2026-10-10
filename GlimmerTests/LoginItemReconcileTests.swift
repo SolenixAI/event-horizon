@@ -60,7 +60,7 @@ struct LoginItemReconcileTests {
     @Test func failedRegistrationRetriesWithoutTurningOffIntent() throws {
         let suiteName = "LoginItemReconcileTests.\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
-        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defer { ScratchDefaults.drop(suiteName) }
         defaults.set(true, forKey: "launchAtLogin")
         defaults.set(build, forKey: "loginItemRegisteredBuild")
 

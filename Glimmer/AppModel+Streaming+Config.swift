@@ -65,7 +65,7 @@ extension AppModel {
     nonisolated static let wiredBitrateCapKbps = 500_000
 
     /// Wi-Fi asks for half as much again under the formula's cap; tested on a
-    /// 6 GHz link with no hitches. `defaults write io.ugfugl.Glimmer
+    /// 6 GHz link with no hitches. `defaults write dev.solenix.eventhorizon
     /// bitrateBoostWifi -float N` overrides it without a rebuild.
     nonisolated static let wifiBitrateMultiplier = 1.5
     nonisolated static var wifiBitrateBoost: Double {

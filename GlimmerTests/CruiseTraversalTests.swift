@@ -33,7 +33,7 @@ struct CruiseTraversalTests {
     @Test func tuningUsesDefaultsAndClampsValues() throws {
         let suiteName = "CruiseTraversalTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
-        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defer { ScratchDefaults.drop(suiteName) }
 
         let fallback = CruiseTraversal.Tuning.current(defaults)
         #expect(fallback.enabled == false)
@@ -56,7 +56,7 @@ struct CruiseTraversalTests {
     @Test @MainActor func tuningStaysFixedAcrossReconnect() throws {
         let suiteName = "CruiseTraversalReconnect-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
-        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defer { ScratchDefaults.drop(suiteName) }
 
         defaults.set(true, forKey: CruiseTraversal.enabledDefaultsKey)
         defaults.set(1_200.0, forKey: CruiseTraversal.vKneeDefaultsKey)

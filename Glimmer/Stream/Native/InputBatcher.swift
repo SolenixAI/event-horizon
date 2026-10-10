@@ -31,7 +31,7 @@ final class InputBatcher: @unchecked Sendable {
     // QoS .userInteractive so the merge/flush context isn't a default-QoS queue
     // starved behind high-QoS main-thread UI/input - it carries latency-sensitive
     // input toward the wire.
-    private let queue = DispatchQueue(label: "io.ugfugl.Glimmer.inputBatcher", qos: .userInteractive)
+    private let queue = DispatchQueue(label: "dev.solenix.eventhorizon.inputBatcher", qos: .userInteractive)
     private var timer: DispatchSourceTimer?
     /// The one-shot flush is armed only while state is dirty, so an idle stream costs no
     /// wakeups; deadlines stay 1 ms apart, as the old repeating tick's did.

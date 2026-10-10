@@ -1,8 +1,8 @@
 //
 //  GlimmerCLI+List.swift
 //
-//  `glimmer list [--csv]`: the paired PCs with the launcher's live status, and
-//  `glimmer list <pc> [--csv]`: the apps that PC offers right now.
+//  `event-horizon list [--csv]`: the paired PCs with the launcher's live status, and
+//  `event-horizon list <pc> [--csv]`: the apps that PC offers right now.
 //
 
 import Foundation
@@ -15,7 +15,7 @@ extension GlimmerCLI {
             return await listApps(on: host, csv: command.flags.contains("--csv"), model: model)
         }
         guard !model.hosts.isEmpty else {
-            printError("No paired PCs. Pair one with: glimmer pair <address>")
+            printError("No paired PCs. Pair one with: event-horizon pair <address>")
             return Exit.ok
         }
         // One PC at a time: a handful of 2-second probes at most. The status

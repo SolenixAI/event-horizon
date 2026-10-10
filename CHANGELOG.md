@@ -5,6 +5,11 @@
 - When the stream's volume or mute changes, a small volume readout shows over
   the picture for a moment, and VoiceOver announces the new level. The readout
   never takes clicks or keys.
+- Event Horizon has its own name everywhere you see it: the macOS prompts,
+  the Login Items entry, the logs in `~/Library/Logs/Event Horizon`, and the
+  command, which is now `event-horizon` instead of `glimmer`. Run Install
+  Command Line Tool… once more to replace the old link. Your PCs, pairings and
+  macOS permissions carry over.
 
 ## 2026.10.7 - 2026-10-12
 

@@ -97,7 +97,7 @@ final class EnvSignalController: @unchecked Sendable {
     // MARK: - Session feed (StreamSession's 2 s present-metric tick)
 
     /// Serial home of the evidence state: every fold runs here, whatever thread posts it.
-    let feedQueue = DispatchQueue(label: "io.ugfugl.Glimmer.envsignal", qos: .utility)
+    let feedQueue = DispatchQueue(label: "dev.solenix.eventhorizon.envsignal", qos: .utility)
     /// Uptime µs of the newest video datagram. Tests pin it: the shared clock is written by every session.
     var latestDatagramUs: @Sendable () -> UInt64 = { RtpVideoQueue.lastDatagramUs.load(ordering: .relaxed) }
     /// Radio sampler for the feed; touched on `feedQueue` only.

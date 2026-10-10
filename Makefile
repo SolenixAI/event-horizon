@@ -1,4 +1,4 @@
-# Glimmer - Mac-native game-streaming client.
+# Event Horizon - Mac-native game-streaming client.
 #
 # EVERYTHING BUT PUBLISH (the dev tier - notarized Release, installed, NOT
 # published). Every build here is byte-for-byte what ships - same Developer-ID
@@ -13,7 +13,7 @@
 #   make release           Build the notarized Release app only (no install).
 #   make app               Quick compile-only check (no signing / notarize).
 #   make test              Build + run the GlimmerTests unit-test bundle.
-#   make uninstall         Remove Glimmer.app.
+#   make uninstall         Remove Event Horizon.app.
 #   make clean             Remove build outputs.
 #
 # RELEASE (one published, auto-updatable build - everything flows here):
@@ -40,7 +40,7 @@
 GLIMMER_APP_DST ?= /Applications/Event Horizon.app
 CONFIG          ?= Debug
 DERIVED         := $(CURDIR)/build
-GLIMMER_APP_SRC := $(DERIVED)/Build/Products/$(CONFIG)/Glimmer.app
+GLIMMER_APP_SRC := $(DERIVED)/Build/Products/$(CONFIG)/Event Horizon.app
 STREAM_XCCONFIG := Glimmer/StreamLib.xcconfig
 INSTRUMENTS_DIR := $(HOME)/Library/Developer/Xcode/Instruments
 
@@ -148,7 +148,7 @@ test:
 	  CODE_SIGNING_ALLOWED=NO -derivedDataPath $(DERIVED) -destination 'platform=macOS'
 
 app:
-	@echo "▶ Building Glimmer.app ($(CONFIG))..."
+	@echo "▶ Building Event Horizon.app ($(CONFIG))..."
 	@scripts/generate-build-info.sh
 	xcodebuild -project Glimmer.xcodeproj -scheme Glimmer -configuration $(CONFIG) \
 		-xcconfig $(STREAM_XCCONFIG) \
@@ -237,14 +237,14 @@ endif
 # Install the everything-but-publish build (see `release`) to /Applications.
 # `reinstall`/`open`/`dev` build on this.
 install: release
-	@SRC="$(DERIVED)/Build/Products/Release/Glimmer.app"; \
-	echo "▶ Installing Glimmer.app to $(GLIMMER_APP_DST)..."; \
+	@SRC="$(DERIVED)/Build/Products/Release/Event Horizon.app"; \
+	echo "▶ Installing Event Horizon.app to $(GLIMMER_APP_DST)..."; \
 	if [ -d "$(GLIMMER_APP_DST)" ]; then echo "  removing existing $(GLIMMER_APP_DST)"; rm -rf "$(GLIMMER_APP_DST)"; fi; \
 	cp -R "$$SRC" "$(GLIMMER_APP_DST)"; \
 	COMMIT=$$(sed -nE 's/.*static let commit = "([^"]+)".*/\1/p' Glimmer/BuildInfo.generated.swift); \
 	echo "  ✓ installed build $$COMMIT"; \
-	if pgrep -x Glimmer >/dev/null 2>&1; then \
-		echo "  ⚠ Glimmer is RUNNING an older build - it will NOT load $$COMMIT until you"; \
+	if pgrep -x "Event Horizon" >/dev/null 2>&1; then \
+		echo "  ⚠ Event Horizon is RUNNING an older build - it will NOT load $$COMMIT until you"; \
 		echo "    fully QUIT (⌘Q) and relaunch. Run 'make reinstall' to do it automatically."; \
 	fi
 
@@ -264,31 +264,31 @@ reinstall: install quit-running
 
 # Quit any running instance so the bundle on disk is the one that loads next.
 quit-running:
-	@if pgrep -x Glimmer >/dev/null 2>&1; then \
-		echo "▶ Quitting the running Glimmer so the new build can load..."; \
-		osascript -e 'tell application "Glimmer" to quit' >/dev/null 2>&1 || true; \
-		for i in 1 2 3 4 5 6 7 8; do pgrep -x Glimmer >/dev/null 2>&1 || break; sleep 1; done; \
-		pkill -x Glimmer >/dev/null 2>&1 || true; \
+	@if pgrep -x "Event Horizon" >/dev/null 2>&1; then \
+		echo "▶ Quitting the running Event Horizon so the new build can load..."; \
+		osascript -e 'tell application "Event Horizon" to quit' >/dev/null 2>&1 || true; \
+		for i in 1 2 3 4 5 6 7 8; do pgrep -x "Event Horizon" >/dev/null 2>&1 || break; sleep 1; done; \
+		pkill -x "Event Horizon" >/dev/null 2>&1 || true; \
 	fi
 
 # Address-sanitized DEBUG build through the normal pipeline (helper, keychain
 # signing, dylibs), installed and relaunched like `reinstall`, never notarized.
-# ASan reports land in ~/Library/Logs/Glimmer/asan.log.<pid>; `make reinstall`
+# ASan reports land in ~/Library/Logs/Event Horizon/asan.log.<pid>; `make reinstall`
 # puts the normal build back.
 ASAN_XCCONFIG := $(DERIVED)/asan.xcconfig
 asan-reinstall:
 	@mkdir -p "$(DERIVED)"
 	@printf '#include "%s"\nENABLE_ADDRESS_SANITIZER = YES\nOTHER_SWIFT_FLAGS = $$(inherited) -sanitize=address\nOTHER_CFLAGS = $$(inherited) -fsanitize=address\nOTHER_LDFLAGS = $$(inherited) -fsanitize=address\n' "$(CURDIR)/$(STREAM_XCCONFIG)" > "$(ASAN_XCCONFIG)"
 	$(MAKE) CONFIG=Debug STREAM_XCCONFIG="$(ASAN_XCCONFIG)" app
-	@rm -rf "$(DERIVED)/Build/Products/Debug/Glimmer.app/Contents/PlugIns"/*.xctest
+	@rm -rf "$(DERIVED)/Build/Products/Debug/Event Horizon.app/Contents/PlugIns"/*.xctest
 	$(MAKE) CONFIG=Debug STREAM_XCCONFIG="$(ASAN_XCCONFIG)" sign
 	$(MAKE) quit-running
 	@echo "▶ Installing the ASan Debug build to $(GLIMMER_APP_DST)..."
-	@rm -rf "$(GLIMMER_APP_DST)"; cp -R "$(DERIVED)/Build/Products/Debug/Glimmer.app" "$(GLIMMER_APP_DST)"
-	@mkdir -p "$$HOME/Library/Logs/Glimmer"
+	@rm -rf "$(GLIMMER_APP_DST)"; cp -R "$(DERIVED)/Build/Products/Debug/Event Horizon.app" "$(GLIMMER_APP_DST)"
+	@mkdir -p "$$HOME/Library/Logs/Event Horizon"
 	@echo "▶ Relaunching with ASAN_OPTIONS..."; \
-	open --env "ASAN_OPTIONS=log_path=$$HOME/Library/Logs/Glimmer/asan.log:halt_on_error=0" "$(GLIMMER_APP_DST)"
-	@echo "  ✓ ASan build running (reports: ~/Library/Logs/Glimmer/asan.log.*)"
+	open --env "ASAN_OPTIONS=log_path=$$HOME/Library/Logs/Event Horizon/asan.log:halt_on_error=0" "$(GLIMMER_APP_DST)"
+	@echo "  ✓ ASan build running (reports: ~/Library/Logs/Event Horizon/asan.log.*)"
 
 # `make dev` is the inner loop: run the unit tests, THEN build + install +
 # relaunch the notarized Release build. Tests run first so a failure skips the
@@ -297,7 +297,7 @@ asan-reinstall:
 dev: test reinstall
 
 uninstall:
-	@echo "▶ Uninstalling Glimmer..."
+	@echo "▶ Uninstalling Event Horizon..."
 	@rm -rf "$(GLIMMER_APP_DST)"
 	@echo "  ✓ removed"
 
@@ -415,7 +415,7 @@ dmg:
 	@test -d "$(GLIMMER_APP_SRC)" || { echo "ERR: build first (make release)" >&2; exit 1; }
 	@echo "▶ Building $(DMG_NAME)..."
 	@rm -rf "$(DIST_DIR)" && mkdir -p "$(DIST_DIR)"
-	@scripts/make-dmg.sh "$(GLIMMER_APP_SRC)" "$(DIST_DIR)/$(DMG_NAME)" "Glimmer $(MARKETING_VERSION)"
+	@scripts/make-dmg.sh "$(GLIMMER_APP_SRC)" "$(DIST_DIR)/$(DMG_NAME)" "Event Horizon $(MARKETING_VERSION)"
 	@echo "  ✓ $(DIST_DIR)/$(DMG_NAME)"
 	@shasum -a 256 "$(DIST_DIR)/$(DMG_NAME)"
 
@@ -519,11 +519,11 @@ sparkle-keys:
 release-publish: dist
 	@scripts/publish-release.sh \
 		"$(MARKETING_VERSION)" "$(BUILD_NUMBER)" \
-		"$(DERIVED)/Build/Products/Release/Glimmer.app" \
+		"$(DERIVED)/Build/Products/Release/Event Horizon.app" \
 		"$(DIST_DIR)" "$(RELEASES_REPO)"
 	@scripts/homebrew-bump.sh "$(MARKETING_VERSION)" || { \
 		echo "" >&2; \
-		echo "WARNING: Glimmer $(MARKETING_VERSION) IS published (release + appcast) -" >&2; \
+		echo "WARNING: Event Horizon $(MARKETING_VERSION) IS published (release + appcast) -" >&2; \
 		echo "  only the Homebrew cask bump failed. Recover with: make brew-bump" >&2; \
 		exit 1; \
 	}
@@ -539,7 +539,7 @@ brew-bump:
 # Profile under Instruments → Time Profiler. CPU hotspots only - for the
 # OSSignpost-driven per-frame timeline, use `make profile-signposts`. Both
 # targets depend on `install` so they pick up the freshly-signed bundle from
-# /Applications/Glimmer.app. Traces land in ~/Library/Developer/Xcode/Instruments
+# /Applications/Event Horizon.app. Traces land in ~/Library/Developer/Xcode/Instruments
 # with a date-stamped name; double-click in Finder to open in Instruments.
 #
 # Use the Release configuration for steady-state numbers - Debug builds have
@@ -551,12 +551,12 @@ brew-bump:
 # + a minute of gameplay), 120s for the Logging template (signposts need more
 # wall-clock to accumulate meaningful per-frame samples at 60Hz).
 profile: install
-	@echo "▶ Launching Glimmer under Instruments (Time Profiler)..."
+	@echo "▶ Launching Event Horizon under Instruments (Time Profiler)..."
 	@mkdir -p "$(INSTRUMENTS_DIR)"
 	xcrun xctrace record \
 	    --template "Time Profiler" \
 	    --launch "$(GLIMMER_APP_DST)" \
-	    --output "$(INSTRUMENTS_DIR)/$(shell date +%Y%m%d-%H%M%S)-Glimmer.trace" \
+	    --output "$(INSTRUMENTS_DIR)/$(shell date +%Y%m%d-%H%M%S)-event-horizon.trace" \
 	    --time-limit 60s
 
 # Profile under Instruments → Logging template, which surfaces OSSignposts as
@@ -566,17 +566,17 @@ profile: install
 # the trace opens in Instruments:
 #
 #   1. Drag the "os_signpost" track into view.
-#   2. Filter by subsystem `io.ugfugl.Glimmer`.
+#   2. Filter by subsystem `dev.solenix.eventhorizon`.
 #   3. Examine DecodeFrame interval p50/p99 (target: <8ms p99 at 4K60).
 #
 # See docs/PROFILING.md for the full playbook.
 profile-signposts: install
-	@echo "▶ Launching Glimmer under Instruments (Logging - OSSignposts)..."
+	@echo "▶ Launching Event Horizon under Instruments (Logging - OSSignposts)..."
 	@mkdir -p "$(INSTRUMENTS_DIR)"
 	xcrun xctrace record \
 	    --template "Logging" \
 	    --launch "$(GLIMMER_APP_DST)" \
-	    --output "$(INSTRUMENTS_DIR)/$(shell date +%Y%m%d-%H%M%S)-Glimmer-signposts.trace" \
+	    --output "$(INSTRUMENTS_DIR)/$(shell date +%Y%m%d-%H%M%S)-event-horizon-signposts.trace" \
 	    --time-limit 120s
 
 # Toggle the app's opt-in telemetry exporter. The remote-sink setup
@@ -584,10 +584,10 @@ profile-signposts: install
 # own if you run a Prometheus/Loki rig; these targets no-op it when it's absent.
 enable-telem:
 	@[ -x scripts/telem-client.sh ] && scripts/telem-client.sh enable || echo "  • no scripts/telem-client.sh (optional local rig setup) - skipping"
-	@defaults write io.ugfugl.Glimmer telemetryEnabled -bool YES
-	@echo "  ✓ app telemetry exporter ON - relaunch Glimmer to pick it up"
+	@defaults write dev.solenix.eventhorizon telemetryEnabled -bool YES
+	@echo "  ✓ app telemetry exporter ON - relaunch Event Horizon to pick it up"
 
 disable-telem:
 	@[ -x scripts/telem-client.sh ] && scripts/telem-client.sh disable || true
-	@defaults write io.ugfugl.Glimmer telemetryEnabled -bool NO
-	@echo "  ✓ app telemetry exporter OFF - relaunch Glimmer to pick it up"
+	@defaults write dev.solenix.eventhorizon telemetryEnabled -bool NO
+	@echo "  ✓ app telemetry exporter OFF - relaunch Event Horizon to pick it up"

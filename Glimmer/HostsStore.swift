@@ -76,7 +76,7 @@ extension AppModel {
             }
         }
         defaults.set(true, forKey: flagKey)
-        Logger(subsystem: "io.ugfugl.Glimmer", category: "HostsStore")
+        Logger(subsystem: "dev.solenix.eventhorizon", category: "HostsStore")
             .info("Migrated \(count, privacy: .public) paired hosts from moonlight-qt UserDefaults")
     }
 
@@ -207,7 +207,7 @@ extension AppModel {
             }
         }
         guard let idx = matchIndex else {
-            Logger(subsystem: "io.ugfugl.Glimmer", category: "HostsStore")
+            Logger(subsystem: "dev.solenix.eventhorizon", category: "HostsStore")
                 .info("rename: no slot matched id=\(host.id, privacy: .private)")
             return
         }

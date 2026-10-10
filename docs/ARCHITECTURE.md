@@ -60,17 +60,17 @@ Top-level pieces:
 > in the path, and the PC's self-signed cert is pinned by exact DER in the TLS
 > verify block instead of CA-validated.
 
-**Command line.** The same binary is the `glimmer` command. `GlimmerMain`
-(`Glimmer/CLI/`) is the entry point: run as `glimmer` (the cask's link), or with
+**Command line.** The same binary is the `event-horizon` command. `GlimmerMain`
+(`Glimmer/CLI/`) is the entry point: run as `event-horizon` (the cask's link), or with
 a bare word or `-h`/`--help` as the first argument, it runs `GlimmerCLI`;
 anything else (no arguments, `--launched-at-login`, `-psn_*`, `-NS*`, Xcode and
 test arguments) starts the app. Login, Launch Services, Sparkle and test
 launches depend on that, so any new launch argument the app takes must start
 with a dash. Verbs run headless through the app's own `AppModel`, pairing and
-`NetworkClient` code. `glimmer stream` opens the app if needed and hands it the
+`NetworkClient` code. `event-horizon stream` opens the app if needed and hands it the
 launch over distributed notifications (`CommandChannel`,
 `AppModel+Commands.swift`), so no stream ever runs in the terminal's process;
-`glimmer quit` ends the app's own stream from that PC the same way. Run through
+`event-horizon quit` ends the app's own stream from that PC the same way. Run through
 a symlink, the binary re-execs through its real path so `Bundle.main` and the
 defaults domain resolve.
 
@@ -530,7 +530,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md#nonisolatedunsafe) for the rule on when
 `Identity.swift`: a per-machine 32-hex `uniqueID`, an RSA-2048 keypair, and a
 20-year self-signed cert (CN `NVIDIA GameStream Client`, the string every client
 of this protocol identifies as). Three mode-0600 files under
-`~/Library/Application Support/Glimmer/Identity/`:
+`~/Library/Application Support/Event Horizon/Identity/`:
 
 - `client-cert.pem`
 - `client-key.pem`
@@ -593,14 +593,14 @@ Debug and never sign.
 | `make test`              | Build + run the `GlimmerTests` bundle                                        |
 | `make verify`            | `swiftlint lint --strict` + `make test`, the gate `dist` runs                |
 | `make release`           | Notarized Release build, no install                                          |
-| `make` / `make install`  | `release` + copy to `/Applications/Glimmer.app`                              |
+| `make` / `make install`  | `release` + copy to `/Applications/Event Horizon.app`                        |
 | `make reinstall`         | `install` + quit and relaunch the running app                                |
 | `make dev`               | Inner loop: `test`, then `reinstall`                                         |
 | `make profile`           | Launch under Instruments (Time Profiler)                                     |
 | `make profile-signposts` | Launch under Instruments (Logging template)                                  |
 | `make dist`              | `verify`, then clean Release → Developer ID sign → notarize → staple → DMG   |
 | `make release-publish`   | `dist` + EdDSA-signed ZIP → GitHub release + Sparkle appcast → Homebrew cask |
-| `make uninstall`         | Remove `/Applications/Glimmer.app`                                           |
+| `make uninstall`         | Remove `/Applications/Event Horizon.app`                                     |
 | `make clean`             | `rm -rf build/`                                                              |
 
 Signing and notarization details (the dedicated signing keychain, the notary

@@ -13,7 +13,7 @@ import os.log
 public actor HostDiscovery {
     public static let shared = HostDiscovery()
 
-    private let log = Logger(subsystem: "io.ugfugl.Glimmer", category: "Stream.Discovery")
+    private let log = Logger(subsystem: "dev.solenix.eventhorizon", category: "Stream.Discovery")
     private var browsers: [NWBrowser] = []
     private var resultsContinuation: AsyncStream<Update>.Continuation?
     private(set) var seen: [String: Discovered] = [:]  // keyed by service name

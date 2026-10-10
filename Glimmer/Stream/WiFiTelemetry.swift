@@ -238,7 +238,7 @@ final class StreamRouteProbe: @unchecked Sendable {
 
     /// Re-probes + the path monitor run here; `current()` reads the lock-guarded
     /// snapshot from the exporter queue, so no probe ever blocks a capture tick.
-    private let queue = DispatchQueue(label: "io.ugfugl.Glimmer.telemetry.route", qos: .utility)
+    private let queue = DispatchQueue(label: "dev.solenix.eventhorizon.telemetry.route", qos: .utility)
     private var monitor: NWPathMonitor?
     private let stateLock = NSLock()
     private var snapshot = StreamRouteSnapshot()

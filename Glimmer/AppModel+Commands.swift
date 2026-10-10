@@ -38,7 +38,7 @@ final class CommandStreamEnd {
 /// delivery so an inactive app still hears them. No URL scheme on purpose:
 /// a web page can't start a stream.
 enum CommandChannel {
-    private static let prefix = Bundle.main.bundleIdentifier ?? "io.ugfugl.Glimmer"
+    private static let prefix = Bundle.main.bundleIdentifier ?? "dev.solenix.eventhorizon"
     static let request = Notification.Name(prefix + ".command")
     static let reply = Notification.Name(prefix + ".command-reply")
 

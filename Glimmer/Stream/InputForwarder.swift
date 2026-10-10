@@ -104,7 +104,7 @@ import os.log
 public final class InputForwarder {
     // Internal (default) so the ControllerForwarder extension in
     // ControllerForwarder.swift can log with the same subsystem/category.
-    let log = Logger(subsystem: "io.ugfugl.Glimmer", category: "Stream.Input")
+    let log = Logger(subsystem: "dev.solenix.eventhorizon", category: "Stream.Input")
 
     weak var window: NSWindow?
     weak var inputView: StreamInputView?

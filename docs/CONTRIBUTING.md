@@ -84,7 +84,7 @@ notarized Release build, installed and relaunched on the same signing path as
 Useful log tails:
 
 ```bash
-log stream --predicate 'subsystem == "io.ugfugl.Glimmer"' --level info
+log stream --predicate 'subsystem == "dev.solenix.eventhorizon"' --level info
 ```
 
 See [PROFILING.md](PROFILING.md) for per-category predicates.
@@ -94,7 +94,7 @@ See [PROFILING.md](PROFILING.md) for per-category predicates.
 **Build once per thing you actually want to look at.** Not once per edit.
 
 macOS gives every distinct copy of the bundle its own privacy identity. Anything
-that registers a `Glimmer.app` with LaunchServices (and `make app` re-registers
+that registers an `Event Horizon.app` with LaunchServices (and `make app` re-registers
 its Debug bundle on _every_ run) earns a separate row under **System Settings →
 Privacy & Security → Local Network**. Those rows are TCC records: they survive
 deleting the app, and they survive a reboot.
@@ -118,8 +118,8 @@ Clean up copies you created:
 ```bash
 LSREG=/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/\
 LaunchServices.framework/Versions/A/Support/lsregister
-"$LSREG" -dump | grep -oE '/[^ ]*Glimmer\.app' | sort -u   # what macOS knows about
-"$LSREG" -u /path/to/stale/Glimmer.app                      # unregister one
+"$LSREG" -dump | grep -oE '/.*Event Horizon\.app' | sort -u   # what macOS knows about
+"$LSREG" -u /path/to/stale/Event Horizon.app                      # unregister one
 rm -rf build ~/Library/Developer/Xcode/DerivedData/Glimmer-*
 ```
 
@@ -127,7 +127,7 @@ Unregistering does **not** retract the privacy grants. Only this does, and only
 the user can run it:
 
 ```bash
-sudo tccutil reset All io.ugfugl.Glimmer
+sudo tccutil reset All dev.solenix.eventhorizon
 ```
 
 `tccutil reset LocalNetwork <bundle-id>` is rejected: `LocalNetwork` is not a
@@ -165,7 +165,7 @@ install, launch, then ask the window what it actually did:
 ```bash
 osascript <<'EOS'
 tell application "System Events"
-  tell process "Glimmer"
+  tell process "Event Horizon"
     set w to first window
     set s0 to size of w
     set out to "opens at " & ((item 1 of s0) as integer) & "x" & ((item 2 of s0) as integer)
@@ -305,9 +305,9 @@ the comment at `StreamBridgeContext.eventContinuation` (in
 
 `Logger` from `os`, never `print`, never `os_log`.
 
-- Subsystem: **`io.ugfugl.Glimmer`** (capital G). Every `Logger` in the app uses
+- Subsystem: **`dev.solenix.eventhorizon`** (capital G). Every `Logger` in the app uses
   this string; no `.Stream` suffix on the subsystem. The privileged AWDL helper
-  is a separate process and uses `io.ugfugl.glimmer.helper`.
+  is a separate process and uses `dev.solenix.eventhorizon.helper`.
 - Category: per-file, dotted form `Stream.<Area>` for streaming-engine files.
   The current list is in [PROFILING.md](PROFILING.md#unified-log); add to it
   when you add a file, don't reuse a neighbour's category. Signposts sit on the

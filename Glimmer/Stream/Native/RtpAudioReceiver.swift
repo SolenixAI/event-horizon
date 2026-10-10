@@ -110,7 +110,7 @@ final class RtpAudioReceiver: @unchecked Sendable {
     /// in bursts - draining the playout cushion (audible gap), then slamming the
     /// catch-up clump into the playout trim gates (audible crackle).
     let recvQueue = DispatchQueue(
-        label: "io.ugfugl.Glimmer.audiortp", qos: .userInteractive)
+        label: "dev.solenix.eventhorizon.audiortp", qos: .userInteractive)
     /// Unconnected bound UDP socket fd (bind wildcard ephemeral; recvfrom any).
     var fd: Int32 = -1
     /// Precomputed destination (host:audioPort) for the ping sendto.

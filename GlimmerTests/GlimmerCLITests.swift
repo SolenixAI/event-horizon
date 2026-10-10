@@ -17,22 +17,38 @@ struct GlimmerCLITests {
     }
 
     @Test func theCommandNameOrABareWordTakesOverTheLaunch() {
-        #expect(GlimmerCLI.isInvocation(["glimmer", "list"]))
-        #expect(GlimmerCLI.isInvocation(["glimmer", "stream", "Tower", "Desktop"]))
-        #expect(GlimmerCLI.isInvocation(["glimmer", "--help"]))
-        // Through the cask's link, never a second copy of the app in the
+        #expect(GlimmerCLI.isInvocation(["event-horizon", "list"]))
+        #expect(GlimmerCLI.isInvocation(["event-horizon", "stream", "Tower", "Desktop"]))
+        #expect(GlimmerCLI.isInvocation(["event-horizon", "--help"]))
+        // Through the command's link, never a second copy of the app in the
         // terminal: alone it opens the app, and unknown flags get usage.
-        #expect(GlimmerCLI.isInvocation(["glimmer"]))
-        #expect(GlimmerCLI.isInvocation(["/opt/homebrew/bin/glimmer", "--version"]))
+        #expect(GlimmerCLI.isInvocation(["event-horizon"]))
+        #expect(GlimmerCLI.isInvocation(["/opt/homebrew/bin/event-horizon", "--version"]))
         // The app binary itself: a typo gets usage, not a second copy.
-        #expect(GlimmerCLI.isInvocation(["/Applications/Glimmer.app/Contents/MacOS/Glimmer", "lsit"]))
+        #expect(GlimmerCLI.isInvocation(["/Applications/Event Horizon.app/Contents/MacOS/Event Horizon", "lsit"]))
         // No arguments, the login helper, Launch Services, Xcode and tests: the app.
-        #expect(!GlimmerCLI.isInvocation(["/Applications/Glimmer.app/Contents/MacOS/Glimmer"]))
-        #expect(!GlimmerCLI.isInvocation(["Glimmer"]))
-        #expect(!GlimmerCLI.isInvocation(["Glimmer", "--launched-at-login"]))
-        #expect(!GlimmerCLI.isInvocation(["Glimmer", "-psn_0_123456"]))
-        #expect(!GlimmerCLI.isInvocation(["Glimmer", "-NSDocumentRevisionsDebugMode", "YES"]))
-        #expect(!GlimmerCLI.isInvocation(["Glimmer", "-XCTest", "All"]))
+        #expect(!GlimmerCLI.isInvocation(["/Applications/Event Horizon.app/Contents/MacOS/Event Horizon"]))
+        #expect(!GlimmerCLI.isInvocation(["Event Horizon"]))
+        #expect(!GlimmerCLI.isInvocation(["Event Horizon", "--launched-at-login"]))
+        #expect(!GlimmerCLI.isInvocation(["Event Horizon", "-psn_0_123456"]))
+        #expect(!GlimmerCLI.isInvocation(["Event Horizon", "-NSDocumentRevisionsDebugMode", "YES"]))
+        #expect(!GlimmerCLI.isInvocation(["Event Horizon", "-XCTest", "All"]))
+    }
+
+    @Test func aLegacyGlimmerLinkIsRetiredOnlyWhenItPointsAtOurApp() {
+        #expect(CommandLineToolInstaller.isOurLegacyLink("/Applications/Glimmer.app/Contents/MacOS/Glimmer"))
+        #expect(CommandLineToolInstaller.isOurLegacyLink("/Applications/Event Horizon.app/Contents/MacOS/Glimmer"))
+        #expect(!CommandLineToolInstaller.isOurLegacyLink("/usr/local/Cellar/other/bin/glimmer"))
+    }
+
+    @Test func theInstallScriptRetiresTheLegacyLinkOnlyWhenAskedTo() {
+        let executable = "/Applications/Event Horizon.app/Contents/MacOS/Event Horizon"
+        let retiring = CommandLineToolInstaller.linkScript(to: executable, retiringLegacy: true)
+        #expect(retiring.contains("ln -sf '\(executable)' /usr/local/bin/event-horizon"))
+        #expect(retiring.contains("rm -f /usr/local/bin/glimmer"))
+        let plain = CommandLineToolInstaller.linkScript(to: executable, retiringLegacy: false)
+        #expect(plain.contains("/usr/local/bin/event-horizon"))
+        #expect(!plain.contains("glimmer"))
     }
 
     @Test func argumentsParseIntoVerbFlagsAndPositionals() throws {
@@ -86,7 +102,7 @@ struct GlimmerCLITests {
     @Test func failureTextPointsAtTheFix() {
         let tower = host("Tower", id: "UUID-1", address: "192.0.2.10")
         #expect(GlimmerCLI.message(for: StreamError.pairingFailed("x"), host: tower)
-            == "Tower needs pairing again. Run: glimmer pair 192.0.2.10")
+            == "Tower needs pairing again. Run: event-horizon pair 192.0.2.10")
         #expect(GlimmerCLI.message(for: StreamError.hostUnreachable("timed out"), host: tower)
             == "Couldn't reach Tower. Make sure it's awake and on the same network.")
         let wedged = "Tower is awake, but its HTTPS listener is stuck. Restart Sunshine on the PC."
@@ -104,7 +120,7 @@ struct GlimmerCLITests {
             == AppModel.needsSunshineMessage("Tower"))
     }
 
-    /// `glimmer list` prints the readiness chip's words, with room for a long name.
+    /// `event-horizon list` prints the readiness chip's words, with room for a long name.
     @Test func statusReadsLikeTheReadinessChip() {
         let now = Date()
         func status(_ state: HostLiveStatus.State, rtt: Int? = nil) -> String {
@@ -128,7 +144,7 @@ struct GlimmerCLITests {
     @Test func aFailedPairSaysToRunItAgainNotToClickTryAgain() {
         for failure in [PairingFailure.timedOut, .busy, .rejected] {
             let line = GlimmerCLI.pairFailureMessage(failure, pc: "192.0.2.10")
-            #expect(line.contains("192.0.2.10") && line.contains("glimmer pair") && !line.contains("Try Again"))
+            #expect(line.contains("192.0.2.10") && line.contains("event-horizon pair") && !line.contains("Try Again"))
         }
         #expect(GlimmerCLI.pairFailureMessage(.unreachable, pc: "x") == PairingFailure.unreachable.message(pc: "x"))
         #expect(GlimmerCLI.pairFailureMessage(.gameStream, pc: "x") == AppModel.needsSunshineMessage("x"))
@@ -157,9 +173,9 @@ struct GlimmerCLITests {
         #expect(CommandLineToolInstaller.isInApplications("/Applications/Glimmer.app", home: "/Users/a"))
         #expect(CommandLineToolInstaller.isInApplications("/Users/a/Applications/Glimmer.app", home: "/Users/a"))
         #expect(!CommandLineToolInstaller.isInApplications("/Volumes/Glimmer/Glimmer.app", home: "/Users/a"))
-        let script = CommandLineToolInstaller.linkScript(to: "/Applications/It's \"G\".app/Glimmer")
+        let script = CommandLineToolInstaller.linkScript(to: "/Applications/It's \"G\".app/Glimmer", retiringLegacy: false)
         #expect(script == "do shell script \"mkdir -p /usr/local/bin && ln -sf '/Applications/It'\\\\''s \\\"G\\\".app/Glimmer' "
-            + "/usr/local/bin/glimmer\" with administrator privileges")
+            + "/usr/local/bin/event-horizon\" with administrator privileges")
     }
 
     @Test func csvQuotesNamesSoCommasAndQuotesSurvive() {

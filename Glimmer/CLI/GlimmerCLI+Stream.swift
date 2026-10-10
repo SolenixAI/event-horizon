@@ -1,7 +1,7 @@
 //
 //  GlimmerCLI+Stream.swift
 //
-//  `glimmer stream <pc> [<app>]`: checks the PC headlessly, settles a
+//  `event-horizon stream <pc> [<app>]`: checks the PC headlessly, settles a
 //  takeover in the terminal, then hands the launch to the one Glimmer app so
 //  the stream runs with its window and permissions, never a second instance.
 //
@@ -19,7 +19,7 @@ extension GlimmerCLI {
         let live = await probe(host, model: model)
         switch live?.state {
         case .asleep, nil:
-            let hint = model.canWake(host) ? " To wake it: glimmer wake \"\(host.displayName)\" --wait" : ""
+            let hint = model.canWake(host) ? " To wake it: event-horizon wake \"\(host.displayName)\" --wait" : ""
             printError(AppModel.unreachableMessage(host.displayName) + hint)
             return Exit.unreachable
         case .certMismatch:

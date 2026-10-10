@@ -24,12 +24,12 @@ profile is what ships. Never profile a `make app` Debug binary.
 
 Both targets drop a `.trace` into `~/Library/Developer/Xcode/Instruments/`.
 Double-click it to open it in Instruments, drag the **os_signpost** track into
-view and filter by subsystem `io.ugfugl.Glimmer` (capital G).
+view and filter by subsystem `dev.solenix.eventhorizon` (capital G).
 
 ## Unified log
 
-The app logs under one subsystem: **`io.ugfugl.Glimmer`**. Per-file `Logger`
-categories partition the output (grep `subsystem: "io.ugfugl.Glimmer"` to
+The app logs under one subsystem: **`dev.solenix.eventhorizon`**. Per-file `Logger`
+categories partition the output (grep `subsystem: "dev.solenix.eventhorizon"` to
 verify; some `Logger(` calls put the category on the next line):
 
 | Category               | File                                                                              |
@@ -61,7 +61,7 @@ categories, such as `Stream`, `NativeConnection`, `NativeVideo` and
 `Controller`.
 
 The privileged AWDL helper is a separate process and logs under its own
-subsystem, `io.ugfugl.glimmer.helper` (lowercase `g`), with categories `main`
+subsystem, `dev.solenix.eventhorizon.helper` (lowercase `g`), with categories `main`
 and `AWDL`.
 
 OSSignpost categories are a separate axis on the same subsystem (see
@@ -78,7 +78,7 @@ OSSignpost categories are a separate axis on the same subsystem (see
 ### Stream-session lifecycle
 
 ```sh
-log show --predicate 'subsystem == "io.ugfugl.Glimmer" \
+log show --predicate 'subsystem == "dev.solenix.eventhorizon" \
     AND (category == "Stream.Session" OR category == "Stream.VideoDecoder")' \
     --last 5m
 ```
@@ -86,7 +86,7 @@ log show --predicate 'subsystem == "io.ugfugl.Glimmer" \
 ### HDR pipeline
 
 ```sh
-log show --predicate 'subsystem == "io.ugfugl.Glimmer" \
+log show --predicate 'subsystem == "dev.solenix.eventhorizon" \
     AND category == "Stream.VideoDecoder" \
     AND eventMessage CONTAINS "HDR"' \
     --last 5m
@@ -95,7 +95,7 @@ log show --predicate 'subsystem == "io.ugfugl.Glimmer" \
 ### Frame drops and backpressure
 
 ```sh
-log show --predicate 'subsystem == "io.ugfugl.Glimmer" \
+log show --predicate 'subsystem == "dev.solenix.eventhorizon" \
     AND (eventMessage CONTAINS "drop" \
          OR eventMessage CONTAINS "FAILED" \
          OR eventMessage CONTAINS "IDR")' \
@@ -105,7 +105,7 @@ log show --predicate 'subsystem == "io.ugfugl.Glimmer" \
 ### Network handshake and pairing
 
 ```sh
-log show --predicate 'subsystem == "io.ugfugl.Glimmer" \
+log show --predicate 'subsystem == "dev.solenix.eventhorizon" \
     AND (category == "Stream.Network" \
          OR category == "Stream.Network.TLS" \
          OR category == "Stream.Pairing")' \
@@ -115,7 +115,7 @@ log show --predicate 'subsystem == "io.ugfugl.Glimmer" \
 ### Input forwarding
 
 ```sh
-log show --predicate 'subsystem == "io.ugfugl.Glimmer" \
+log show --predicate 'subsystem == "dev.solenix.eventhorizon" \
     AND category == "Stream.Input"' \
     --last 1m
 ```
@@ -123,7 +123,7 @@ log show --predicate 'subsystem == "io.ugfugl.Glimmer" \
 ### Identity
 
 ```sh
-log show --predicate 'subsystem == "io.ugfugl.Glimmer" \
+log show --predicate 'subsystem == "dev.solenix.eventhorizon" \
     AND category == "Stream.Identity"' \
     --last 24h
 ```
@@ -131,7 +131,7 @@ log show --predicate 'subsystem == "io.ugfugl.Glimmer" \
 ## OSSignpost instrumentation
 
 Hot paths have OSSignpost intervals and events. The subsystem is
-`io.ugfugl.Glimmer`; categories partition by area.
+`dev.solenix.eventhorizon`; categories partition by area.
 
 | Category         | Intervals                        | Events                                                                               | Wired in                                       |
 | ---------------- | -------------------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------- |
@@ -236,7 +236,7 @@ per-stage events, so for the breakdown read the log instead (the stage lines are
 info level):
 
 ```sh
-log show --info --predicate 'subsystem == "io.ugfugl.Glimmer" \
+log show --info --predicate 'subsystem == "dev.solenix.eventhorizon" \
     AND category == "NativeConnection"' --last 5m
 ```
 
@@ -272,7 +272,7 @@ Option-click the version line in **Settings → About**. The pane's always-visib
 half (a live controller input test and the in-app log viewer) needs no gesture.
 Turning the toggle on applies to the next stream, not the running one.
 
-When enabled, a stream writes to `~/Library/Logs/Glimmer/`:
+When enabled, a stream writes to `~/Library/Logs/Event Horizon/`:
 
 - `telemetry-<timestamp>.ndjson`: per-second stream metrics, plus event rows
   (bookmarks, video gaps, loss episodes, key frames). Every row names the PC and
@@ -284,7 +284,7 @@ When enabled, a stream writes to `~/Library/Logs/Glimmer/`:
   (`input_motion`, sampled at 20 Hz per sensor) and scroll (`input_scroll`).
   Keys, mouse buttons, pasted text and DualSense touchpad touches are not
   recorded;
-- `glimmer-<timestamp>.log`: a richer per-session diagnostic log, with PC names,
+- `event-horizon-<timestamp>.log`: a richer per-session diagnostic log, with PC names,
   addresses and error text shown as `<private>`.
 
 The exporter also serves the per-second metrics on a local Prometheus endpoint,
@@ -359,7 +359,7 @@ nothing. Keys, mouse buttons, pasted text and touchpad touches leave no row
 either way.
 
 ```sh
-cd ~/Library/Logs/Glimmer
+cd ~/Library/Logs/Event\ Horizon
 # The newest bookmark's t_ms, then the input rows in the 2 s before it, in order:
 bm=$(grep -h '"event":"bookmark"' telemetry-frames-<timestamp>*.ndjson | jq .t_ms | sort -n | tail -1)
 jq -c --argjson bm "$bm" 'select((.event // "" | startswith("input_"))
@@ -395,8 +395,8 @@ each gap.
 ### Hidden defaults
 
 These have no Settings row. Each lives in the app's defaults domain
-(`defaults write io.ugfugl.Glimmer <key> -bool YES` or `-float N`;
-`defaults delete io.ugfugl.Glimmer <key>` restores the default) and, unless its
+(`defaults write dev.solenix.eventhorizon <key> -bool YES` or `-float N`;
+`defaults delete dev.solenix.eventhorizon <key>` restores the default) and, unless its
 row says otherwise, applies from the next stream. The `pacerTick*` and `cruise*`
 keys are escape hatches for chasing a regression, not tuning advice.
 
@@ -405,7 +405,7 @@ keys are escape hatches for chasing a regression, not tuning advice.
 | `bitrateBoostWifi`       | float, 1.5    | Highest quality's multiplier on the Wi-Fi bitrate ask. The Wi-Fi cap and the radio gate still apply.                                        |
 | `hidGamepadClaimAll`     | bool, NO      | The raw-HID path also takes pads GameController owns, for testing without odd hardware. Reconnect the pad or relaunch to apply.             |
 | `telemetryListenLAN`     | bool, NO      | Serves the Prometheus endpoint (port 9847) on every interface instead of loopback, so anyone on your network can read it.                   |
-| `diagFileLogDebug`       | bool, NO      | Debug lines in the in-app log and `glimmer-<timestamp>.log`. Same as the “Verbose session log file” toggle in the hidden Telemetry section. |
+| `diagFileLogDebug`       | bool, NO      | Debug lines in the in-app log and `event-horizon-<timestamp>.log`. Same as the “Verbose session log file” toggle in the hidden Telemetry section. |
 | `pacerTickOffMain`       | bool, YES     | NO moves the present tick back onto the main run loop.                                                                                      |
 | `pacerTickRealtime`      | bool, YES     | NO drops the tick thread's real-time scheduling.                                                                                            |
 | `cruiseTraversalEnabled` | bool, NO      | Boosts fast mouse flicks on streams wider than 1920 pixels. Off because aim and flicks overlap in speed.                                    |
@@ -503,7 +503,7 @@ declare a dead connection.
   Profiler symbolicates without manual dSYM linking.
 
 `make profile` and `make profile-signposts` both depend on `install`, which
-builds Release and copies the signed bundle to `/Applications/Glimmer.app`, the
+builds Release and copies the signed bundle to `/Applications/Event Horizon.app`, the
 path `xctrace --launch` points at. So `make profile-signposts` on its own is the
 whole command.
 
@@ -523,13 +523,13 @@ whole command.
 
   ```sh
   sudo log config --mode "level:debug" \
-      --subsystem io.ugfugl.Glimmer
+      --subsystem dev.solenix.eventhorizon
   ```
 
   Reset when done:
 
   ```sh
-  sudo log config --reset --subsystem io.ugfugl.Glimmer
+  sudo log config --reset --subsystem dev.solenix.eventhorizon
   ```
 
 - **Signpost cost is real but tiny.** `OSSignposter` calls are ~5 ns when not

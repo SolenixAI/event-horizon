@@ -6,7 +6,7 @@
 //  GameStream Client", 20-year validity). These three pieces of state are what
 //  the host uses to recognize us - both during the pairing handshake and on
 //  every subsequent TLS connection. They're generated once on first launch and
-//  persisted to mode-0600 files under ~/Library/Application Support/Glimmer/
+//  persisted to mode-0600 files under ~/Library/Application Support/Event Horizon/
 //  Identity/ so a process running as our UID can re-load them silently across
 //  rebuilds without any Security.framework prompt.
 //
@@ -66,7 +66,7 @@ enum IdentityKey {
 
 // MARK: - FileIdentityStore
 //
-// Three mode-0600 files under ~/Library/Application Support/Glimmer/Identity/.
+// Three mode-0600 files under ~/Library/Application Support/Event Horizon/Identity/.
 // Atomic writes, owner-only permissions, verified by stat(2) after setattr
 // because some filesystems (network mounts, FUSE) silently ignore the chmod.
 
@@ -93,15 +93,10 @@ enum FileIdentityStore {
         }
     }
 
-    /// `~/Library/Application Support/Glimmer/Identity/`. Created on first
+    /// `~/Library/Application Support/Event Horizon/Identity/`. Created on first
     /// write with mode 0700.
     static func directoryURL() throws -> URL {
-        let fm = FileManager.default
-        let base = try fm.url(for: .applicationSupportDirectory,
-                              in: .userDomainMask,
-                              appropriateFor: nil,
-                              create: true)
-        return base.appendingPathComponent("Glimmer/Identity", isDirectory: true)
+        AppDataFolders.root.appendingPathComponent("Identity", isDirectory: true)
     }
 
     static func fileURL(account: String) throws -> URL? {
@@ -198,7 +193,7 @@ public actor IdentityManager {
 
     var cached: Identity?
 
-    let log = Logger(subsystem: "io.ugfugl.Glimmer",
+    let log = Logger(subsystem: "dev.solenix.eventhorizon",
                              category: "Stream.Identity")
 
     private init() {}
@@ -269,20 +264,14 @@ public actor IdentityManager {
         }
 
         // Sweep 3: the abandoned file-based SecKeychain from an even earlier
-        // build. Different path from our new mode-0600 identity files -
-        // this was an entire SecKeychain database at
-        // ~/Library/Application Support/Glimmer/identity.keychain that we
-        // no longer need. Safe to delete on every install where the flag
-        // hasn't been bumped past this version.
+        // build. Different path from our new mode-0600 identity files: it was
+        // an entire SecKeychain database at identity.keychain in the data folder,
+        // which the move to Event Horizon's folder carried along. Safe to delete.
         let fm = FileManager.default
-        if let appSupport = try? fm.url(for: .applicationSupportDirectory,
-                                         in: .userDomainMask, appropriateFor: nil,
-                                         create: false) {
-            let oldKC = appSupport.appendingPathComponent("Glimmer/identity.keychain")
-            if fm.fileExists(atPath: oldKC.path) {
-                try? fm.removeItem(at: oldKC)
-                log.info("Removed legacy file-based identity keychain")
-            }
+        let oldKC = AppDataFolders.root.appendingPathComponent("identity.keychain")
+        if fm.fileExists(atPath: oldKC.path) {
+            try? fm.removeItem(at: oldKC)
+            log.info("Removed legacy file-based identity keychain")
         }
         defaults.removeObject(forKey: "glimmer.identityKeychainPassphrase")
 

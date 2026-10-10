@@ -167,7 +167,7 @@ enum ResourceTelemetry {
             guard let sample = sampleOne(thread: threads[index]) else { continue }
             // Keep a thread if it's drawing measurable CPU, OR it's one of our
             // named hot-path threads (so its QoS stays auditable even when idle).
-            let named = sample.name == "main" || sample.name.hasPrefix("io.ugfugl.Glimmer")
+            let named = sample.name == "main" || sample.name.hasPrefix("dev.solenix.eventhorizon")
                 || sample.name.hasPrefix("Glimmer.")
             guard sample.cpuPercent >= cpuFloorPercent || named else { continue }
             if sample.name.isEmpty {

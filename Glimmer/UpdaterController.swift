@@ -7,7 +7,7 @@ import SwiftUI
 /// starts the background update scheduler. One shared instance, reached from both
 /// the app-menu command and the menu-bar dropdown.
 ///
-/// The whole file is gated on `canImport(Sparkle)` so Glimmer still builds before
+/// The whole file is gated on `canImport(Sparkle)` so Event Horizon still builds before
 /// the Sparkle SPM package is linked - the updater and its menu items simply don't
 /// exist until the package is added. Feed URL + ed25519 public key live in
 /// Info.plist (SUFeedURL / SUPublicEDKey); updates are published prompt-free by
@@ -35,7 +35,7 @@ final class UpdaterController {
         // PRESCRIPTIVE nag policy (2026-08-26). Previously nothing set a check
         // schedule: Sparkle's own opt-in prompt decided whether SCHEDULED
         // checks ever ran, and the only forced check fired on a user-initiated
-        // OPEN - which a Glimmer that sits running for days never triggers, so
+        // OPEN - which an Event Horizon that sits running for days never triggers, so
         // multi-day sessions rode releases behind without a single nag (a
         // 3-day 2026.8.11 process ran through the .12 release unprompted).
         // Now: automatic checks ON BY DEFAULT, DAILY. Sparkle's standard driver

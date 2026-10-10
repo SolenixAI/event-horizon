@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# sign-bundle.sh - inside-out codesign of Glimmer.app. NO `--deep`.
+# sign-bundle.sh - inside-out codesign of Event Horizon.app. NO `--deep`.
 #
 # `--deep` is the wrong tool here: it re-signs nested code (Sparkle's framework +
 # its Updater.app / Autoupdate / Installer.xpc / Downloader.xpc, and the Login
@@ -15,7 +15,7 @@
 # with its own entitlements, then the app last with Glimmer's entitlements.
 #
 # Args:
-#   $1  app path (Glimmer.app)
+#   $1  app path (Event Horizon.app)
 #   $2  signing identity ('-' for adhoc)
 #   $3  keychain to pin identity resolution to (optional)
 #   $4  the app's entitlements file (Glimmer/Glimmer.entitlements)
@@ -50,7 +50,7 @@ if [ -d "$FW" ]; then
 	sign_plain "$FW"
 fi
 
-HELPER="$APP/Contents/Library/LoginItems/Glimmer Login Helper.app"
+HELPER="$APP/Contents/Library/LoginItems/Event Horizon Login Helper.app"
 if [ -d "$HELPER" ]; then
 	echo "Signing Login Helper with its own entitlements"
 	if [ -f "$HELPER_ENT" ]; then
@@ -72,7 +72,7 @@ if [ -f "$DAEMON" ]; then
 	codesign --force --options runtime $TS $KCF --sign "$ID" --identifier "dev.solenix.eventhorizon.helper" "$DAEMON"
 fi
 
-echo "Signing the app bundle (Glimmer entitlements, no --deep)"
+echo "Signing the app bundle (Event Horizon entitlements, no --deep)"
 codesign --force --options runtime $TS $KCF --sign "$ID" --entitlements "$ENT" "$APP"
 
 echo "Verifying the whole bundle (deep + strict)"

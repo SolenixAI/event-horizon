@@ -11,9 +11,8 @@ import Testing
 struct StreamVolumeTests {
 
     private func scratchSuite() throws -> String {
-        let suite = "io.ugfugl.Glimmer.tests.stream-volume.\(UUID().uuidString)"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defaults.removePersistentDomain(forName: suite)
+        let suite = "dev.solenix.eventhorizon.tests.stream-volume.\(UUID().uuidString)"
+        _ = try #require(UserDefaults(suiteName: suite))
         return suite
     }
 
@@ -109,6 +108,7 @@ struct StreamVolumeTests {
 
     @Test func levelSurvivesARelaunch() throws {
         let suite = try scratchSuite()
+        defer { ScratchDefaults.drop(suite) }
         var volume = StreamVolume(level: 0.3125)
         volume.toggleMute()
         volume.save(to: try #require(UserDefaults(suiteName: suite)))
@@ -119,6 +119,7 @@ struct StreamVolumeTests {
 
     @Test func missingOrCorruptSavedLevelFallsBackToFull() throws {
         let suite = try scratchSuite()
+        defer { ScratchDefaults.drop(suite) }
         let defaults = try #require(UserDefaults(suiteName: suite))
         #expect(StreamVolume.load(from: defaults) == .full)
         defaults.set(Data("not json".utf8), forKey: StreamVolume.defaultsKey)
@@ -127,6 +128,7 @@ struct StreamVolumeTests {
 
     @Test func outOfRangeSavedLevelIsClampedOnLoad() throws {
         let suite = try scratchSuite()
+        defer { ScratchDefaults.drop(suite) }
         let defaults = try #require(UserDefaults(suiteName: suite))
         let json = Data(#"{"level":3,"isMuted":false,"lastAudible":3}"#.utf8)
         defaults.set(json, forKey: StreamVolume.defaultsKey)

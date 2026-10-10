@@ -18,7 +18,7 @@ public actor PairingClient {
     /// The name Sunshine lists this pairing under while it waits for the PIN.
     private let deviceName: String
 
-    private let log = Logger(subsystem: "io.ugfugl.Glimmer",
+    private let log = Logger(subsystem: "dev.solenix.eventhorizon",
                              category: "Stream.Pairing")
 
     // MARK: Init

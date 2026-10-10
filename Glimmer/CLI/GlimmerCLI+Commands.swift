@@ -1,7 +1,7 @@
 //
 //  GlimmerCLI+Commands.swift
 //
-//  `glimmer pair`, `glimmer wake` and `glimmer quit`: the pairing sheet's
+//  `event-horizon pair`, `event-horizon wake` and `event-horizon quit`: the pairing sheet's
 //  handshake, the Wake and Connect signal, and /cancel, all headless.
 //
 
@@ -53,7 +53,7 @@ extension GlimmerCLI {
         return nil
     }
 
-    /// What `glimmer pair` asks of the person at the PC: the companion's code and Allow, or Sunshine's PIN.
+    /// What `event-horizon pair` asks of the person at the PC: the companion's code and Allow, or Sunshine's PIN.
     nonisolated static func pairingInstruction(address: String, pin: String, companionCode: String?) -> String {
         guard let companionCode else {
             return "On \(address), open Sunshine's web page, choose PIN, and enter \(pin)."
@@ -64,11 +64,11 @@ extension GlimmerCLI {
     /// The pair sheet's failure words, with a rerun in place of its Try Again button.
     nonisolated static func pairFailureMessage(_ failure: PairingFailure, pc: String) -> String {
         switch failure {
-        case .timedOut: "The code wasn't entered on \(pc) in time. Run glimmer pair again for a new code."
+        case .timedOut: "The code wasn't entered on \(pc) in time. Run event-horizon pair again for a new code."
         case .busy:
             "\(pc) is busy with another pairing request. "
-                + "Cancel it on Sunshine's PIN page or wait a few minutes, then run glimmer pair again."
-        case .rejected: "\(pc) didn't accept the pairing. Run glimmer pair again for a new code."
+                + "Cancel it on Sunshine's PIN page or wait a few minutes, then run event-horizon pair again."
+        case .rejected: "\(pc) didn't accept the pairing. Run event-horizon pair again for a new code."
         case .invalidAddress, .unreachable, .gameStream: failure.message(pc: pc)
         }
     }
@@ -152,7 +152,7 @@ extension GlimmerCLI {
         }
     }
 
-    /// The Glimmer app, if one is running. Every `glimmer` command registers
+    /// The Event Horizon app, if one is running. Every `event-horizon` command registers
     /// under the app's bundle ID too, but with a prohibited activation policy.
     static func runningGlimmer() -> NSRunningApplication? {
         guard let bundleID = Bundle.main.bundleIdentifier else { return nil }

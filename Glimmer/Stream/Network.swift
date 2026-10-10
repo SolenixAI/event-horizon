@@ -271,7 +271,7 @@ public actor NetworkClient {
 
     func setRequestDeadline(_ deadline: Date?) { requestDeadline = deadline }
 
-    let log = Logger(subsystem: "io.ugfugl.Glimmer",
+    let log = Logger(subsystem: "dev.solenix.eventhorizon",
                              category: "Stream.Network")
 
     // MARK: Init

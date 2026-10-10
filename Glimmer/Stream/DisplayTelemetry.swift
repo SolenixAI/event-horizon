@@ -59,7 +59,7 @@ struct DisplayProbe: Sendable {
 /// timer + its main-actor sampler are confined to the main run loop.
 final class DisplayTelemetry: @unchecked Sendable {
 
-    private let log = Logger(subsystem: "io.ugfugl.Glimmer", category: "Stream.Telemetry")
+    private let log = Logger(subsystem: "dev.solenix.eventhorizon", category: "Stream.Telemetry")
 
     /// The main-actor probe the sampler calls each tick. Set by the exporter from
     /// the `TelemetrySource`. `@MainActor` because EDR/HDR/screen are main-only.

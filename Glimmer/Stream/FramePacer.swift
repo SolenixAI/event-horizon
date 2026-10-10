@@ -107,7 +107,7 @@ final class FramePacer: @unchecked Sendable {
 
     // Module-internal (not private) so the floor re-apply in
     // FramePacer+FrameRateRange.swift can log through the same category.
-    let log = Logger(subsystem: "io.ugfugl.Glimmer", category: "Stream.Pacer")
+    let log = Logger(subsystem: "dev.solenix.eventhorizon", category: "Stream.Pacer")
 
     // The static tuning constants (FIFO caps, the adaptive jitter-buffer depth
     // schedule, the starvation failsafe thresholds, the present-loop backoff
@@ -299,7 +299,7 @@ final class FramePacer: @unchecked Sendable {
     /// Dedicated serial queue for the present path. `.userInteractive` because
     /// a missed release is a dropped frame the user sees. NEVER the main actor.
     let pacingQueue = DispatchQueue(
-        label: "io.ugfugl.Glimmer.video.pacer", qos: .userInteractive)
+        label: "dev.solenix.eventhorizon.video.pacer", qos: .userInteractive)
 
     // MARK: - Present tick run loop (off-main, default)
 
@@ -455,7 +455,7 @@ final class FramePacer: @unchecked Sendable {
         pacerTickThread = nil
         log.info("FramePacer stopped")
         // Mirror to the Diag/LogStore file sink: os_log-only pacer breadcrumbs
-        // were structurally invisible postmortem (the glimmer-*.log sink records
+        // were structurally invisible postmortem (the event-horizon-*.log sink records
         // only Diag entries - 0 FramePacer lines across whole sessions).
         Diag.info("FramePacer stopped", "Stream.Pacer")
     }

@@ -27,7 +27,7 @@
 //  Subsystem / category convention.
 //  --------------------------------
 //  The subsystem string matches what the Stream's Logger instances already
-//  use (`io.ugfugl.Glimmer`) so Instruments shows all of our
+//  use (`dev.solenix.eventhorizon`) so Instruments shows all of our
 //  os_log + os_signpost traffic under the same root node. Categories pick
 //  out specific hot paths so a profile run can focus on one area:
 //
@@ -38,7 +38,7 @@
 //    Audio    - opus decode + AVAudioPlayerNode schedule
 //
 //  Open the .trace in Instruments → drag the "os_signpost" track in → filter
-//  by subsystem `io.ugfugl.Glimmer` to see all of it at once,
+//  by subsystem `dev.solenix.eventhorizon` to see all of it at once,
 //  or by category for one path. See docs/PROFILING.md for the full playbook.
 
 import os
@@ -49,7 +49,7 @@ extension OSSignposter {
     /// frame, with the bitstream byte count as the begin message and the
     /// outcome (ok / dropped / abandoned) as the end message.
     static let decode = OSSignposter(
-        subsystem: "io.ugfugl.Glimmer",
+        subsystem: "dev.solenix.eventhorizon",
         category: "Stream.Decode")
 
     /// Render path: VT output callback enters → renderer.enqueue() returns.
@@ -57,25 +57,25 @@ extension OSSignposter {
     /// event when the AVSampleBufferDisplayLayer latches FAILED and we have
     /// to flush + request an IDR.
     static let render = OSSignposter(
-        subsystem: "io.ugfugl.Glimmer",
+        subsystem: "dev.solenix.eventhorizon",
         category: "Stream.Render")
 
     /// Network path: startConnection → first connectionStarted callback,
     /// plus per-stage stageStarting/stageComplete/stageFailed events. These
     /// are the native backend's connection lifecycle markers.
     static let network = OSSignposter(
-        subsystem: "io.ugfugl.Glimmer",
+        subsystem: "dev.solenix.eventhorizon",
         category: "Stream.Network")
 
     /// Pairing path: full runPairingFlow as one interval, with one event per
     /// HTTP round so a stuck handshake shows the exact step that hung.
     static let pairing = OSSignposter(
-        subsystem: "io.ugfugl.Glimmer",
+        subsystem: "dev.solenix.eventhorizon",
         category: "Stream.Pairing")
 
     /// Audio path: Opus decode + scheduleBuffer. One
     /// interval per network-delivered audio packet.
     static let audio = OSSignposter(
-        subsystem: "io.ugfugl.Glimmer",
+        subsystem: "dev.solenix.eventhorizon",
         category: "Stream.Audio")
 }

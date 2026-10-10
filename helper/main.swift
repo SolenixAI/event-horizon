@@ -2,7 +2,7 @@ import Foundation
 import os.log
 
 let log = OSLog(subsystem: "dev.solenix.eventhorizon.helper", category: "main")
-os_log("Glimmer helper starting (pid %d)", log: log, type: .info, getpid())
+os_log("Event Horizon helper starting (pid %d)", log: log, type: .info, getpid())
 
 if getuid() != 0 {
     os_log("Helper must run as root", log: log, type: .error)
@@ -20,6 +20,6 @@ let service = HelperService(suppressor: suppressor)
 listener.delegate = service
 listener.resume()
 
-os_log("Glimmer helper listening on %{public}@", log: log, type: .info, glimmerHelperMachServiceName)
+os_log("Event Horizon helper listening on %{public}@", log: log, type: .info, glimmerHelperMachServiceName)
 
 RunLoop.main.run()

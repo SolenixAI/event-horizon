@@ -92,14 +92,14 @@ struct MoonlightQtIdentityImportTests {
     /// name per run would litter ~/Library/Preferences a file at a time. One
     /// stable name per test also keeps the two tests off each other's domain
     /// when the suite runs in parallel.
-    private static let copyDomain = "io.ugfugl.Glimmer.tests.moonlightqt-copy"
-    private static let skipDomain = "io.ugfugl.Glimmer.tests.moonlightqt-skip"
+    private static let copyDomain = "dev.solenix.eventhorizon.tests.moonlightqt-copy"
+    private static let skipDomain = "dev.solenix.eventhorizon.tests.moonlightqt-skip"
 
     @Test func importCopiesAndLeavesTheSourceSuiteUntouched() throws {
         let domain = Self.copyDomain
         let suite = try #require(UserDefaults(suiteName: domain))
-        suite.removePersistentDomain(forName: domain)   // no crumbs from a prior run
-        defer { suite.removePersistentDomain(forName: domain) }
+        ScratchDefaults.drop(domain)   // no crumbs from a prior run
+        defer { ScratchDefaults.drop(domain) }
 
         // QSettings writes the cert as a String and the key as Data; mirror
         // both shapes so the reader's Data → String path is exercised too.
@@ -126,8 +126,8 @@ struct MoonlightQtIdentityImportTests {
     @Test func aSuiteWithoutAKeyPairIsSkippedAndStillUntouched() throws {
         let domain = Self.skipDomain
         let suite = try #require(UserDefaults(suiteName: domain))
-        suite.removePersistentDomain(forName: domain)
-        defer { suite.removePersistentDomain(forName: domain) }
+        ScratchDefaults.drop(domain)
+        defer { ScratchDefaults.drop(domain) }
 
         // Cert but no key - moonlight-qt installed, never paired.
         suite.set("cert-only", forKey: "certificate")

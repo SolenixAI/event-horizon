@@ -24,7 +24,7 @@ struct ReinstalledPCSaveTests {
     /// with one game stored. A custom name is set when given. Each test removes its domain.
     private func savedPC(_ domain: String, customName: String? = nil) throws -> UserDefaults {
         let defaults = try #require(UserDefaults(suiteName: domain))
-        defaults.removePersistentDomain(forName: domain)
+        ScratchDefaults.drop(domain)
         defaults.set(1, forKey: "hosts.size")
         defaults.set("zephyr-citadel", forKey: "hosts.1.hostname")
         defaults.set(Self.oldID, forKey: "hosts.1.uuid")
@@ -54,9 +54,9 @@ struct ReinstalledPCSaveTests {
     }
 
     @Test func aReinstalledPCReplacesItsOldEntry() throws {
-        let domain = "io.ugfugl.Glimmer.tests.reinstalled-replaces"
+        let domain = "dev.solenix.eventhorizon.tests.reinstalled-replaces"
         let defaults = try savedPC(domain)
-        defer { defaults.removePersistentDomain(forName: domain) }
+        defer { ScratchDefaults.drop(domain) }
         try pairReinstalled(into: defaults)
         #expect(storedIDs(defaults) == [Self.newID])
         #expect(defaults.string(forKey: "hosts.1.hostname") == "zephyr-citadel")
@@ -65,9 +65,9 @@ struct ReinstalledPCSaveTests {
     }
 
     @Test func theReplacementKeepsItsCustomNameAndWakeSetting() throws {
-        let domain = "io.ugfugl.Glimmer.tests.reinstalled-keeps-name"
+        let domain = "dev.solenix.eventhorizon.tests.reinstalled-keeps-name"
         let defaults = try savedPC(domain, customName: "Den PC")
-        defer { defaults.removePersistentDomain(forName: domain) }
+        defer { ScratchDefaults.drop(domain) }
         try pairReinstalled(into: defaults)
         #expect(defaults.bool(forKey: "hosts.1.customname"))
         #expect(defaults.string(forKey: "hosts.1.name") == "Den PC")
@@ -75,9 +75,9 @@ struct ReinstalledPCSaveTests {
     }
 
     @Test func aPCAtAnotherAddressIsNotReplaced() throws {
-        let domain = "io.ugfugl.Glimmer.tests.reinstalled-other-address"
+        let domain = "dev.solenix.eventhorizon.tests.reinstalled-other-address"
         let defaults = try savedPC(domain)
-        defer { defaults.removePersistentDomain(forName: domain) }
+        defer { ScratchDefaults.drop(domain) }
         try pairReinstalled(into: defaults, at: "192.168.1.20")
         #expect(storedIDs(defaults) == [Self.oldID, Self.newID])
     }

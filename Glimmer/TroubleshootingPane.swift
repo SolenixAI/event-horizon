@@ -90,7 +90,7 @@ struct RawHIDControl: View {
         if !DualSenseHID.accessGranted { Self.registerAndOpen() }
     }
 
-    /// IOHIDRequestAccess is the ONLY call that adds Glimmer to the Input
+    /// IOHIDRequestAccess is the ONLY call that adds Event Horizon to the Input
     /// Monitoring list (IOHIDCheckAccess never registers it - confirmed via
     /// OpenEmu/Karabiner). It also prompts when state is unknown. We then
     /// deep-link so the user can flip the toggle if it's still off.

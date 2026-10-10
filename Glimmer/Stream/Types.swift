@@ -270,7 +270,7 @@ public struct VideoFormats: OptionSet, Sendable {
     public static let probedSupported: VideoFormats = probeSupported()
 
     private static func probeSupported() -> VideoFormats {
-        let log = Logger(subsystem: "io.ugfugl.Glimmer", category: "Stream.Capabilities")
+        let log = Logger(subsystem: "dev.solenix.eventhorizon", category: "Stream.Capabilities")
         var out: VideoFormats = []
         // H.264 baseline: every Mac since 2008 has HW H.264 decode.
         if VTIsHardwareDecodeSupported(kCMVideoCodecType_H264) {

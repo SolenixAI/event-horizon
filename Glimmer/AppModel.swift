@@ -38,7 +38,7 @@ import os.log
 final class AppModel {
 
     @ObservationIgnored let log = Logger(
-        subsystem: "io.ugfugl.Glimmer", category: "AppModel")
+        subsystem: "dev.solenix.eventhorizon", category: "AppModel")
 
     // Hosts
     var hosts: [Host] = []

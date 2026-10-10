@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-# make-dmg.sh - build the distributable Glimmer DMG, styled the way a normal Mac
-# app installer looks: a background image with an arrow from Glimmer.app to the
+# make-dmg.sh - build the distributable Event Horizon DMG, styled the way a normal Mac
+# app installer looks: a background image with an arrow from Event Horizon.app to the
 # /Applications alias, fixed window bounds, 128px icons, no toolbar or sidebar,
 # and the resulting .DS_Store baked into the image.
 #

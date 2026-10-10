@@ -115,7 +115,7 @@ final class LogStore: Sendable {
 
     /// Private values are already "<private>" here, so .public keeps the wording greppable.
     private func mirrorToSystemLog(_ level: LogLevel, _ redacted: String, category: String) {
-        let logger = Logger(subsystem: "io.ugfugl.Glimmer", category: category)
+        let logger = Logger(subsystem: "dev.solenix.eventhorizon", category: category)
         switch level {
         case .debug: logger.debug("\(redacted, privacy: .public)")
         case .info: logger.info("\(redacted, privacy: .public)")
@@ -236,7 +236,7 @@ struct DiagMessage: ExpressibleByStringInterpolation, Sendable {
 // MARK: - Per-session file sink (gate-checked, buffered, off the hot path)
 
 /// While a telemetry session runs, mirrors Diag's redacted text (INFO+, DEBUG with
-/// `diagFileLogDebug`) to Logs/Glimmer. `@unchecked Sendable`: the lock guards
+/// `diagFileLogDebug`) to Logs/Event Horizon. `@unchecked Sendable`: the lock guards
 /// `pending`; the file and timer live on `flushQueue`, so loggers never touch disk.
 final class SessionLogFileSink: @unchecked Sendable {
 
@@ -282,8 +282,8 @@ final class SessionLogFileSink: @unchecked Sendable {
     /// the right thing to lose) and is logged once.
     private static let maxPendingLines = 10_000
 
-    private let log = Logger(subsystem: "io.ugfugl.Glimmer", category: "Diag.FileSink")
-    private let flushQueue = DispatchQueue(label: "io.ugfugl.Glimmer.diag.filesink", qos: .utility)
+    private let log = Logger(subsystem: "dev.solenix.eventhorizon", category: "Diag.FileSink")
+    private let flushQueue = DispatchQueue(label: "dev.solenix.eventhorizon.diag.filesink", qos: .utility)
     private var fileHandle: FileHandle?
     private var flushTimer: DispatchSourceTimer?
 
@@ -330,12 +330,12 @@ final class SessionLogFileSink: @unchecked Sendable {
                 return
             }
             // ISO8601 with ':' is filename-legal on APFS; same stamp shape as the
-            // telemetry NDJSON files, so a `glimmer-<stamp>.log` sorts next to its
+            // telemetry NDJSON files, so an `event-horizon-<stamp>.log` sorts next to its
             // `telemetry-<stamp>.ndjson` siblings.
             let iso = ISO8601DateFormatter()
             iso.formatOptions = [.withInternetDateTime]
             let stamp = iso.string(from: Date())
-            let url = dir.appendingPathComponent("glimmer-\(stamp).log")
+            let url = dir.appendingPathComponent("event-horizon-\(stamp).log")
             FileManager.default.createFile(atPath: url.path, contents: nil)
             do {
                 self.fileHandle = try FileHandle(forWritingTo: url)

@@ -12,9 +12,9 @@ import Testing
 struct MutedOutputTests {
 
     private func scratchDefaults() throws -> UserDefaults {
-        let suite = "io.ugfugl.Glimmer.tests.\(UUID().uuidString)"
+        let suite = "dev.solenix.eventhorizon.tests.\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
-        defaults.removePersistentDomain(forName: suite)
+        ScratchDefaults.drop(suite)
         return defaults
     }
 

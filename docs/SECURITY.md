@@ -7,7 +7,7 @@
 is end-to-end private between you and the maintainer, needs no key exchange, and
 is the channel that is actually monitored. Include a description of the issue,
 reproduction steps, and the affected version (**Glimmer → About Glimmer**, or
-`defaults read /Applications/Glimmer.app/Contents/Info CFBundleShortVersionString`).
+`defaults read /Applications/Event Horizon.app/Contents/Info CFBundleShortVersionString`).
 
 Public disclosure on GitHub Issues is acceptable for non-exploitable bugs (UI
 glitches, build failures, etc.). Anything involving the client identity, the
@@ -42,7 +42,7 @@ is sized to that.
   running as you can read the client key, impersonate this Mac to every paired
   PC, and rewrite the pinned host certificates. This is an accepted risk that
   moonlight-qt shares.
-- **Local control surface:** the running app takes `glimmer` requests over
+- **Local control surface:** the running app takes `event-horizon` requests over
   distributed notifications (`CommandChannel`, `AppModel+Commands.swift`), with
   no authentication. Any process running as you can post one: start a stream
   from a paired PC, end Glimmer's own stream, or post `stream` with takeover
@@ -83,7 +83,7 @@ client identifier).
 - `client-key.pem`: RSA private key in PEM (PKCS#8 unencrypted)
 - `client-uniqueid.txt`: 32-hex-char client unique ID
 
-Stored at `~/Library/Application Support/Glimmer/Identity/`.
+Stored at `~/Library/Application Support/Event Horizon/Identity/`.
 
 `FileIdentityStore.write` (`Identity.swift`):
 
@@ -178,7 +178,7 @@ an open request ends only when it completes, fails or expires.
 ## Pinning
 
 Host certs are pinned **after** successful pairing. The pin lives in a file at
-`~/Library/Application Support/Glimmer/PinnedHosts/<hostID>.pem`, where `hostID`
+`~/Library/Application Support/Event Horizon/PinnedHosts/<hostID>.pem`, where `hostID`
 is the host's UUID (or its hostname, when that is all we have) with anything
 outside `[A-Za-z0-9-_.]` replaced by `_`. `PinnedCertStore` (`Types+Cert.swift`)
 owns it.
@@ -260,7 +260,7 @@ up.
   It accepts a connection only from the signed Glimmer app, not a process that
   merely claims the bundle id: the caller's code signature must satisfy the
   designated requirement in `helper/HelperService.swift`,
-  `identifier "io.ugfugl.Glimmer" and anchor apple generic and certificate leaf[subject.OU] = "5T7M4RH3F8"`.
+  `identifier "dev.solenix.eventhorizon" and anchor apple generic and certificate leaf[subject.OU] = "5T7M4RH3F8"`.
 
 **The defense-in-depth the sandbox used to provide** was containment of a
 memory-safety exploit in the streaming-protocol parsers reachable from a

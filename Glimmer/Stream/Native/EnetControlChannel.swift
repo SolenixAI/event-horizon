@@ -62,13 +62,13 @@ final class EnetControlChannel: @unchecked Sendable {
     /// QoS .userInteractive so ACK processing is never de-prioritized behind
     /// main-thread UI/input. Critically it does NOT carry outbound sends anymore
     /// (see sendQueue) - that is the primary fix for the all-stream wedge.
-    let queue = DispatchQueue(label: "io.ugfugl.Glimmer.enet", qos: .userInteractive)
+    let queue = DispatchQueue(label: "dev.solenix.eventhorizon.enet", qos: .userInteractive)
     /// Dedicated outbound-send queue. Every connection.send hops here so a
     /// controller-driven send storm can NEVER block the receive/ACK chain on
     /// `queue`. NWConnection.send is internally thread-safe and ordered
     /// per-connection, so submitting from a separate serial queue preserves wire
     /// order. Mirrors moonlight's separate InputSend pthread vs ControlRecv.
-    let sendQueue = DispatchQueue(label: "io.ugfugl.Glimmer.enet.send", qos: .userInteractive)
+    let sendQueue = DispatchQueue(label: "dev.solenix.eventhorizon.enet.send", qos: .userInteractive)
 
     /// Guards `connection` - the same discipline as RtspClient.connLock for the
     /// identical "set on the async pipeline, cancelled from another thread"

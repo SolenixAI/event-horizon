@@ -62,7 +62,7 @@ final class ControllerHaptics: @unchecked Sendable {
     /// feedback, not input - it must feel immediate but may never compete with
     /// the enet ACK path or the render loop for scheduling. (Internal for the
     /// +Actuation split's engine stop/reset handler hops.)
-    let queue = DispatchQueue(label: "io.ugfugl.Glimmer.haptics", qos: .userInitiated)
+    let queue = DispatchQueue(label: "dev.solenix.eventhorizon.haptics", qos: .userInitiated)
 
     /// Latest-wins inbox. Lock-guarded (NOT queue-confined) because the writer
     /// is the enet receive thread, which deposits and leaves - one dictionary
