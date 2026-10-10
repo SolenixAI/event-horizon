@@ -32,3 +32,23 @@ struct CompanionClientTests {
         #expect(CompanionClient.result(from: [:]) == .unavailable)
     }
 }
+
+/// The lease keeps the PC awake for the whole stream: only the companion
+/// refusing the token ends it; a dropped request is retried next round.
+struct CompanionLeaseTests {
+
+    @Test func aRenewalIsTheCompanionsNoContent() {
+        #expect(CompanionClient.leaseOutcome(statusCode: 204) == .renewed)
+    }
+
+    @Test func onlyARefusedTokenEndsTheLease() {
+        #expect(CompanionClient.leaseOutcome(statusCode: 401) == .refused)
+        #expect(CompanionClient.leaseOutcome(statusCode: 403) == .refused)
+    }
+
+    @Test func aDroppedRequestIsRetriedNotTheEnd() {
+        #expect(CompanionClient.leaseOutcome(statusCode: nil) == .unreachable)
+        #expect(CompanionClient.leaseOutcome(statusCode: 500) == .unreachable)
+        #expect(CompanionClient.leaseOutcome(statusCode: 503) == .unreachable)
+    }
+}

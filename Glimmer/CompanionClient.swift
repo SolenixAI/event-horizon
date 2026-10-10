@@ -75,15 +75,28 @@ struct CompanionClient: Sendable {
         }
     }
 
-    /// Keep the PC awake for the next 90 s. False when the token is refused.
-    @discardableResult
-    func lease(token: String) async -> Bool {
-        guard let url = url("/lease") else { return false }
+    enum LeaseOutcome: Equatable, Sendable {
+        case renewed, refused, unreachable
+    }
+
+    /// Keep the PC awake for the next 90 s.
+    func lease(token: String) async -> LeaseOutcome {
+        guard let url = url("/lease") else { return .unreachable }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         let response = try? await Self.session(timeout: 5).data(for: request).1
-        return (response as? HTTPURLResponse)?.statusCode == 204
+        return Self.leaseOutcome(statusCode: (response as? HTTPURLResponse)?.statusCode)
+    }
+
+    /// Only a refused token ends the lease; anything else is tried again
+    /// next round, so one dropped request never lets the PC sleep.
+    static func leaseOutcome(statusCode: Int?) -> LeaseOutcome {
+        switch statusCode {
+        case 204: .renewed
+        case 401, 403: .refused
+        default: .unreachable
+        }
     }
 }
 
