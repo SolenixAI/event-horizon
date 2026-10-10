@@ -20,6 +20,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # The Metal shaders compile with the Metal Toolchain, which the image does not ship.
+      - name: Install the Metal Toolchain
+        run: xcodebuild -downloadComponent MetalToolchain
       - name: Build and test
         run: make test
   lint:

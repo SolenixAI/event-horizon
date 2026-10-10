@@ -34,11 +34,11 @@ extension OnboardingItem {
     @MainActor var explanation: String {
         switch self {
         case .notifications:
-            "Event Horizon can tell you when your PC is awake, if you are in another app. macOS asks next."
+            "Get a message when your PC wakes up while you use another app. macOS asks next."
         case .controllerButtons:
             AppModel.rawHIDExplanation
         case .volumeKeys:
-            "Allow Accessibility so your Mac's volume keys control the game while you play. macOS asks next."
+            "Your Mac's volume keys turn the game up and down while you play. macOS asks for Accessibility next."
         case .wifiHelper:
             AWDLEnablePrompt.explanation + " " + AWDLEnablePrompt.installNote
         case .openAtLogin:
