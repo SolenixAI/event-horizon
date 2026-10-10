@@ -36,9 +36,14 @@ network. Diagnostics are off by default and stay on your Mac.
 
 ## Install
 
-**Mac:** macOS 26 or later on Apple Silicon. Download Event Horizon from
-[solenix.dev](https://solenix.dev), open the disk image and drag Event Horizon
-to Applications.
+**Mac:** macOS 26 or later on Apple Silicon.
+
+1. Download `Event-Horizon-<version>.dmg` from the newest pre-release on the
+   [releases page](https://github.com/SolenixAI/event-horizon/releases). Open
+   the disk image and drag Event Horizon to Applications.
+2. The app is not notarized yet, so macOS blocks its first open. Open System
+   Settings › Privacy & Security, find the message about Event Horizon, and
+   click Open Anyway.
 
 Or install it with Homebrew:
 
