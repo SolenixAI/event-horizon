@@ -23,9 +23,14 @@ extension GlimmerCLI {
             return Exit.ok
         }
         let pin = command.pin ?? model.generatePairingPIN()
-        printError("On \(address), open Sunshine's web page, choose PIN, and enter \(pin).")
+        let viaCompanion = await CompanionClient(address: address, pinned: nil).isPresent()
+        if !viaCompanion { printError(pairingInstruction(address: address, pin: pin, companionCode: nil)) }
         let attempt = model.beginPairing(address: address)
-        if let host = await model.pair(attempt: attempt, pin: pin) {
+        let pairing = Task { await model.pair(attempt: attempt, pin: pin) }
+        if viaCompanion, let code = await awaitCompanionCode(model) {
+            printError(pairingInstruction(address: address, pin: pin, companionCode: code))
+        }
+        if let host = await pairing.value {
             print("Paired with \(host.displayName).")
             return Exit.ok
         }
@@ -35,6 +40,25 @@ extension GlimmerCLI {
             printError("Pairing failed.")
         }
         return Exit.failed
+    }
+
+    /// The companion's code, once the PC has made it. Nil when pairing ends first.
+    private static func awaitCompanionCode(_ model: AppModel) async -> String? {
+        for _ in 0..<100 {
+            if let code = model.companionCode { return code }
+            if case .success = model.pairingPhase { return nil }
+            if case .failure = model.pairingPhase { return nil }
+            try? await Task.sleep(for: .milliseconds(100))
+        }
+        return nil
+    }
+
+    /// What `glimmer pair` asks of the person at the PC: the companion's code and Allow, or Sunshine's PIN.
+    nonisolated static func pairingInstruction(address: String, pin: String, companionCode: String?) -> String {
+        guard let companionCode else {
+            return "On \(address), open Sunshine's web page, choose PIN, and enter \(pin)."
+        }
+        return "On \(address), the code is \(CompanionClient.spaced(companionCode)). Click Allow on \(address)."
     }
 
     /// The pair sheet's failure words, with a rerun in place of its Try Again button.

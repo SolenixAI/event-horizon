@@ -8,6 +8,9 @@
 - A PC that reinstalled Sunshine replaces its old entry on Home, instead of
   showing a second one that needs trust again. Its custom name and settings
   carry over.
+- `glimmer pair` on a PC with the Event Horizon companion shows the code and
+  says to click Allow on the PC, instead of asking for a Sunshine PIN.
+  (Sunshine's own PIN line stays for PCs without the companion.)
 
 ## 2026.10.4 - 2026-10-03
 
