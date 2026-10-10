@@ -12,6 +12,13 @@
 		99C34EB9C7FD41DBA2D5BD2F /* OnboardingLiveSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DBE16BC8CBA4730B258CC43 /* OnboardingLiveSource.swift */; };
 		7A180E9416684C8A81EE3CEF /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A21CE90B60B492DAC799624 /* OnboardingView.swift */; };
 		8F8ACCE10F4E4A9DA6C42ED5 /* PermissionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD9815CADA24FF291907B84 /* PermissionCard.swift */; };
+		15E879C0A1AE095729D80F64 /* OnboardingScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E928E10CE70DEA6C1D87C7F /* OnboardingScene.swift */; };
+		6FB024A594036CAE4AFDC899 /* OnboardingMotion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AB00D0F4FA1CB3E90F70EF4 /* OnboardingMotion.swift */; };
+		7045F56326115B6B982DBFEB /* OnboardingSceneTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EAB1E352484325FB2976A83 /* OnboardingSceneTests.swift */; };
+		15C269EF5BEE362830ECECF5 /* OnboardingStage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF0B8AF1F65F019145AE663F /* OnboardingStage.swift */; };
+		7818370A7AB5C9AB4ECA20E5 /* SpaceFieldView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 125153573BF208098DCD9816 /* SpaceFieldView.swift */; };
+		EFD642BCB13D431E74478D0D /* OnboardingStageDrawing.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB4BEDAF509C33E85492CDB5 /* OnboardingStageDrawing.swift */; };
+		080F4CCEE25882C0FF7C4D5C /* SpaceField.metal in Sources */ = {isa = PBXBuildFile; fileRef = 665566E4550F2F028FEEF40A /* SpaceField.metal */; };
 		D175B6524A3A454DBABE4686 /* OnboardingFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC7398882BB744358FE5132A /* OnboardingFlowTests.swift */; };
 		BC7B12E4E59E46B2885B9079 /* OnboardingRailTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 296861F56EE24CD498CD47CB /* OnboardingRailTests.swift */; };
 		DEC0DE202609258300000003 /* AWDLHelperManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202609258300000004 /* AWDLHelperManagerTests.swift */; };
@@ -463,6 +470,13 @@
 		6A21CE90B60B492DAC799624 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Onboarding/OnboardingView.swift; sourceTree = "<group>"; };
 		6BD9815CADA24FF291907B84 /* PermissionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Onboarding/PermissionCard.swift; sourceTree = "<group>"; };
 		BC7398882BB744358FE5132A /* OnboardingFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingFlowTests.swift; sourceTree = "<group>"; };
+		9E928E10CE70DEA6C1D87C7F /* OnboardingScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Onboarding/OnboardingScene.swift; sourceTree = "<group>"; };
+		0AB00D0F4FA1CB3E90F70EF4 /* OnboardingMotion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Onboarding/OnboardingMotion.swift; sourceTree = "<group>"; };
+		9EAB1E352484325FB2976A83 /* OnboardingSceneTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingSceneTests.swift; sourceTree = "<group>"; };
+		CF0B8AF1F65F019145AE663F /* OnboardingStage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Onboarding/OnboardingStage.swift; sourceTree = "<group>"; };
+		125153573BF208098DCD9816 /* SpaceFieldView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceFieldView.swift; sourceTree = "<group>"; };
+		DB4BEDAF509C33E85492CDB5 /* OnboardingStageDrawing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Onboarding/OnboardingStageDrawing.swift; sourceTree = "<group>"; };
+		665566E4550F2F028FEEF40A /* SpaceField.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = SpaceField.metal; sourceTree = "<group>"; };
 		296861F56EE24CD498CD47CB /* OnboardingRailTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingRailTests.swift; sourceTree = "<group>"; };
 		DEC0DE202609258300000004 /* AWDLHelperManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AWDLHelperManagerTests.swift; sourceTree = "<group>"; };
 		DEC0DE202609258300000002 /* Protocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../helper/Protocol.swift; sourceTree = "<group>"; };
@@ -971,6 +985,12 @@
 				41F0D500FE094808A789E19F /* OnboardingRail.swift */,
 				6DBE16BC8CBA4730B258CC43 /* OnboardingLiveSource.swift */,
 				6A21CE90B60B492DAC799624 /* OnboardingView.swift */,
+				665566E4550F2F028FEEF40A /* SpaceField.metal */,
+				CF0B8AF1F65F019145AE663F /* OnboardingStage.swift */,
+				125153573BF208098DCD9816 /* SpaceFieldView.swift */,
+				DB4BEDAF509C33E85492CDB5 /* OnboardingStageDrawing.swift */,
+				9E928E10CE70DEA6C1D87C7F /* OnboardingScene.swift */,
+				0AB00D0F4FA1CB3E90F70EF4 /* OnboardingMotion.swift */,
 				6BD9815CADA24FF291907B84 /* PermissionCard.swift */,
 				A100030B /* ContainerMigration.swift */,
 				F0A0D17A0000000000000016 /* DataFolderMigration.swift */,
@@ -1277,6 +1297,7 @@
 				DEC0DE202609258300000004 /* AWDLHelperManagerTests.swift */,
 				BC7398882BB744358FE5132A /* OnboardingFlowTests.swift */,
 				296861F56EE24CD498CD47CB /* OnboardingRailTests.swift */,
+				9EAB1E352484325FB2976A83 /* OnboardingSceneTests.swift */,
 				DEC0DE202609258000000002 /* TestConcurrency.swift */,
 				DEC0DE202609256700000004 /* AWDLStreamLease.swift */,
 				DEC0DE202609253700000004 /* Protocol.swift */,
@@ -1532,6 +1553,12 @@
 				DBF0268508F541DE84B6033D /* OnboardingRail.swift in Sources */,
 				99C34EB9C7FD41DBA2D5BD2F /* OnboardingLiveSource.swift in Sources */,
 				7A180E9416684C8A81EE3CEF /* OnboardingView.swift in Sources */,
+				080F4CCEE25882C0FF7C4D5C /* SpaceField.metal in Sources */,
+				15C269EF5BEE362830ECECF5 /* OnboardingStage.swift in Sources */,
+				7818370A7AB5C9AB4ECA20E5 /* SpaceFieldView.swift in Sources */,
+				EFD642BCB13D431E74478D0D /* OnboardingStageDrawing.swift in Sources */,
+				15E879C0A1AE095729D80F64 /* OnboardingScene.swift in Sources */,
+				6FB024A594036CAE4AFDC899 /* OnboardingMotion.swift in Sources */,
 				8F8ACCE10F4E4A9DA6C42ED5 /* PermissionCard.swift in Sources */,
 				A100030A /* ContainerMigration.swift in Sources */,
 				F0A0D17A0000000000000015 /* DataFolderMigration.swift in Sources */,
@@ -1828,6 +1855,7 @@
 				DEC0DE202609258300000003 /* AWDLHelperManagerTests.swift in Sources */,
 				D175B6524A3A454DBABE4686 /* OnboardingFlowTests.swift in Sources */,
 				BC7B12E4E59E46B2885B9079 /* OnboardingRailTests.swift in Sources */,
+				7045F56326115B6B982DBFEB /* OnboardingSceneTests.swift in Sources */,
 				DEC0DE202609258000000001 /* TestConcurrency.swift in Sources */,
 				DEC0DE202609256700000005 /* AWDLStreamLease.swift in Sources */,
 				DEC0DE202609253700000003 /* Protocol.swift in Sources */,

@@ -234,16 +234,27 @@ struct PairSheet: View {
                     .buttonStyle(StreamButtonStyle())
                 }
             } else if !chosen {
-                Spacer()
                 if let embedded {
+                    // Back sits where it does on every embedded screen: leading, quiet.
                     Button("Back") { embedded.back() }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.secondary)
+                    Spacer()
                 } else {
+                    Spacer()
                     Button("Cancel") { cancelPairing(); dismiss() }
                         .keyboardShortcut(.cancelAction)
                 }
             } else {
+                if embedded != nil {
+                    Button("Back") { backToChooser(); embedded?.back() }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.secondary)
+                }
                 Spacer()
-                Button("Back") { backToChooser(); embedded?.back() }
+                if embedded == nil {
+                    Button("Back") { backToChooser() }
+                }
                 if embedded == nil {
                     Button("Cancel") { cancelPairing(); dismiss() }
                         .keyboardShortcut(.cancelAction)
@@ -331,7 +342,7 @@ private struct HostChooser: View {
             // starts only on Continue, so the reason is already on screen.
             Text("Event Horizon looks for PCs running Sunshine on your local network; "
                 + "macOS will ask to allow that.")
-                .font(.footnote)
+                .font(.callout)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
@@ -501,17 +512,17 @@ private struct FloatingWindowLevel: NSViewRepresentable {
 private struct CodeTiles: View {
     let code: String
     var body: some View {
-        GlassEffectContainer(spacing: 8) {
-            HStack(spacing: 8) {
-                ForEach(Array(code.enumerated()), id: \.offset) { _, ch in
+        // Two groups of three, the way the PC shows it ("236 676").
+        GlassEffectContainer(spacing: 6) {
+            HStack(spacing: 6) {
+                ForEach(Array(code.enumerated()), id: \.offset) { index, ch in
                     Text(String(ch))
-                        .font(.system(size: 40, weight: .semibold, design: .monospaced))
-                        .frame(maxWidth: .infinity, minHeight: 78)
-                        .glassEffect(
-                            .regular.tint(Color.accentColor.opacity(0.12)),
-                            in: .rect(cornerRadius: 14)
-                        )
+                        .font(.system(size: 30, weight: .medium, design: .rounded))
+                        .monospacedDigit()
+                        .frame(maxWidth: .infinity, minHeight: 58)
+                        .glassEffect(.regular, in: .rect(cornerRadius: 12))
                         .allowsHitTesting(false)
+                        .padding(.trailing, index == 2 && code.count == 6 ? 12 : 0)
                 }
             }
         }

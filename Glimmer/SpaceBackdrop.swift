@@ -90,9 +90,14 @@ struct SpaceBackdrop: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        SpaceLayers(palette: colorScheme == .dark ? .night : .dawn, bezel: bezel, flow: flow, sample: sample)
-            .accessibilityHidden(true)
-            .allowsHitTesting(false)
+        let night = colorScheme == .dark
+        ZStack {
+            // At night Home sits in the same ray-traced space onboarding flies through.
+            if night { HomeSpaceField(flow: flow) }
+            SpaceLayers(palette: night ? .night : .dawn, skyShown: !night, bezel: bezel, flow: flow, sample: sample)
+        }
+        .accessibilityHidden(true)
+        .allowsHitTesting(false)
     }
 }
 
@@ -101,6 +106,8 @@ struct SpaceBackdrop: View {
 /// The Core Animation view, placed in SwiftUI.
 private struct SpaceLayers: NSViewRepresentable {
     let palette: SpacePalette
+    /// The static sky, stars and horizon light; off when the ray-traced field is behind.
+    let skyShown: Bool
     let bezel: CGRect?
     let flow: SpaceFlow
     let sample: @MainActor () async -> LiveFlowReading
@@ -108,7 +115,7 @@ private struct SpaceLayers: NSViewRepresentable {
     func makeNSView(context: Context) -> SpaceLayerView { SpaceLayerView() }
 
     func updateNSView(_ view: SpaceLayerView, context: Context) {
-        view.configure(palette: palette, bezel: bezel, flow: flow, sample: sample)
+        view.configure(palette: palette, skyShown: skyShown, bezel: bezel, flow: flow, sample: sample)
     }
 }
 
@@ -206,8 +213,12 @@ final class SpaceLayerView: NSView {
         rebuild()
     }
 
-    func configure(palette: SpacePalette, bezel: CGRect?, flow: SpaceFlow,
+    func configure(palette: SpacePalette, skyShown: Bool = true, bezel: CGRect?, flow: SpaceFlow,
                    sample: @escaping @MainActor () async -> LiveFlowReading) {
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        for sky in [field, stars, horizonGold, horizonBlue, grain] { sky.isHidden = !skyShown }
+        CATransaction.commit()
         self.palette = palette
         self.bezel = bezel
         self.sample = sample

@@ -18,6 +18,13 @@
 - A first launch walks you through setup in one window: find your PC, pair it,
   choose the optional permissions, then stream. Each permission is explained
   before macOS asks for it, and you can skip any of them.
+- The first launch flies through a real-time, ray-traced black hole. The camera
+  arrives from deep space, orbits toward your PC as it finds it, draws a beam of
+  light from your Mac to the PC as you pair, lights a satellite for each
+  permission you allow, then dives through the horizon into Home. Reduce Motion
+  shows each stop still.
+- Home's night sky is the same space: the black hole you fell through glows as
+  a small ember beside your PC.
 - Wake no longer asks for notification permission when you click it. The
   question comes in setup, with its reason, and Settings › General › Permissions
   can grant it later.
