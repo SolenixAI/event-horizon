@@ -21,11 +21,19 @@ async fn main() {
         return;
     }
 
-    // `place-virtual-screen`: the virtual screen's unit runs this once it starts.
+    // `place-virtual-screen` and `guard-virtual-screen`: the screen's units run these.
     #[cfg(target_os = "linux")]
     if args.get(1).map(String::as_str) == Some("place-virtual-screen") {
         if let Err(e) = event_horizon_companion::os::linux::place_virtual_screen() {
             eprintln!("virtual screen: {e}");
+            std::process::exit(1);
+        }
+        return;
+    }
+    #[cfg(target_os = "linux")]
+    if args.get(1).map(String::as_str) == Some("guard-virtual-screen") {
+        if let Err(e) = event_horizon_companion::os::linux::guard_virtual_screen() {
+            eprintln!("display guard: {e}");
             std::process::exit(1);
         }
         return;
@@ -41,10 +49,9 @@ async fn main() {
     #[cfg(target_os = "linux")]
     if installing {
         match event_horizon_companion::os::linux::install(&dir) {
-            Ok(screen) => {
+            Ok(()) => {
                 println!("This PC is ready. Open Event Horizon on your Mac.");
-                if let event_horizon_companion::linux_install::VirtualScreen::Skipped(why) = screen
-                {
+                if let Some(why) = event_horizon_companion::os::linux::screen_skip(&dir) {
                     println!("{why}");
                 }
             }

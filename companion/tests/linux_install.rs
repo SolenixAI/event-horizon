@@ -2,7 +2,7 @@
 //! interface. The command runner and the file system are fakes that share one
 //! log, so a test can check what ran, what was written, and in what order.
 
-use event_horizon_companion::linux_install::{self, Commands, Files, Layout, VirtualScreen};
+use event_horizon_companion::linux_install::{self, Commands, Files, Layout, screen_skip};
 use event_horizon_companion::virtual_screen::{DEFAULT_SIZE, Size};
 use serde_json::json;
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -15,6 +15,7 @@ type Log = Arc<Mutex<Vec<String>>>;
 
 const SUNSHINE_UNIT: &str = "app-dev.lizardbyte.app.Sunshine.service";
 const SCREEN_UNIT: &str = "event-horizon-virtual-screen.service";
+const GUARD_UNIT: &str = "event-horizon-display-guard.service";
 const KRFB: &str = "/usr/bin/krfb-virtualmonitor";
 const KSCREEN: &str = "/usr/bin/kscreen-doctor";
 const UDEV_RULES: &str = "/etc/udev/rules.d/60-sunshine.rules";
@@ -186,11 +187,7 @@ fn secret() -> String {
     "deadbeef".to_string()
 }
 
-fn install(
-    cmd: &FakeCommands,
-    files: &FakeFiles,
-    layout: &Layout,
-) -> Result<VirtualScreen, String> {
+fn install(cmd: &FakeCommands, files: &FakeFiles, layout: &Layout) -> Result<(), String> {
     linux_install::install(cmd, files, layout, DEFAULT_SIZE, &secret)
 }
 
@@ -234,7 +231,8 @@ fn on_kde_wayland_the_screen_unit_runs_krfb_at_the_default_size() {
     let (cmd, files) = pc();
     let layout = kde_layout();
 
-    assert_eq!(install(&cmd, &files, &layout), Ok(VirtualScreen::Ready));
+    install(&cmd, &files, &layout).unwrap();
+    assert!(screen_skip(&files, &layout).is_none());
 
     let unit = files
         .read(&layout.screen_unit())
@@ -260,6 +258,26 @@ fn the_screen_is_started_now_so_it_exists_before_sunshine_is_configured() {
     assert!(ran(
         &cmd.log,
         &format!("run systemctl --user restart {SCREEN_UNIT}")
+    ));
+}
+
+#[test]
+fn the_display_guard_is_written_and_started_beside_the_screen() {
+    let (cmd, files) = pc();
+    let layout = kde_layout();
+    install(&cmd, &files, &layout).unwrap();
+
+    let unit = files
+        .read(&layout.guard_unit())
+        .expect("the guard unit is written");
+    assert!(unit.contains(&format!(
+        "ExecStart={} guard-virtual-screen",
+        layout.installed_companion().display()
+    )));
+    assert!(unit.contains("Restart=always"));
+    assert!(ran(
+        &cmd.log,
+        &format!("run systemctl --user restart {GUARD_UNIT}")
     ));
 }
 
@@ -364,6 +382,21 @@ fn a_second_run_rewrites_nothing_and_restarts_nothing_for_the_screen() {
         1,
         "a running screen is not restarted, so a stream is not cut"
     );
+    assert_eq!(
+        count(
+            &cmd.log,
+            &format!("run systemctl --user restart {GUARD_UNIT}")
+        ),
+        1,
+        "a running guard is not restarted either"
+    );
+    assert_eq!(
+        count(
+            &cmd.log,
+            &format!("write {}", layout.guard_unit().display())
+        ),
+        1
+    );
 }
 
 #[test]
@@ -413,14 +446,13 @@ fn outside_kde_on_wayland_it_skips_the_screen_and_says_why() {
     let mut layout = kde_layout();
     layout.session_type = Some("x11".into());
 
-    let outcome = install(&cmd, &files, &layout).unwrap();
+    install(&cmd, &files, &layout).unwrap();
 
-    let VirtualScreen::Skipped(reason) = outcome else {
-        panic!("no virtual screen outside KDE on Wayland");
-    };
+    let reason = screen_skip(&files, &layout).expect("the screen is skipped");
     assert!(reason.contains("KDE"));
     assert!(reason.contains("Wayland"));
     assert!(files.read(&layout.screen_unit()).is_none());
+    assert!(files.read(&layout.guard_unit()).is_none());
     assert!(files.read(&layout.sunshine_conf()).is_none());
 }
 
@@ -429,11 +461,10 @@ fn without_krfb_it_skips_the_screen_and_names_the_package() {
     let (cmd, files) = pc();
     files.remove(KRFB);
 
-    let outcome = install(&cmd, &files, &kde_layout()).unwrap();
+    let layout = kde_layout();
+    install(&cmd, &files, &layout).unwrap();
 
-    let VirtualScreen::Skipped(reason) = outcome else {
-        panic!("no virtual screen without krfb-virtualmonitor");
-    };
+    let reason = screen_skip(&files, &layout).expect("the screen is skipped");
     assert!(reason.contains("krfb"));
 }
 

@@ -1,7 +1,7 @@
 //! Linux install: one run turns this PC into an Event Horizon host. The steps
 //! run through the `Commands` and `Files` ports, so tests drive them with fakes.
 
-use crate::virtual_screen::{self, OUTPUT, Size};
+use crate::virtual_screen::{self, GUARD_SERVICE, OUTPUT, SCREEN_SERVICE, Size};
 use serde_json::Value;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
@@ -10,7 +10,6 @@ const SUNSHINE_APP: &str = "dev.lizardbyte.app.Sunshine";
 const SUNSHINE_SERVICE: &str = "app-dev.lizardbyte.app.Sunshine.service";
 const SUNSHINE_USER: &str = "eventhorizon";
 const SERVICE: &str = "event-horizon-companion.service";
-const SCREEN_SERVICE: &str = "event-horizon-virtual-screen.service";
 const UDEV_RULES: &str = "/etc/udev/rules.d/60-sunshine.rules";
 const SCREEN_PASSWORD_FILE: &str = "virtual-screen-vnc";
 const PLACE_TRIES: u32 = 40;
@@ -71,6 +70,10 @@ impl Layout {
         self.units().join(SCREEN_SERVICE)
     }
 
+    pub fn guard_unit(&self) -> PathBuf {
+        self.units().join(GUARD_SERVICE)
+    }
+
     pub fn sunshine_conf(&self) -> PathBuf {
         self.home
             .join(".var/app/dev.lizardbyte.app.Sunshine/config/sunshine/sunshine.conf")
@@ -89,19 +92,32 @@ impl Layout {
     }
 }
 
-/// Whether this install gave the PC a virtual screen, or why it did not.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum VirtualScreen {
-    Ready,
-    /// The reason, in words for the person at the PC.
-    Skipped(String),
-}
-
 /// A random secret of 36 hex digits, from the OS.
 pub fn random_secret() -> String {
     let mut bytes = [0u8; 18];
     getrandom::fill(&mut bytes).expect("the OS gives random bytes");
     bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+
+/// Why this PC gets no virtual screen, in words for the person at it. None
+/// when it can have one. It reads only the session and the files, never a secret.
+pub fn screen_skip(files: &dyn Files, layout: &Layout) -> Option<String> {
+    if !virtual_screen::is_kde_wayland(layout.session_type.as_deref(), layout.desktop.as_deref()) {
+        return Some(
+            "This session is not KDE on Wayland, so Sunshine streams the physical screen.".into(),
+        );
+    }
+    if find_on_path(files, layout, "krfb-virtualmonitor").is_none() {
+        return Some(
+            "Install the krfb package (krfb-virtualmonitor) for a Mac-sized screen. Until then, Sunshine streams the physical screen.".into(),
+        );
+    }
+    if find_on_path(files, layout, "kscreen-doctor").is_none() {
+        return Some(
+            "Install KScreen (kscreen-doctor) for a Mac-sized screen. Until then, Sunshine streams the physical screen.".into(),
+        );
+    }
+    None
 }
 
 /// Installs Sunshine, the companion, and the virtual screen where the session
@@ -112,13 +128,14 @@ pub fn install(
     layout: &Layout,
     size: Size,
     secret: &dyn Fn() -> String,
-) -> Result<VirtualScreen, String> {
+) -> Result<(), String> {
     copy_companion(files, layout)?;
     install_sunshine(cmd, files)?;
-    let screen = virtual_screen(cmd, files, layout, size, secret)?;
+    if screen_skip(files, layout).is_none() {
+        virtual_screen(cmd, files, layout, size, secret)?;
+    }
     sunshine_login(cmd, files, layout, secret)?;
-    companion_service(cmd, files, layout)?;
-    Ok(screen)
+    companion_service(cmd, files, layout)
 }
 
 fn copy_companion(files: &dyn Files, layout: &Layout) -> Result<(), String> {
@@ -156,66 +173,73 @@ fn install_sunshine(cmd: &dyn Commands, files: &dyn Files) -> Result<(), String>
     Ok(())
 }
 
-/// The virtual screen: a krfb-virtualmonitor user unit at the requested size,
-/// and Sunshine pointed at its output. Skipped with a reason where it cannot run.
+/// The virtual screen: the krfb unit at the requested size, the display guard,
+/// and Sunshine pointed at the output. Only called where `screen_skip` is None.
 fn virtual_screen(
     cmd: &dyn Commands,
     files: &dyn Files,
     layout: &Layout,
     size: Size,
     secret: &dyn Fn() -> String,
-) -> Result<VirtualScreen, String> {
-    let kde =
-        virtual_screen::is_kde_wayland(layout.session_type.as_deref(), layout.desktop.as_deref());
-    if !kde {
-        return Ok(VirtualScreen::Skipped(
-            "This session is not KDE on Wayland, so Sunshine streams the physical screen.".into(),
-        ));
-    }
-    let Some(krfb) = find_on_path(files, layout, "krfb-virtualmonitor") else {
-        return Ok(VirtualScreen::Skipped(
-            "Install the krfb package (krfb-virtualmonitor) for a Mac-sized screen. Until then, Sunshine streams the physical screen.".into(),
-        ));
-    };
-    if find_on_path(files, layout, "kscreen-doctor").is_none() {
-        return Ok(VirtualScreen::Skipped(
-            "Install KScreen (kscreen-doctor) for a Mac-sized screen. Until then, Sunshine streams the physical screen.".into(),
-        ));
-    }
-
+) -> Result<(), String> {
+    let krfb = find_on_path(files, layout, "krfb-virtualmonitor")
+        .ok_or("krfb-virtualmonitor is not on the PATH")?;
+    let placer = layout.installed_companion();
     let password = screen_password(files, layout, secret)?;
-    let unit = virtual_screen::unit_text(&krfb, &layout.installed_companion(), size, &password);
-    let unit_changed = files.read(&layout.screen_unit()).as_deref() != Some(unit.as_str());
-    if unit_changed {
-        files.write(&layout.screen_unit(), &unit)?;
-        files.restrict(&layout.screen_unit());
-    }
+    let screen_text = virtual_screen::unit_text(&krfb, &placer, size, &password);
+    let guard_text = virtual_screen::guard_unit_text(&placer);
 
-    let conf_path = layout.sunshine_conf();
-    let before = files.read(&conf_path).unwrap_or_default();
+    let screen_changed = user_unit(files, &layout.screen_unit(), &screen_text, true)?;
+    let guard_changed = user_unit(files, &layout.guard_unit(), &guard_text, false)?;
+    write_sunshine_conf(files, layout)?;
+
+    if screen_changed || guard_changed {
+        cmd.run("systemctl", &["--user", "daemon-reload"])?;
+    }
+    start_unit(cmd, SCREEN_SERVICE, screen_changed)?;
+    start_unit(cmd, GUARD_SERVICE, guard_changed)
+}
+
+/// Writes a user unit when its text changed. Returns whether it changed. A unit
+/// with a secret in it is kept private.
+fn user_unit(files: &dyn Files, path: &Path, text: &str, private: bool) -> Result<bool, String> {
+    if files.read(path).as_deref() == Some(text) {
+        return Ok(false);
+    }
+    files.write(path, text)?;
+    if private {
+        files.restrict(path);
+    }
+    Ok(true)
+}
+
+/// Enables a unit, and restarts it when its text changed or it is not running.
+/// A running screen is left alone otherwise, so a stream is not cut.
+fn start_unit(cmd: &dyn Commands, unit: &str, changed: bool) -> Result<(), String> {
+    cmd.run("systemctl", &["--user", "enable", unit])?;
+    let running = cmd
+        .run("systemctl", &["--user", "is-active", "--quiet", unit])
+        .is_ok();
+    if changed || !running {
+        cmd.run("systemctl", &["--user", "restart", unit])?;
+    }
+    Ok(())
+}
+
+/// Sunshine reads the output name and captures through KWin, since the output is
+/// not a DRM connector. Other settings in the file stay as they are.
+fn write_sunshine_conf(files: &dyn Files, layout: &Layout) -> Result<(), String> {
+    let path = layout.sunshine_conf();
+    let before = files.read(&path).unwrap_or_default();
     let after = virtual_screen::with_setting(
         &virtual_screen::with_setting(&before, "output_name", OUTPUT),
         "capture",
         "kwin",
     );
     if after != before {
-        files.write(&conf_path, &after)?;
+        files.write(&path, &after)?;
     }
-
-    if unit_changed {
-        cmd.run("systemctl", &["--user", "daemon-reload"])?;
-    }
-    cmd.run("systemctl", &["--user", "enable", SCREEN_SERVICE])?;
-    let running = cmd
-        .run(
-            "systemctl",
-            &["--user", "is-active", "--quiet", SCREEN_SERVICE],
-        )
-        .is_ok();
-    if unit_changed || !running {
-        cmd.run("systemctl", &["--user", "restart", SCREEN_SERVICE])?;
-    }
-    Ok(VirtualScreen::Ready)
+    Ok(())
 }
 
 /// The VNC password for the screen. It is made once and kept, so the unit stays the same.

@@ -2,6 +2,7 @@
 //! One deep core (`Host`) and small OS seams. See docs/companion/DESIGN.md.
 
 pub mod discovery;
+pub mod display_guard;
 pub mod games;
 mod host;
 pub mod library;

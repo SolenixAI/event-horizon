@@ -14,6 +14,10 @@ pub const OUTPUT: &str = "Virtual-sunshine-vmon";
 pub const VNC_PORT: u16 = 5905;
 /// The Mac's usual display scale, 175 per cent.
 pub const SCALE: &str = "1.75";
+/// The user unit that runs krfb-virtualmonitor.
+pub const SCREEN_SERVICE: &str = "event-horizon-virtual-screen.service";
+/// The user unit that keeps the screen on after a monitor wake.
+pub const GUARD_SERVICE: &str = "event-horizon-display-guard.service";
 
 /// A screen's size in pixels.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -90,6 +94,25 @@ pub fn unit_text(krfb: &Path, placer: &Path, size: Size, password: &str) -> Stri
          [Install]\n\
          WantedBy=graphical-session.target\n",
         krfb = systemd_arg(krfb),
+        placer = systemd_arg(placer),
+    )
+}
+
+/// The user unit for the display guard: it runs the companion's guard, and restarts.
+pub fn guard_unit_text(placer: &Path) -> String {
+    format!(
+        "[Unit]\n\
+         Description=Event Horizon display guard: keeps the virtual screen on when the desk monitor wakes\n\
+         PartOf=graphical-session.target\n\
+         After=graphical-session.target {SCREEN_SERVICE}\n\
+         \n\
+         [Service]\n\
+         ExecStart={placer} guard-virtual-screen\n\
+         Restart=always\n\
+         RestartSec=3s\n\
+         \n\
+         [Install]\n\
+         WantedBy=graphical-session.target\n",
         placer = systemd_arg(placer),
     )
 }
