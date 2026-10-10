@@ -28,13 +28,16 @@ git switch main && git pull && make release-publish
 `release-publish` signs, notarizes, staples, cuts the DMG, EdDSA-signs a ZIP of
 the bundle, uploads both to the GitHub release, and updates the Sparkle appcast.
 Existing installs pick the update up at their next check (startup, then once a
-day). New installs come from the Releases DMG (`Event-Horizon-<version>.dmg`)
-or the Homebrew cask, `brew install --cask solenixai/event-horizon/event-horizon`.
+day). New installs come from the website download (the Releases DMG,
+`Event-Horizon-<version>.dmg`) or from Homebrew, which reads `Casks/event-horizon.rb`
+at the repo root:
+`brew tap solenixai/event-horizon https://github.com/SolenixAI/event-horizon`, then
+`brew install --cask solenixai/event-horizon/event-horizon`.
 
-Last, `release-publish` runs `scripts/homebrew-bump.sh` to checksum the
-published DMG and push the cask and its rename of the old `glimmer` token to the
-[tap](https://github.com/SolenixAI/homebrew-event-horizon). If only that step fails,
-the release is still live: re-run `make brew-bump`.
+Last, `release-publish` runs `scripts/homebrew-bump.sh`, which checksums the
+published DMG and writes its version and sha256 into `Casks/event-horizon.rb`.
+That is an edit in this repo only: commit the file on a branch and open a pull
+request. If only that step fails, the release is still live: re-run `make brew-bump`.
 
 Release notes come from `CHANGELOG.md`, so write that section before publishing.
 Each release is a `## <version> - <date>` heading followed by a flat list of
