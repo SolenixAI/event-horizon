@@ -17,8 +17,8 @@ extension AppModel {
 
     /// Compute smart defaults from the current display.
     ///
-    /// Returns the PANEL NATIVE resolution - the actual pixel grid the display
-    /// hardware has, not the framebuffer the user is currently rendering at.
+    /// Returns the PANEL NATIVE resolution less the camera-notch band - the pixel
+    /// grid below the notch, not the framebuffer the user is currently rendering at.
     ///
     /// We get panel native by querying CGDisplayCopyAllDisplayModes with no
     /// options. Without `kCGDisplayShowDuplicateLowResolutionModes`, macOS only
@@ -30,7 +30,7 @@ extension AppModel {
         guard let screen = NSScreen.main else { return (1920, 1080, 60) }
         let fps = screen.maximumFramesPerSecond > 0 ? screen.maximumFramesPerSecond : 60
 
-        // Send the panel's actual pixel-native dimensions verbatim. The
+        // Send the panel's pixel-native dimensions less the notch band. The
         // host is responsible for being able to accept them - modern
         // Sunshine + VDD setups (e.g. MTT's VDD) can register the Mac
         // panel modes (3024×1964 for 14" MBP, 3456×2234 for 16" MBP,
@@ -68,7 +68,7 @@ extension AppModel {
                 let kDisplayModeNativeFlag: UInt32 = 0x02000000
                 let nativeMatches = usable.filter { ($0.ioFlags & kDisplayModeNativeFlag) != 0 }
                 if let native = nativeMatches.max(by: { ($0.pixelWidth * $0.pixelHeight) < ($1.pixelWidth * $1.pixelHeight) }) {
-                    return (native.pixelWidth, native.pixelHeight, fps)
+                    return Self.streamSize((native.pixelWidth, native.pixelHeight), on: screen, fps: fps)
                 }
                 // No native flag found (older OS / external panel without
                 // EDID-derived preferred-mode info). Fall back to the
@@ -77,7 +77,7 @@ extension AppModel {
                 let retinaModes = usable.filter { $0.pixelWidth == $0.width * 2 }
                 if let smallest = retinaModes.min(by: { ($0.pixelWidth * $0.pixelHeight) < ($1.pixelWidth * $1.pixelHeight) }),
                    smallest.pixelWidth >= 1920 {
-                    return (smallest.pixelWidth, smallest.pixelHeight, fps)
+                    return Self.streamSize((smallest.pixelWidth, smallest.pixelHeight), on: screen, fps: fps)
                 }
             }
         }
@@ -87,7 +87,23 @@ extension AppModel {
         // have when Core Graphics returns nothing usable.
         let w = Int((screen.frame.width  * screen.backingScaleFactor).rounded())
         let h = Int((screen.frame.height * screen.backingScaleFactor).rounded())
-        return (w, h, fps)
+        return Self.streamSize((w, h), on: screen, fps: fps)
+    }
+
+    /// The panel's pixels on `screen`, less the notch band the menu bar sits in.
+    static func streamSize(_ pixels: (width: Int, height: Int), on screen: NSScreen, fps: Int)
+        -> (width: Int, height: Int, fps: Int) {
+        let size = streamPixelSize(
+            nativeWidth: pixels.width, nativeHeight: pixels.height,
+            notchInsetPoints: screen.safeAreaInsets.top, scale: screen.backingScaleFactor)
+        return (size.width, size.height, fps)
+    }
+
+    /// The grid a stream asks for: the native pixel grid with the notch band cut off the top.
+    nonisolated static func streamPixelSize(
+        nativeWidth: Int, nativeHeight: Int, notchInsetPoints: CGFloat, scale: CGFloat
+    ) -> (width: Int, height: Int) {
+        (nativeWidth, nativeHeight - Int((notchInsetPoints * scale).rounded()))
     }
 
     // MARK: - Bitrate formula

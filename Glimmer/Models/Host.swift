@@ -129,7 +129,7 @@ enum QualityPreset: String, CaseIterable, Identifiable {
 
     var subtitle: String {
         switch self {
-        case .matchDisplay: return "Every pixel of this Mac's display. Needs a solid network."
+        case .matchDisplay: return "Every pixel of this Mac's usable screen. Needs a solid network."
         case .hidpi: return "This Mac's usual Retina scale. A touch softer, far less bandwidth."
         case .custom: return "Pick your own resolution and refresh rate."
         }
