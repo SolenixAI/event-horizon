@@ -5,10 +5,11 @@ name: Companion release
 on:
   push:
     tags: ["companion-v*"]
-permissions:
-  contents: write
+permissions: {}
 jobs:
   build:
+    permissions:
+      contents: read
     strategy:
       matrix:
         include:
@@ -20,30 +21,51 @@ jobs:
             asset: event-horizon-companion-linux-x86_64
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
       - name: Build
         working-directory: companion
         run: cargo build --release
       - name: Name the asset
         shell: bash
         run: cp "${{ matrix.built }}" "${{ matrix.asset }}"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ${{ matrix.asset }}
           path: ${{ matrix.asset }}
   release:
     needs: build
     runs-on: ubuntu-latest
+    # Signed build provenance: anyone can check a download came from this workflow
+    # with `gh attestation verify <file> -R SolenixAI/event-horizon`.
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           merge-multiple: true
+      - name: Attest build provenance
+        id: attest
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            EventHorizonCompanion-Windows.exe
+            event-horizon-companion-linux-x86_64
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
+          # Releases are immutable, so the provenance bundle ships in the same create
+          # call. OpenSSF Scorecard reads it from the release assets.
+          BUNDLE: ${{ steps.attest.outputs.bundle-path }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
         run: |
+          cp "$BUNDLE" companion.intoto.jsonl
           sha256sum EventHorizonCompanion-Windows.exe event-horizon-companion-linux-x86_64 > SHA256SUMS
-          cat > notes.md <<'EOF'
+          cat > notes.md <<EOF
           Run it on your gaming PC. It installs Sunshine and pairs with Event Horizon on your Mac with one click on Allow.
 
           **Linux (x86_64)**
@@ -54,7 +76,7 @@ jobs:
 
           Or download and run it in one line:
 
-              curl -fsSL https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/event-horizon-companion-linux-x86_64 -o event-horizon-companion-linux-x86_64 && chmod +x event-horizon-companion-linux-x86_64 && ./event-horizon-companion-linux-x86_64
+              curl -fsSL https://github.com/${REPO}/releases/download/${TAG}/event-horizon-companion-linux-x86_64 -o event-horizon-companion-linux-x86_64 && chmod +x event-horizon-companion-linux-x86_64 && ./event-horizon-companion-linux-x86_64
 
           **Windows**
 
@@ -62,7 +84,8 @@ jobs:
 
           When the PC says it is ready, open Event Horizon on your Mac.
           EOF
-          gh release create "${{ github.ref_name }}" --repo "${{ github.repository }}" \
-            --title "PC companion ${{ github.ref_name }}" --prerelease --latest=false \
+          gh release create "$TAG" --repo "$REPO" \
+            --title "PC companion $TAG" --prerelease --latest=false \
             --notes-file notes.md \
-            EventHorizonCompanion-Windows.exe event-horizon-companion-linux-x86_64 SHA256SUMS
+            EventHorizonCompanion-Windows.exe event-horizon-companion-linux-x86_64 SHA256SUMS \
+            companion.intoto.jsonl

@@ -9,12 +9,17 @@ on:
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
+# Every job only reads the code; no job needs write access.
+permissions:
+  contents: read
 jobs:
   test:
     runs-on: xcode-27
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
       - name: Build and test
         run: make test
   lint:
@@ -23,7 +28,9 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
       - name: Strict SwiftLint
         run: |
           brew install swiftlint
@@ -34,7 +41,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
       - name: No locked skills
         run: scripts/unlock-skills.sh && git diff --exit-code .agents .claude
   companion:
@@ -49,7 +58,9 @@ jobs:
       run:
         working-directory: companion
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
       - name: Lint
         run: cargo clippy --all-targets -- -D warnings
       - name: Test
@@ -64,7 +75,9 @@ jobs:
         shell: pwsh
         working-directory: companion
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
       - name: Build
         run: cargo build --release
       - name: Install (as a person would, by running the companion's installer)
@@ -106,3 +119,14 @@ jobs:
         run: |
           $run = Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
           if (-not $run.'Event Horizon') { throw 'no Run entry' }
+  ci-summary:
+    # The one check the branch ruleset requires. It passes only when every job above
+    # passed, so adding or renaming a job never leaves the ruleset stale.
+    if: always()
+    needs: [test, lint, skills, companion, companion-install-windows]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Every job passed
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}
+        run: exit 1
