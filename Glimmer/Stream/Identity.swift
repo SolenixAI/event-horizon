@@ -131,8 +131,15 @@ enum FileIdentityStore {
             throw StreamError.crypto("FileIdentityStore: unknown account \(account)")
         }
 
+        try writeOwnerOnly(data, to: url)
+    }
+
+    /// Atomic write at mode 0600 into `url`, creating its folder at 0700. Shared
+    /// by the identity files and the companion token file, so both get the same
+    /// enforcement and stat(2) check.
+    static func writeOwnerOnly(_ data: Data, to url: URL) throws {
         let fm = FileManager.default
-        let dir = try directoryURL()
+        let dir = url.deletingLastPathComponent()
 
         // Ensure directory exists at 0700. `createDirectory` is a no-op if it
         // already exists (with `withIntermediateDirectories: true`), but it
