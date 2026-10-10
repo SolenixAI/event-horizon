@@ -26,6 +26,7 @@
 #
 # ONE-TIME SETUP (signing / notarization / update keys):
 #   make creds-init        Write the signing credentials file template.
+#   make local-signing-setup  A stable self-signed identity for local builds (keeps permissions).
 #   make codesign-setup    Build the signing keychain + import the Developer ID.
 #   make setup-notary      Store the notarytool profile.
 #   make sparkle-keys      Generate the Sparkle EdDSA update-signing keypair.
@@ -55,6 +56,13 @@ DEVELOPER_ID ?= $(shell security find-identity -v -p codesigning 2>/dev/null | \
 # and the other permissions across rebuilds (adhoc resets them every build).
 LOCAL_ID ?= $(shell security find-identity -v -p codesigning 2>/dev/null | \
               sed -n 's/.*"\(Apple Development: .*\)"/\1/p' | head -1)
+# No Apple Development certificate: use the self-signed local identity that
+# `make local-signing-setup` creates (not trusted, but stable, which is all macOS
+# needs to keep permissions).
+ifeq ($(strip $(LOCAL_ID)),)
+LOCAL_ID := $(shell security find-identity -p codesigning 2>/dev/null | \
+              grep -q '"Event Horizon Local Signing"' && echo "Event Horizon Local Signing")
+endif
 # notarytool keychain profile name (created by `make setup-notary`).
 NOTARY_PROFILE  ?= notary
 # Signing secrets: one KEY=value file, mode 0600, outside the repo, read and
@@ -102,7 +110,7 @@ HELPER_TARGET := arm64-apple-macos26.0
 .PHONY: all release install reinstall uninstall clean app sign open \
         helper-build embed-helper \
         profile profile-signposts setup-notary notarize dmg dmg-background dist preflight \
-        codesign-setup codesign-teardown ensure-signing dev test \
+        codesign-setup codesign-teardown local-signing-setup ensure-signing dev test \
         creds-init enable-telem disable-telem release-publish sparkle-keys \
         guard-clean-tree brew-bump
 
@@ -208,6 +216,10 @@ embed-helper: app $(HELPER_BIN)
 # Release with a Developer ID signs with Glimmer.entitlements (library validation
 # on). Debug and adhoc builds get Glimmer-Debug.entitlements: an adhoc signature
 # has no Team ID for validation to match. See SECURITY.md.
+# A stable signing identity for builds on this Mac (no Apple account needed).
+local-signing-setup:
+	scripts/local-signing-setup.sh
+
 sign: app embed-helper ensure-signing
 ifeq ($(strip $(DEVELOPER_ID)),)
 ifneq ($(strip $(LOCAL_ID)),)
