@@ -25,19 +25,19 @@ git push -u origin my-change && gh pr create --fill
 git switch main && git pull && make release-publish
 ```
 
-`release-publish` signs, notarizes, staples, cuts the DMG, EdDSA-signs a ZIP of
-the bundle, uploads both to the GitHub release, and updates the Sparkle appcast.
-Existing installs pick the update up at their next check (startup, then once a
-day). New installs come from the website download (the Releases DMG,
-`Event-Horizon-<version>.dmg`) or from Homebrew, which reads `Casks/event-horizon.rb`
-at the repo root:
-`brew tap solenixai/event-horizon https://github.com/SolenixAI/event-horizon`, then
-`brew install --cask solenixai/event-horizon/event-horizon`.
+`release-publish` builds the Release bundle, EdDSA-signs a ZIP of it with the
+keychain key, creates the GitHub release with the ZIP, and uploads `appcast.xml`
+as a release asset. Installs read `releases/latest/download/appcast.xml`
+(`SUFeedURL` in `Glimmer/Info.plist`), so an installed copy sees the update at its
+next daily check and asks before it installs. Nothing is pushed to a branch, and
+GitHub Pages is not used.
 
-Last, `release-publish` runs `scripts/homebrew-bump.sh`, which checksums the
-published DMG and writes its version and sha256 into `Casks/event-horizon.rb`.
-That is an edit in this repo only: commit the file on a branch and open a pull
-request. If only that step fails, the release is still live: re-run `make brew-bump`.
+Until a Developer ID exists, release builds are not notarized. Gatekeeper treats
+the first install from a browser as an unidentified app; the tester approves it
+once in System Settings › Privacy & Security › Open Anyway.
+
+The Homebrew cask bump is not part of `release-publish` yet: it needs the DMG,
+which only the notarized `make dist` path makes. Run `make brew-bump` after that.
 
 Release notes come from `CHANGELOG.md`, so write that section before publishing.
 Each release is a `## <version> - <date>` heading followed by a flat list of

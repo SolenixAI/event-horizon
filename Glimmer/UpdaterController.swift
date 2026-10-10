@@ -3,15 +3,12 @@ import Sparkle
 import SwiftUI
 
 /// Owns the Sparkle updater for the app's lifetime. `SPUStandardUpdaterController`
-/// wires the standard user driver (the "update available" / progress panels) and
-/// starts the background update scheduler. One shared instance, reached from both
-/// the app-menu command and the menu-bar dropdown.
+/// wires the standard user driver (the "update available" panel) and starts the
+/// daily check at launch. One shared instance, reached from the app-menu command.
 ///
 /// The whole file is gated on `canImport(Sparkle)` so Event Horizon still builds before
-/// the Sparkle SPM package is linked - the updater and its menu items simply don't
-/// exist until the package is added. Feed URL + ed25519 public key live in
-/// Info.plist (SUFeedURL / SUPublicEDKey); updates are published prompt-free by
-/// `make release-publish`.
+/// the Sparkle SPM package is linked. Info.plist is the one source of truth for the
+/// feed (SUFeedURL), the key (SUPublicEDKey) and the schedule and install policy.
 @MainActor
 final class UpdaterController {
     static let shared = UpdaterController()
@@ -24,18 +21,11 @@ final class UpdaterController {
         checkInBackground: { UpdaterController.shared.updater.checkForUpdatesInBackground() })
 
     private init() {
-        // Auto-update IS the release channel. No build-type gating needed:
-        // Sparkle only offers an update when the appcast's build number is
-        // STRICTLY greater than the running build's. So a dev build OLDER than a
-        // release grabs it, and a dev build at/after the latest release stays
-        // silent until the next one - exactly the desired behavior, for free.
+        // Starts at launch. Sparkle offers an update only when the appcast's build
+        // number is strictly greater than the running build's.
         controller = SPUStandardUpdaterController(
-            startingUpdater: false, updaterDelegate: streamAwareAlerts, userDriverDelegate: streamAwareAlerts)
+            startingUpdater: true, updaterDelegate: streamAwareAlerts, userDriverDelegate: streamAwareAlerts)
         streamAwareAlerts.observeAvailability(of: controller.updater)
-        // Automatic checks follow Info.plist (SUEnableAutomaticChecks, off), so no
-        // update alert can take focus during the first-launch pass or a stream.
-        // Turning them on is a product decision, and it must change Info.plist too.
-        controller.updater.updateCheckInterval = 86_400
     }
 
     var updater: SPUUpdater { controller.updater }
@@ -99,7 +89,7 @@ final class StreamAwareUpdateAlerts: NSObject, @preconcurrency SPUStandardUserDr
     func standardUserDriverShouldHandleShowingScheduledUpdate(
         _ update: SUAppcastItem, andInImmediateFocus immediateFocus: Bool
     ) -> Bool {
-        !isStreaming()
+        UpdatePolicy.mayShowWindow(isStreaming: isStreaming())
     }
 
     func standardUserDriverWillHandleShowingUpdate(
@@ -162,20 +152,22 @@ final class UpdateAvailability {
     }
 }
 
-/// The "Check for Updates…" menu command. Disables itself mid-check via the
-/// observed `UpdateAvailability` (a plain Button can't reflect that state).
+/// The "Check for Updates…" menu command. Greys out mid-check, and mid-stream too,
+/// because `UpdatePolicy` keeps update windows off a live stream.
 struct CheckForUpdatesView: View {
     private let updater: SPUUpdater
+    private let model: AppModel
     @State private var availability: UpdateAvailability
 
-    init(updater: SPUUpdater) {
+    init(updater: SPUUpdater, model: AppModel) {
         self.updater = updater
+        self.model = model
         _availability = State(initialValue: UpdateAvailability(updater))
     }
 
     var body: some View {
         Button("Check for Updates…") { updater.checkForUpdates() }
-            .disabled(!availability.canCheckForUpdates)
+            .disabled(!availability.canCheckForUpdates || !UpdatePolicy.mayCheckNow(isStreaming: model.isStreaming))
     }
 }
 #endif

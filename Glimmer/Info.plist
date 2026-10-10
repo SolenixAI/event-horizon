@@ -47,12 +47,16 @@
 	<false/>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
-	<key>SUEnableAutomaticChecks</key>
+	<key>SUAllowsAutomaticUpdates</key>
 	<false/>
-	<key>SUEnableInstallerLauncherService</key>
+	<key>SUAutomaticallyUpdate</key>
+	<false/>
+	<key>SUEnableAutomaticChecks</key>
 	<true/>
+	<key>SUFeedURL</key>
+	<string>https://github.com/SolenixAI/event-horizon/releases/latest/download/appcast.xml</string>
 	<key>SUPublicEDKey</key>
-	<string>bUc9IWEtH/FuDUIsGqyDIVy/1gvlPtBkFXNcVO/TrPU=</string>
+	<string>cPwm0aRVkUvDfPqi5G38cJ1dwKfvNwvyFzHy+vrus5c=</string>
 	<key>SUScheduledCheckInterval</key>
 	<integer>86400</integer>
 </dict>

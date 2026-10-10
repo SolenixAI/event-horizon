@@ -2,6 +2,9 @@
 
 ## 2026.10.8 - 2026-10-13
 
+- Updates reach you on their own. Event Horizon checks once a day and asks
+  before it installs one. Check for Updates… is in the app menu. It stays
+  greyed out during a stream, and an update never opens over a live stream.
 - When the stream's volume or mute changes, a small volume readout shows over
   the picture for a moment, and VoiceOver announces the new level. The readout
   never takes clicks or keys.
