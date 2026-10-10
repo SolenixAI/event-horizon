@@ -13,9 +13,11 @@ import Testing
 struct SpaceBackdropTests {
 
     /// WCAG relative luminance of an sRGB colour (its opacity is not part of it).
-    private func luminance(_ c: SpaceRGB) -> Double {
-        func linear(_ v: Double) -> Double { v <= 0.03928 ? v / 12.92 : pow((v + 0.055) / 1.055, 2.4) }
-        return 0.2126 * linear(c.red) + 0.7152 * linear(c.green) + 0.0722 * linear(c.blue)
+    private func luminance(_ color: SpaceRGB) -> Double {
+        func linear(_ channel: Double) -> Double {
+            channel <= 0.03928 ? channel / 12.92 : pow((channel + 0.055) / 1.055, 2.4)
+        }
+        return 0.2126 * linear(color.red) + 0.7152 * linear(color.green) + 0.0722 * linear(color.blue)
     }
 
     /// WCAG contrast ratio between two colours.
@@ -33,9 +35,9 @@ struct SpaceBackdropTests {
     }
 
     /// Every ground a label can sit on: the sky, and the sky under each horizon glow.
-    private func grounds(_ p: SpacePalette) -> [SpaceRGB] {
-        let lowGold = over(p.horizonGold, p.skyBottom)
-        return [p.skyTop, p.skyBottom, lowGold, over(p.horizonBlue, lowGold)]
+    private func grounds(_ palette: SpacePalette) -> [SpaceRGB] {
+        let lowGold = over(palette.horizonGold, palette.skyBottom)
+        return [palette.skyTop, palette.skyBottom, lowGold, over(palette.horizonBlue, lowGold)]
     }
 
     @Test func nightLabelsKeepWCAGContrast() {

@@ -58,20 +58,7 @@ extension StreamSession {
         guard !isStreaming, !stopInProgress else {
             throw StreamError.sessionFailed(-1)
         }
-        teardown = SharedTeardown()
-        stopCause = nil
-        ownsHostSession = false
-        isStreaming = true
-        // Capture launch and teardown even when Cancel prevents the backend handshake.
-        SessionLogFileSink.startIfEnabled(enabled: TelemetryGate.isEnabled)
-
-        // Capture the inputs a SILENT RECONNECT needs to rebuild the connection
-        // in place (see StreamSession+Reconnect.swift): the original server (for
-        // a fresh NetworkClient + handshake), the requested mode, and the app id.
-        self.reconnectServer = server
-        self.reconnectConfig = config
-        self.reconnectAppID = appID
-        applyAudioLevels(config)
+        beginSessionRecord(server: server, config: config, appID: appID)
 
         // Keep the Mac (and its display) awake AND opt OUT of App Nap for the
         // whole session. Begun here so a slow handshake can't let the machine
@@ -224,6 +211,23 @@ extension StreamSession {
     }
 
     // MARK: Start helpers
+
+    /// Reset the per-session state, start the log sink, and keep the inputs a reconnect rebuilds from.
+    private func beginSessionRecord(server: ServerInfo, config: StreamConfig, appID: Int) {
+        teardown = SharedTeardown()
+        stopCause = nil
+        ownsHostSession = false
+        isStreaming = true
+        // Capture launch and teardown even when Cancel prevents the backend handshake.
+        SessionLogFileSink.startIfEnabled(enabled: TelemetryGate.isEnabled)
+        // Capture the inputs a SILENT RECONNECT needs to rebuild the connection
+        // in place (see StreamSession+Reconnect.swift): the original server (for
+        // a fresh NetworkClient + handshake), the requested mode, and the app id.
+        reconnectServer = server
+        reconnectConfig = config
+        reconnectAppID = appID
+        applyAudioLevels(config)
+    }
 
     /// The stream's sound on this Mac: silenced while the PC plays it, at the stream's own level.
     private func applyAudioLevels(_ config: StreamConfig) {

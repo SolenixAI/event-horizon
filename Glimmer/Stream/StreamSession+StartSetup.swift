@@ -132,14 +132,7 @@ extension StreamSession {
         // stream. Capture-at-attach silently strands edits. The
         // provider closures route back to the caller-supplied
         // resolvers (typically `{ moonlight.quitHotkey }`).
-        inp.quitHotkeyProvider = options.quitHotkeyProvider
-        inp.statsHotkeyProvider = options.statsHotkeyProvider
-        inp.bookmarkHotkeyProvider = options.bookmarkHotkeyProvider
-        inp.releasePointerHotkeyProvider = options.releasePointerHotkeyProvider
-        inp.miniPlayerHotkeyProvider = options.miniPlayerHotkeyProvider
-        inp.controllerQuitChordProvider = options.controllerQuitChordProvider
-        inp.customControllerChordProvider = options.customControllerChordProvider
-        inp.onCancelConnect = options.onCancelConnect
+        Self.wireHotkeyProviders(inp, options)
         dec.statsOverlayEnabled = initialStatsOverlay
         dec.setNegotiatedBitrateKbps(options.negotiatedBitrateKbps)
         dec.setActiveAudioConfigLabel(config.audio.displayLabel)
@@ -227,26 +220,7 @@ extension StreamSession {
         // The reference frame absolute positions are measured against.
         inp.streamPixelSize = CGSize(width: config.width, height: config.height)
         Self.wireWindowPointerModel(win: win, inp: inp, onMiniPlayerChanged: onMiniPlayerChanged)
-        if win.isEmbedded {
-            let surface = inp.attach(embedding: win.streamContentView, in: win.window)
-            win.embeddedSurface = surface
-            // ⌘W: Home, with the PC still running behind it.
-            surface?.onHomeRequested = { [weak win, weak inp] in
-                inp?.suspendForHome()
-                win?.enterHome()
-            }
-            // Home shows the PC live, so it is not a background: the decoder
-            // keeps presenting, and only the launcher hears about it.
-            win.onHomeChanged = { atHome in onBackgroundedChanged?(atHome) }
-            // One click on the PC on the desk goes back in.
-            surface?.onDeskClick = { [weak win, weak inp] in
-                win?.leaveHome()
-                inp?.resumeFromHome()
-            }
-            inp.capturesOnClick = true
-        } else {
-            inp.attach(to: win.window)
-        }
+        Self.attachInput(inp, to: win, onBackgroundedChanged: onBackgroundedChanged)
         // The window installs first responder only after it has
         // become key AND finished its enter-fullscreen transition.
         // macOS resets the responder chain during fullscreen Space
@@ -269,6 +243,46 @@ extension StreamSession {
             drivingView: win.streamContentView,
             configuredFps: Int32(config.fps))
         return (win, inp, dec)
+    }
+
+    /// Every hotkey and chord is read live, so Settings edits reach a stream already running.
+    @MainActor
+    private static func wireHotkeyProviders(_ inp: InputForwarder, _ options: StreamSetupOptions) {
+        inp.quitHotkeyProvider = options.quitHotkeyProvider
+        inp.statsHotkeyProvider = options.statsHotkeyProvider
+        inp.bookmarkHotkeyProvider = options.bookmarkHotkeyProvider
+        inp.releasePointerHotkeyProvider = options.releasePointerHotkeyProvider
+        inp.miniPlayerHotkeyProvider = options.miniPlayerHotkeyProvider
+        inp.controllerQuitChordProvider = options.controllerQuitChordProvider
+        inp.customControllerChordProvider = options.customControllerChordProvider
+        inp.onCancelConnect = options.onCancelConnect
+    }
+
+    /// Attach input to the desk surface inside Home, or to the stream window itself.
+    @MainActor
+    private static func attachInput(
+        _ inp: InputForwarder, to win: StreamWindow, onBackgroundedChanged: (@MainActor (Bool) -> Void)?
+    ) {
+        guard win.isEmbedded else {
+            inp.attach(to: win.window)
+            return
+        }
+        let surface = inp.attach(embedding: win.streamContentView, in: win.window)
+        win.embeddedSurface = surface
+        // ⌘W: Home, with the PC still running behind it.
+        surface?.onHomeRequested = { [weak win, weak inp] in
+            inp?.suspendForHome()
+            win?.enterHome()
+        }
+        // Home shows the PC live, so it is not a background: the decoder
+        // keeps presenting, and only the launcher hears about it.
+        win.onHomeChanged = { atHome in onBackgroundedChanged?(atHome) }
+        // One click on the PC on the desk goes back in.
+        surface?.onDeskClick = { [weak win, weak inp] in
+            win?.leaveHome()
+            inp?.resumeFromHome()
+        }
+        inp.capturesOnClick = true
     }
 
     /// Event Horizon's own window, when it is open and can host the stream.

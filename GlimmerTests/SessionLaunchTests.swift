@@ -266,19 +266,25 @@ struct SessionLaunchTests {
     /// the click's: the desk takes whatever runs, the cover resumes only its own app, and a different
     /// shelf game replaces what runs, as it always has.
     @Test func homeClicksResumeTheRunningGameAndNeverCancelIt() {
-        let cases: [(rule: ResumeRule, appID: Int, runningID: Int, step: LaunchStep)] = [
-            (.anyApp, 1, 7, .resume),
-            (.anyApp, 1, 0, .launch),
-            (.sameApp, 7, 7, .resume),
-            (.sameApp, 7, 0, .launch),
-            (.sameApp, 7, 9, .cancelThenLaunch),
-            (.never, 7, 7, .cancelThenLaunch),
-            (.never, 7, 0, .launch),
+        struct HomeClick {
+            let rule: ResumeRule
+            let appID: Int
+            let runningID: Int
+            let step: LaunchStep
+        }
+        let cases = [
+            HomeClick(rule: .anyApp, appID: 1, runningID: 7, step: .resume),
+            HomeClick(rule: .anyApp, appID: 1, runningID: 0, step: .launch),
+            HomeClick(rule: .sameApp, appID: 7, runningID: 7, step: .resume),
+            HomeClick(rule: .sameApp, appID: 7, runningID: 0, step: .launch),
+            HomeClick(rule: .sameApp, appID: 7, runningID: 9, step: .cancelThenLaunch),
+            HomeClick(rule: .never, appID: 7, runningID: 7, step: .cancelThenLaunch),
+            HomeClick(rule: .never, appID: 7, runningID: 0, step: .launch)
         ]
-        for c in cases {
+        for item in cases {
             let step = StreamAttempt.launchStep(
-                rule: c.rule, appID: c.appID, runningID: c.runningID, busy: c.runningID != 0)
-            #expect(step == c.step, "\(c.rule) for app \(c.appID) on a PC running \(c.runningID)")
+                rule: item.rule, appID: item.appID, runningID: item.runningID, busy: item.runningID != 0)
+            #expect(step == item.step, "\(item.rule) for app \(item.appID) on a PC running \(item.runningID)")
         }
         // A busy PC with no game named still gets the takeover path, as before.
         #expect(StreamAttempt.launchStep(rule: .never, appID: 7, runningID: 0, busy: true) == .cancelThenLaunch)

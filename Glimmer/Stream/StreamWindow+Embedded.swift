@@ -141,7 +141,11 @@ extension StreamWindow {
         guard let surface = embeddedSurface, let host = surface.superview else { return }
         surface.autoresizingMask = []
         let target = deskRect(in: host) ?? host.bounds
-        log.info("Surface on the desk: \(target.debugDescription, privacy: .public) in \(host.bounds.debugDescription, privacy: .public) flipped=\(host.isFlipped, privacy: .public)")
+        let frame = target.debugDescription, bounds = host.bounds.debugDescription
+        log.info("""
+            Surface on the desk: \(frame, privacy: .public) in \(bounds, privacy: .public) \
+            flipped=\(host.isFlipped, privacy: .public)
+            """)
         setSurfaceCorner(rounded ? 12 : 0)
         move(surface, to: target, animate: animate)
     }
