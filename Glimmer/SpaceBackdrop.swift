@@ -4,20 +4,21 @@
 //  Home's surroundings: a deep-space field behind the PC on the desk. It is a
 //  Core Animation layer tree, so the render server does the work: the sky, the
 //  stars, the horizon light and the grain are static layers rasterised at the
-//  window's backing scale, the orbit trace is a hairline, and three faint
-//  neutral bodies follow the figure-eight from the logo on a path animation.
-//  No frame runs on the main thread.
+//  window's backing scale. Over them, the live connection flows as faint blue
+//  particles on an undrawn round trip between the Mac's horizon and the PC's
+//  bezel. Density follows the bitrate; the pulse's round trip follows the
+//  latency. Those numbers are sampled once a second, and the animation takes
+//  them only when they change. No frame runs on the main thread.
 //
-//  The horizon light is atmosphere, never a signal. Gold is for what you press
-//  and blue is for what is live on the PC; the light stays far dimmer and less
-//  saturated than either, and the bodies are neutral so they never read as
-//  live. Dark is deep space. Light is the same composition at dawn.
+//  The live flow is a live mark: the logo's blue at full strength, as the chip
+//  and the Running label show it. Only the horizon light is atmosphere, kept
+//  under the horizon bar. Gold is for what you press and blue is for what is
+//  live on the PC. Dark is deep space. Light is the same composition at dawn.
 //
-//  The motion pauses under Reduce Motion, when the window is not key, when the
-//  app is in the background and while a PC streams, and resumes without a
-//  jump. The trace is anchored to the PC's bezel and sits beside it, so the
-//  bodies never reach the status row or the readiness chip. VoiceOver ignores
-//  the backdrop.
+//  The flow freezes while the window is not key and while the stream fills the
+//  window, and it is hidden under Reduce Motion. The flow stays beside the PC,
+//  in the margin left of the bezel, so it never crosses the status row, the chip
+//  or the shelf. VoiceOver ignores the backdrop.
 //
 
 import AppKit
@@ -46,15 +47,15 @@ struct SpaceRGB: Equatable {
     func faded(_ factor: Double) -> SpaceRGB { SpaceRGB(red, green, blue, opacity: opacity * factor) }
 }
 
-/// One appearance's backdrop colours. The horizon colours already carry their
-/// low opacity: they are atmosphere, kept well under any signal.
+/// One appearance's backdrop colours. The horizon and live colours already carry
+/// their low opacity: they are atmosphere, kept well under any signal.
 struct SpacePalette: Equatable {
     let skyTop: SpaceRGB
     let skyBottom: SpaceRGB
     let horizonGold: SpaceRGB
     let horizonBlue: SpaceRGB
-    let trace: SpaceRGB
-    let body: SpaceRGB
+    /// The live flow's particles and pulse: the logo's blue at atmosphere strength.
+    let live: SpaceRGB
     /// Night only: the field's stars. Dawn has none.
     let stars: SpaceRGB?
 
@@ -64,8 +65,7 @@ struct SpacePalette: Equatable {
         skyBottom: SpaceRGB(0.043, 0.055, 0.098),
         horizonGold: SpaceRGB(0.941, 0.541, 0.141, opacity: 0.16),
         horizonBlue: SpaceRGB(0.227, 0.627, 1.0, opacity: 0.12),
-        trace: SpaceRGB(1, 1, 1, opacity: 0.08),
-        body: SpaceRGB(0.92, 0.94, 1.0, opacity: 0.55),
+        live: SpaceRGB(0.227, 0.627, 1.0),
         stars: SpaceRGB(1, 1, 1, opacity: 0.5))
 
     /// Dawn: the same composition, a pale sky and a soft gold horizon.
@@ -74,45 +74,25 @@ struct SpacePalette: Equatable {
         skyBottom: SpaceRGB(0.965, 0.945, 0.910),
         horizonGold: SpaceRGB(0.788, 0.439, 0.059, opacity: 0.20),
         horizonBlue: SpaceRGB(0.227, 0.627, 1.0, opacity: 0.09),
-        trace: SpaceRGB(0.106, 0.165, 0.267, opacity: 0.10),
-        body: SpaceRGB(0.106, 0.165, 0.267, opacity: 0.35),
+        live: SpaceRGB(0.227, 0.627, 1.0),
         stars: nil)
 }
 
 struct SpaceBackdrop: View {
-    /// False while the motion must stand still (see the file header).
-    var drifts: Bool = true
-    /// The PC's bezel on Home, in this view's space. The trace is anchored to
-    /// it: nothing is drawn until Home has laid the bezel out.
+    /// How the live flow runs: hidden, frozen or running (see SpaceFlow).
+    var flow: SpaceFlow = .running
+    /// The PC's bezel on Home, in this view's space. The flow is anchored to it:
+    /// nothing is drawn until Home has laid the bezel out.
     var bezel: CGRect?
+    /// Reads the live numbers on the main actor. Called once a second while the
+    /// flow runs.
+    var sample: @MainActor () async -> LiveFlowReading = { LiveFlowReading.none }
     @Environment(\.colorScheme) private var colorScheme
 
-    /// One lap of the figure-eight. Slow on purpose.
-    static let lapSeconds: Double = 240
-    /// The trace is never wider than this share of the window.
-    static let traceMaxWidthShare: CGFloat = 0.92
-
     var body: some View {
-        SpaceLayers(palette: colorScheme == .dark ? .night : .dawn, bezel: bezel, drifts: drifts)
+        SpaceLayers(palette: colorScheme == .dark ? .night : .dawn, bezel: bezel, flow: flow, sample: sample)
             .accessibilityHidden(true)
             .allowsHitTesting(false)
-    }
-
-    /// Where the orbit trace sits, for a view of `size` and a PC bezel. The
-    /// loop is as tall as the bezel and centred on it, so its arcs show only
-    /// beside the PC, never under the status row or the shelf. Where the loop
-    /// would be wider than the window allows, it is narrowed to that width and
-    /// kept at the figure-eight's proportions, still inside the bezel's height.
-    static func traceFrame(in size: CGSize, bezel: CGRect) -> CGRect {
-        var width = bezel.height * FigureEightTrace.aspect
-        var height = bezel.height
-        let maxWidth = size.width * traceMaxWidthShare
-        if width > maxWidth {
-            width = maxWidth
-            height = width / FigureEightTrace.aspect
-        }
-        return CGRect(x: (size.width - width) / 2, y: bezel.midY - height / 2,
-                      width: width, height: height)
     }
 }
 
@@ -122,33 +102,58 @@ struct SpaceBackdrop: View {
 private struct SpaceLayers: NSViewRepresentable {
     let palette: SpacePalette
     let bezel: CGRect?
-    let drifts: Bool
+    let flow: SpaceFlow
+    let sample: @MainActor () async -> LiveFlowReading
 
     func makeNSView(context: Context) -> SpaceLayerView { SpaceLayerView() }
 
     func updateNSView(_ view: SpaceLayerView, context: Context) {
-        view.configure(palette: palette, bezel: bezel, drifts: drifts)
+        view.configure(palette: palette, bezel: bezel, flow: flow, sample: sample)
     }
 }
 
 // MARK: - Layer tree
 
-/// The backdrop's layers. Everything but the bodies is static; the bodies
-/// and the trace live in `motion`, whose clock pauses them together.
+/// The backdrop's layers. Everything but the live flow is static. The flow is
+/// a container whose clock freezes with its state, holding one pulse and a fixed
+/// set of particle slots, each with its own phase on the round trip.
 final class SpaceLayerView: NSView {
+    /// One particle's round trip, out and back. Slow, so the flow reads as data.
+    static let particleLapSeconds: Double = 18
+    /// The pulse animation's own cycle. Its speed sets the round trip.
+    static let pulseCycleSeconds: Double = LiveFlowMapping.stretchedLapSeconds
+    static let particleSide: CGFloat = SpaceFlowPath.dotRadius * 2
+    static let pulseSide: CGFloat = SpaceFlowPath.dotRadius * 1.5
+    /// How long a particle takes to fade in or out when the density changes.
+    static let fadeSeconds: Double = 0.6
+    private static let flowKey = "flow"
+    private static let pulseKey = "pulse"
+
     private let field = CAGradientLayer()
     private let stars = CALayer()
     private let horizonGold = CAGradientLayer()
     private let horizonBlue = CAGradientLayer()
     private let grain = CALayer()
-    private let motion = CALayer()
-    private let trace = CAShapeLayer()
-    private var bodies: [CALayer] = []
+    private let flowLayer = CALayer()
+    private let pulse = CALayer()
+    private let particles: [CALayer] = (0..<LiveFlowMapping.slotCount).map { _ in CALayer() }
 
     private var palette: SpacePalette = .dawn
     private var bezel: CGRect?
-    private var drifting = false
+    /// Starts hidden: nothing moves until the first configure says how.
+    private var flow: SpaceFlow = .hidden
+    private var sample: (@MainActor () async -> LiveFlowReading)?
     private var lastKey: BuildKey?
+    private var ticker: Timer?
+    private var sampling = false
+    private var smoothedRtt: Double?
+    private var smoothedMbps: Double?
+    /// The round trip the pulse is timed to, and how many particle slots show.
+    private var appliedLap: Double?
+    private var appliedSlots = 0
+    private var particlesAnimating = false
+    private var pulseAnimating = false
+    private var flowPath: CGPath?
 
     private struct BuildKey: Equatable {
         let size: CGSize
@@ -162,22 +167,26 @@ final class SpaceLayerView: NSView {
         wantsLayer = true
         guard let root = layer else { return }
         root.masksToBounds = true
-        for sub in [field, stars, horizonGold, horizonBlue, grain] {
+        for sub in [field, stars, horizonGold, horizonBlue, grain, flowLayer] {
             root.addSublayer(sub)
         }
         field.type = .axial
         horizonGold.type = .radial
         horizonBlue.type = .radial
-        root.addSublayer(motion)
-        motion.addSublayer(trace)
-        trace.fillColor = nil
-        trace.lineCap = .round
-        trace.lineJoin = .round
-        for _ in 0..<3 {
-            let body = CALayer()
-            motion.addSublayer(body)
-            bodies.append(body)
-        }
+        flowLayer.isHidden = true
+        for particle in particles { flowLayer.addSublayer(particle) }
+        flowLayer.addSublayer(pulse)
+        zeroFlowDots()
+    }
+
+    /// Every dot at zero opacity and off: a dot with no animation sits at the
+    /// layer's origin, so none may show until the numbers call for it.
+    private func zeroFlowDots() {
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        for particle in particles { particle.opacity = 0 }
+        pulse.isHidden = true
+        CATransaction.commit()
     }
 
     required init?(coder: NSCoder) { return nil }
@@ -197,18 +206,20 @@ final class SpaceLayerView: NSView {
         rebuild()
     }
 
-    func configure(palette: SpacePalette, bezel: CGRect?, drifts: Bool) {
+    func configure(palette: SpacePalette, bezel: CGRect?, flow: SpaceFlow,
+                   sample: @escaping @MainActor () async -> LiveFlowReading) {
         self.palette = palette
         self.bezel = bezel
+        self.sample = sample
         rebuild()
-        setDrifting(drifts)
+        setFlow(flow)
     }
 
     // MARK: Build
 
-    /// Lays out and paints the static layers, and places the trace and bodies
-    /// when the PC's bezel is known. Runs only when something it depends on
-    /// changes, never per frame.
+    /// Lays out and paints the static layers, and places the live flow when the
+    /// PC's bezel is known. Runs only when something it depends on changes,
+    /// never per frame.
     private func rebuild() {
         let size = bounds.size
         guard size.width > 0, size.height > 0 else { return }
@@ -220,7 +231,7 @@ final class SpaceLayerView: NSView {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         let whole = CGRect(origin: .zero, size: size)
-        for layer in [field, stars, horizonGold, horizonBlue, grain, motion] {
+        for layer in [field, stars, horizonGold, horizonBlue, grain, flowLayer] {
             layer.frame = whole
             layer.contentsScale = scale
         }
@@ -242,7 +253,7 @@ final class SpaceLayerView: NSView {
         // Grain: a fine dither that breaks up gradient banding.
         grain.backgroundColor = SpaceImages.grainColor(scale: scale)
 
-        placeTraceAndBodies(size: size, scale: scale)
+        placeFlow(size: size, scale: scale)
         CATransaction.commit()
     }
 
@@ -256,68 +267,217 @@ final class SpaceLayerView: NSView {
         layer.endPoint = CGPoint(x: 1, y: 1)
     }
 
-    /// The trace and the bodies. Their path is the figure-eight inside the
-    /// bezel's span, flipped to this layer's unflipped space.
-    private func placeTraceAndBodies(size: CGSize, scale: CGFloat) {
+    /// The round trip's path and the particle and pulse images. The animations
+    /// are re-timed on the new path, keeping each one's state.
+    private func placeFlow(size: CGSize, scale: CGFloat) {
         guard let bezel else {
-            trace.path = nil
-            bodies.forEach { $0.isHidden = true }
+            flowPath = nil
+            removeParticleAnimations()
+            stopPulse()
+            zeroFlowDots()
             return
         }
-        let frame = SpaceBackdrop.traceFrame(in: size, bezel: bezel)
-        var flip = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: size.height)
-        guard let path = FigureEightTrace.path(in: frame).copy(using: &flip) else { return }
+        flowPath = SpaceFlowPath.path(size: size, bezel: bezel)
+        let particleImage = SpaceImages.flowDot(palette: palette, scale: scale, side: Self.particleSide, crisp: false)
+        let pulseImage = SpaceImages.flowDot(palette: palette, scale: scale, side: Self.pulseSide, crisp: true)
+        for particle in particles {
+            particle.bounds = CGRect(x: 0, y: 0, width: Self.particleSide, height: Self.particleSide)
+            particle.contentsScale = scale
+            particle.contents = particleImage
+        }
+        pulse.bounds = CGRect(x: 0, y: 0, width: Self.pulseSide, height: Self.pulseSide)
+        pulse.contentsScale = scale
+        pulse.contents = pulseImage
 
-        trace.frame = motion.bounds
-        trace.contentsScale = scale
-        trace.path = path
-        // A hairline one device pixel wide, whatever the scale.
-        trace.lineWidth = 1 / scale
-        trace.strokeColor = palette.trace.cgColor
+        removeParticleAnimations()
+        stopPulse()
+        restoreAnimations()
+    }
 
-        let glow = SpaceImages.bodyGlow(palette: palette, scale: scale)
-        let side: CGFloat = 16
-        for (k, body) in bodies.enumerated() {
-            body.isHidden = false
-            body.bounds = CGRect(x: 0, y: 0, width: side, height: side)
-            body.contentsScale = scale
-            body.contents = glow
-            body.removeAllAnimations()
+    // MARK: Flow state
 
-            let offset = CGFloat(k) / 3
-            let start = FigureEightTrace.point(at: offset, in: frame)
-            body.position = CGPoint(x: start.x, y: size.height - start.y)
-
-            let drift = CAKeyframeAnimation(keyPath: "position")
-            drift.path = path
-            drift.calculationMode = .paced
-            drift.duration = SpaceBackdrop.lapSeconds
-            drift.repeatCount = .infinity
-            drift.timeOffset = SpaceBackdrop.lapSeconds * Double(offset)
-            body.add(drift, forKey: "orbit")
+    /// Moves the flow between hidden, frozen and running. Its clock freezes and
+    /// resumes without a jump, and sampling runs only while the flow runs.
+    private func setFlow(_ state: SpaceFlow) {
+        guard state != flow else { return }
+        let previous = flow
+        flow = state
+        switch state {
+        case .hidden:
+            stopTicker()
+            removeParticleAnimations()
+            stopPulse()
+            zeroFlowDots()
+            flowLayer.isHidden = true
+        case .paused:
+            if previous == .hidden {
+                flowLayer.isHidden = false
+                restoreAnimations()
+            }
+            stopTicker()
+            freezeFlow()
+        case .running:
+            if previous == .hidden {
+                flowLayer.isHidden = false
+                restoreAnimations()
+            }
+            thawFlow()
+            startTicker()
         }
     }
 
-    // MARK: Motion
+    /// Pauses the flow's clock where it stands.
+    private func freezeFlow() {
+        let now = flowLayer.convertTime(CACurrentMediaTime(), from: nil)
+        flowLayer.speed = 0
+        flowLayer.timeOffset = now
+    }
 
-    /// Starts or pauses the bodies on the render server. Pausing freezes the
-    /// clock of `motion` (its animations and its trace), and resuming continues
-    /// from the same point without a jump.
-    private func setDrifting(_ on: Bool) {
-        guard on != drifting else { return }
-        drifting = on
-        if on {
-            let pausedAt = motion.timeOffset
-            motion.speed = 1
-            motion.timeOffset = 0
-            motion.beginTime = 0
-            let sincePause = motion.convertTime(CACurrentMediaTime(), from: nil) - pausedAt
-            motion.beginTime = sincePause
-        } else {
-            let now = motion.convertTime(CACurrentMediaTime(), from: nil)
-            motion.speed = 0
-            motion.timeOffset = now
+    /// Resumes the flow's clock from the point where it froze.
+    private func thawFlow() {
+        let pausedAt = flowLayer.timeOffset
+        flowLayer.speed = 1
+        flowLayer.timeOffset = 0
+        flowLayer.beginTime = 0
+        let sincePause = flowLayer.convertTime(CACurrentMediaTime(), from: nil) - pausedAt
+        flowLayer.beginTime = sincePause
+    }
+
+    /// Puts back the animations that the current numbers call for.
+    private func restoreAnimations() {
+        guard flow != .hidden, let flowPath else { return }
+        if appliedSlots > 0, !particlesAnimating { startParticles(flowPath) }
+        if let lap = appliedLap {
+            if !pulseAnimating { startPulse(flowPath) }
+            retimePulse(lap)
         }
+    }
+
+    // MARK: Sampling
+
+    private func startTicker() {
+        guard ticker == nil else { return }
+        sampleNow()
+        let timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.sampleNow() }
+        }
+        timer.tolerance = 0.2
+        ticker = timer
+    }
+
+    private func stopTicker() {
+        ticker?.invalidate()
+        ticker = nil
+    }
+
+    /// Reads the live numbers once; a read still in flight is not doubled.
+    private func sampleNow() {
+        guard !sampling, let sample else { return }
+        sampling = true
+        Task { @MainActor [weak self] in
+            let reading = await sample()
+            guard let self else { return }
+            self.sampling = false
+            self.apply(reading)
+        }
+    }
+
+    /// Smooths the numbers and sets the pulse and the density from them.
+    private func apply(_ reading: LiveFlowReading) {
+        guard flow == .running else { return }
+        smoothedRtt = LiveFlowMapping.smooth(smoothedRtt, reading.rttMs)
+        smoothedMbps = LiveFlowMapping.smooth(smoothedMbps, reading.bitrateMbps)
+        setPulse(LiveFlowMapping.pulseLapSeconds(rttMs: smoothedRtt))
+        setSlots(LiveFlowMapping.activeSlots(bitrateMbps: smoothedMbps))
+    }
+
+    // MARK: Pulse
+
+    /// Times the pulse to a round trip. Still without a latency.
+    private func setPulse(_ lap: Double?) {
+        guard let lap else {
+            appliedLap = nil
+            stopPulse()
+            return
+        }
+        if let applied = appliedLap, abs(lap - applied) <= applied * LiveFlowMapping.retimeTolerance { return }
+        appliedLap = lap
+        guard let flowPath, flow != .hidden else { return }
+        if !pulseAnimating { startPulse(flowPath) }
+        retimePulse(lap)
+    }
+
+    private func startPulse(_ path: CGPath) {
+        let animation = CAKeyframeAnimation(keyPath: "position")
+        animation.path = path
+        animation.calculationMode = .paced
+        animation.duration = Self.pulseCycleSeconds
+        animation.repeatCount = .infinity
+        pulse.add(animation, forKey: Self.pulseKey)
+        pulse.isHidden = false
+        pulseAnimating = true
+    }
+
+    /// Sets the pulse's speed so one cycle takes `lap` seconds, keeping the
+    /// pulse where it is: no jump when the latency changes.
+    private func retimePulse(_ lap: Double) {
+        let parentNow = flowLayer.convertTime(CACurrentMediaTime(), from: nil)
+        let local = pulse.convertTime(CACurrentMediaTime(), from: nil)
+        pulse.speed = Float(Self.pulseCycleSeconds / lap)
+        pulse.timeOffset = local
+        pulse.beginTime = parentNow
+    }
+
+    /// Removes the pulse's animation and hides it: nothing moves while still.
+    private func stopPulse() {
+        pulse.removeAnimation(forKey: Self.pulseKey)
+        pulse.isHidden = true
+        pulseAnimating = false
+    }
+
+    // MARK: Particles
+
+    /// Shows `count` of the particle slots. Each slot keeps its phase, so
+    /// showing or hiding one never moves the others.
+    private func setSlots(_ count: Int) {
+        let count = min(max(count, 0), LiveFlowMapping.slotCount)
+        guard count != appliedSlots else { return }
+        appliedSlots = count
+        if count > 0, !particlesAnimating, let flowPath, flow != .hidden {
+            startParticles(flowPath)
+        }
+        CATransaction.begin()
+        CATransaction.setAnimationDuration(Self.fadeSeconds)
+        if count == 0 {
+            // Once the last particle has faded, its animations go too: still means no work.
+            CATransaction.setCompletionBlock { [weak self] in
+                guard let self, self.appliedSlots == 0 else { return }
+                self.removeParticleAnimations()
+            }
+        }
+        for (slot, particle) in particles.enumerated() {
+            particle.opacity = slot < count ? 1 : 0
+        }
+        CATransaction.commit()
+    }
+
+    /// Starts every slot on the round trip, each at its own phase.
+    private func startParticles(_ path: CGPath) {
+        for (slot, particle) in particles.enumerated() {
+            let animation = CAKeyframeAnimation(keyPath: "position")
+            animation.path = path
+            animation.calculationMode = .paced
+            animation.duration = Self.particleLapSeconds
+            animation.repeatCount = .infinity
+            animation.timeOffset = Self.particleLapSeconds * LiveFlowMapping.slotPhase(slot)
+            particle.add(animation, forKey: Self.flowKey)
+        }
+        particlesAnimating = true
+    }
+
+    private func removeParticleAnimations() {
+        for particle in particles { particle.removeAnimation(forKey: Self.flowKey) }
+        particlesAnimating = false
     }
 }
 
@@ -361,19 +521,23 @@ private enum SpaceImages {
         return context.makeImage()
     }
 
-    /// A soft glow with a small core: one body on the trace.
-    static func bodyGlow(palette: SpacePalette, scale: CGFloat) -> CGImage? {
-        let side: CGFloat = 16
+    /// One dot of the live blue. A particle is a soft glow. The pulse is the same
+    /// glow with a crisp core, so a quick round trip reads as a sharp flash.
+    static func flowDot(palette: SpacePalette, scale: CGFloat, side: CGFloat, crisp: Bool) -> CGImage? {
         guard let context = bitmap(width: side, height: side, scale: scale) else { return nil }
         let center = CGPoint(x: side / 2, y: side / 2)
-        let colors = [palette.body.faded(0.6).cgColor, palette.body.faded(0).cgColor] as CFArray
+        let live = palette.live
+        // Full-strength live blue at the core, feathering to nothing at the edge.
+        let colors = [live.cgColor, live.faded(0.6).cgColor, live.faded(0).cgColor] as CFArray
         if let gradient = CGGradient(colorsSpace: CGColorSpace(name: CGColorSpace.sRGB), colors: colors,
-                                     locations: [0, 1]) {
+                                     locations: [0, 0.35, 1]) {
             context.drawRadialGradient(gradient, startCenter: center, startRadius: 0,
                                        endCenter: center, endRadius: side / 2, options: [])
         }
-        context.setFillColor(palette.body.cgColor)
-        context.fillEllipse(in: CGRect(x: center.x - 1.5, y: center.y - 1.5, width: 3, height: 3))
+        if crisp {
+            context.setFillColor(live.cgColor)
+            context.fillEllipse(in: CGRect(x: center.x - 1.5, y: center.y - 1.5, width: 3, height: 3))
+        }
         return context.makeImage()
     }
 

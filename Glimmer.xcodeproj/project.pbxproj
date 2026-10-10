@@ -43,7 +43,8 @@
 		A100015A /* AppModel+Audio.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100015B /* AppModel+Audio.swift */; };
 		C17ADE100000000000000003 /* DeskHome.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17ADE100000000000000004 /* DeskHome.swift */; };
 		C17ADE1000000000000000B2 /* SpaceBackdrop.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17ADE1000000000000000B1 /* SpaceBackdrop.swift */; };
-		C17ADE1000000000000000B4 /* SpaceBackdropTrace.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17ADE1000000000000000B3 /* SpaceBackdropTrace.swift */; };
+		C17ADE1000000000000000D2 /* SpaceLiveFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17ADE1000000000000000D1 /* SpaceLiveFlow.swift */; };
+		C17ADE1000000000000000B4 /* SpaceFlowPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17ADE1000000000000000B3 /* SpaceFlowPath.swift */; };
 		C17ADE100000000000000005 /* AppModel+Desk.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17ADE100000000000000006 /* AppModel+Desk.swift */; };
 		C17ADE100000000000000009 /* CompanionClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17ADE10000000000000000A /* CompanionClient.swift */; };
 		DEC0DE2026101000000003 /* CompanionTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE2026101000000004 /* CompanionTokens.swift */; };
@@ -358,6 +359,7 @@
 		DEC0DE202609221000000003 /* RtspClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202609221000000004 /* RtspClientTests.swift */; };
 		DEC0DE202609222200000006 /* HostContextMenuTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202609222200000005 /* HostContextMenuTests.swift */; };
 		C17ADE1000000000000000C2 /* SpaceBackdropTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17ADE1000000000000000C1 /* SpaceBackdropTests.swift */; };
+		C17ADE1000000000000000D4 /* SpaceLiveFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17ADE1000000000000000D3 /* SpaceLiveFlowTests.swift */; };
 		DEC0DE202609222200000004 /* StreamButtonTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202609222200000003 /* StreamButtonTests.swift */; };
 		DEC0DE2026092000000000D7 /* MiniPlayerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE2026092000000000D8 /* MiniPlayerTests.swift */; };
 		DEC0DE2026092000000000D9 /* WiredBitrateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE2026092000000000DA /* WiredBitrateTests.swift */; };
@@ -475,7 +477,8 @@
 		A100015B /* AppModel+Audio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppModel+Audio.swift"; sourceTree = "<group>"; };
 		C17ADE100000000000000004 /* DeskHome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeskHome.swift; sourceTree = "<group>"; };
 		C17ADE1000000000000000B1 /* SpaceBackdrop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceBackdrop.swift; sourceTree = "<group>"; };
-		C17ADE1000000000000000B3 /* SpaceBackdropTrace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceBackdropTrace.swift; sourceTree = "<group>"; };
+		C17ADE1000000000000000D1 /* SpaceLiveFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceLiveFlow.swift; sourceTree = "<group>"; };
+		C17ADE1000000000000000B3 /* SpaceFlowPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceFlowPath.swift; sourceTree = "<group>"; };
 		C17ADE100000000000000006 /* AppModel+Desk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppModel+Desk.swift"; sourceTree = "<group>"; };
 		C17ADE10000000000000000A /* CompanionClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionClient.swift; sourceTree = "<group>"; };
 		DEC0DE2026101000000004 /* CompanionTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionTokens.swift; sourceTree = "<group>"; };
@@ -800,6 +803,7 @@
 		DEC0DE202609221000000004 /* RtspClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RtspClientTests.swift"; sourceTree = "<group>"; };
 		DEC0DE202609222200000005 /* HostContextMenuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HostContextMenuTests.swift"; sourceTree = "<group>"; };
 		C17ADE1000000000000000C1 /* SpaceBackdropTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SpaceBackdropTests.swift"; sourceTree = "<group>"; };
+		C17ADE1000000000000000D3 /* SpaceLiveFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SpaceLiveFlowTests.swift"; sourceTree = "<group>"; };
 		DEC0DE202609222200000003 /* StreamButtonTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StreamButtonTests.swift"; sourceTree = "<group>"; };
 		DEC0DE2026092000000000D8 /* MiniPlayerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MiniPlayerTests.swift"; sourceTree = "<group>"; };
 		DEC0DE2026092000000000DA /* WiredBitrateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WiredBitrateTests.swift"; sourceTree = "<group>"; };
@@ -920,7 +924,8 @@
 				A100015B /* AppModel+Audio.swift */,
 				C17ADE100000000000000004 /* DeskHome.swift */,
 				C17ADE1000000000000000B1 /* SpaceBackdrop.swift */,
-				C17ADE1000000000000000B3 /* SpaceBackdropTrace.swift */,
+				C17ADE1000000000000000B3 /* SpaceFlowPath.swift */,
+				C17ADE1000000000000000D1 /* SpaceLiveFlow.swift */,
 				C17ADE100000000000000006 /* AppModel+Desk.swift */,
 				C17ADE10000000000000000A /* CompanionClient.swift */,
 				DEC0DE2026101000000004 /* CompanionTokens.swift */,
@@ -1280,6 +1285,7 @@
 				DEC0DE202609220300000010 /* AppShellTests.swift */,
 				DEC0DE202609222200000005 /* HostContextMenuTests.swift */,
 				C17ADE1000000000000000C1 /* SpaceBackdropTests.swift */,
+				C17ADE1000000000000000D3 /* SpaceLiveFlowTests.swift */,
 				DEC0DE202609222200000003 /* StreamButtonTests.swift */,
 				DEC0DE2026092000000000D8 /* MiniPlayerTests.swift */,
 				DEC0DE2026092000000000DA /* WiredBitrateTests.swift */,
@@ -1455,7 +1461,8 @@
 				A100015A /* AppModel+Audio.swift in Sources */,
 				C17ADE100000000000000003 /* DeskHome.swift in Sources */,
 				C17ADE1000000000000000B2 /* SpaceBackdrop.swift in Sources */,
-				C17ADE1000000000000000B4 /* SpaceBackdropTrace.swift in Sources */,
+				C17ADE1000000000000000B4 /* SpaceFlowPath.swift in Sources */,
+				C17ADE1000000000000000D2 /* SpaceLiveFlow.swift in Sources */,
 				C17ADE100000000000000005 /* AppModel+Desk.swift in Sources */,
 				C17ADE100000000000000009 /* CompanionClient.swift in Sources */,
 				DEC0DE2026101000000003 /* CompanionTokens.swift in Sources */,
@@ -1804,6 +1811,7 @@
 				DEC0DE20260922030000000F /* AppShellTests.swift in Sources */,
 				DEC0DE202609222200000006 /* HostContextMenuTests.swift in Sources */,
 				C17ADE1000000000000000C2 /* SpaceBackdropTests.swift in Sources */,
+				C17ADE1000000000000000D4 /* SpaceLiveFlowTests.swift in Sources */,
 				DEC0DE202609222200000004 /* StreamButtonTests.swift in Sources */,
 				DEC0DE2026092000000000D7 /* MiniPlayerTests.swift in Sources */,
 				DEC0DE2026092000000000D9 /* WiredBitrateTests.swift in Sources */,
