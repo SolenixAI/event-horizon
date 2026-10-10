@@ -116,3 +116,6 @@ __pycache__/
 
 # Rust build output (PC companion)
 companion/target/
+
+# Impeccable engine binaries: its launcher downloads them on first run
+**/skills/impeccable/scripts/bin/
