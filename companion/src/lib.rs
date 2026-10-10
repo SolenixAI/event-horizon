@@ -6,6 +6,7 @@ pub mod games;
 mod host;
 pub mod library;
 pub mod link;
+pub mod linux_install;
 pub mod os;
 pub mod play;
 mod ports;
@@ -13,6 +14,7 @@ pub mod setup;
 pub mod steam;
 pub mod sunshine;
 pub mod tls;
+pub mod virtual_screen;
 
 pub use host::{Host, LEASE_TTL, PAIR_TIMEOUT, PairOutcome, PairRequest, new_code};
 pub use ports::{Awake, Decision, GameSources, Prompt, SunshineApi, SunshineError};

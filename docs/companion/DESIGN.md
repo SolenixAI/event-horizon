@@ -114,7 +114,7 @@ tests, so each is a real seam.
 
 | Seam | Interface | Windows adapter | Linux adapter |
 |---|---|---|---|
-| `Installer` | `ensure_sunshine() -> SunshineInstall` (idempotent; sets credentials, virtual display, firewall) | Sunshine installer, silent; Virtual Display Driver with `docs/vddsettings.xml` | Flatpak `dev.lizardbyte.app.Sunshine`; user service; uinput setup |
+| `Installer` | `ensure_sunshine() -> SunshineInstall` (idempotent; sets credentials, virtual display, firewall) | Sunshine installer, silent; Virtual Display Driver with `docs/vddsettings.xml` | Flatpak `dev.lizardbyte.app.Sunshine`; user service; uinput setup; on KDE Wayland a krfb virtual screen at 2560×1600 (`linux_install.rs`) |
 | `Awake` | `hold() -> AwakeGuard` (dropping the guard releases it) | Power request: display + system required (proven: `powercfg /requests` lists it) | `org.freedesktop.ScreenSaver.Inhibit` + login1 `idle:sleep` inhibit, from the desktop session |
 | `Foreground` | `current() -> Option<RunningApp>` | `GetForegroundWindow` → process image | KWin over D-Bus (active window → pid → executable) |
 | `Prompt` | `ask_allow(mac_name, code) -> Decision` (times out to Deny) | Native dialog from the tray app | KDE notification with actions, fallback dialog |

@@ -4,5 +4,5 @@ mod awake;
 mod install;
 mod prompt;
 pub use awake::SessionInhibit;
-pub use install::install;
+pub use install::{install, place_virtual_screen};
 pub use prompt::Notification;
