@@ -260,6 +260,25 @@ extension AppModel {
         loadHosts()
     }
 
+    /// The PC answered as `id` over its pinned certificate, so any other saved entry
+    /// with its name and address is a past identity of the same machine: Sunshine was
+    /// reinstalled before pairing learned to replace the old entry. It can never connect.
+    func retirePastIdentities(ofHost id: String, defaults: UserDefaults = .standard) {
+        let count = defaults.integer(forKey: "hosts.size")
+        guard count > 0,
+              let slot = (1...count).first(where: { defaults.string(forKey: "hosts.\($0).uuid") == id }),
+              let hostname = defaults.string(forKey: "hosts.\(slot).hostname") else { return }
+        let addresses = Set(["localaddress", "manualaddress"].compactMap {
+            defaults.string(forKey: "hosts.\(slot).\($0)")
+        })
+        var retired = false
+        for address in addresses
+        where Self.retireSupersededSlots(hostname: hostname, address: address, keeping: id, defaults: defaults) != nil {
+            retired = true
+        }
+        if retired { loadHosts() }
+    }
+
     /// Resolve the `hosts.N` slot `saveHost` should write into: the slot that
     /// already holds this uuid, else the first fully-empty slot left by an
     /// unpair, else a freshly appended one (which grows `hosts.size` here, as

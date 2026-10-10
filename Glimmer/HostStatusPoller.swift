@@ -238,6 +238,8 @@ extension AppModel {
     private func publishAnswer(_ info: ServerInfo, rttMs: Int, hostID: String, appListFor: Int?) async -> Int? {
         guard let host = selectedHost, host.id == hostID else { return appListFor }
         updateHostMac(hostID: hostID, mac: info.macAddress)
+        // A paired PC's answer comes over its pinned certificate, so it proves who it is.
+        if info.uniqueId == hostID { retirePastIdentities(ofHost: hostID) }
         var fetchedFor = appListFor
         let running = info.currentGameID
         if Self.needsAppList(runningID: running, known: Set(host.apps.map(\.id)), fetchedFor: appListFor) {

@@ -2,19 +2,21 @@
 
 ## 2026.10.8 - 2026-10-13
 
+- A PC that reinstalled Sunshine shows once. If an older entry for it is still
+  saved, Event Horizon removes it the next time the PC answers.
 - Updates reach you on their own. Event Horizon checks once a day and asks
-  before it installs one. Check for Updates… is in the app menu. It stays
-  greyed out during a stream, and an update never opens over a live stream.
+  before it installs one. Check for Updates… is in the app menu. It stays greyed
+  out during a stream, and an update never opens over a live stream.
 - When the stream's volume or mute changes, a small volume readout shows over
   the picture for a moment, and VoiceOver announces the new level. The readout
   never takes clicks or keys.
-- Event Horizon has its own name everywhere you see it: the macOS prompts,
-  the Login Items entry, the logs in `~/Library/Logs/Event Horizon`, and the
+- Event Horizon has its own name everywhere you see it: the macOS prompts, the
+  Login Items entry, the logs in `~/Library/Logs/Event Horizon`, and the
   command, which is now `event-horizon` instead of `glimmer`. Run Install
   Command Line Tool… once more to replace the old link. Your PCs, pairings and
   macOS permissions carry over.
-- The download is named `Event-Horizon-2026.10.8.dmg`, and the release is
-  titled Event Horizon.
+- The download is named `Event-Horizon-2026.10.8.dmg`, and the release is titled
+  Event Horizon.
 - A first launch walks you through setup in one window: find your PC, pair it,
   choose the optional permissions, then stream. Each permission is explained
   before macOS asks for it, and you can skip any of them.
@@ -23,8 +25,8 @@
   light from your Mac to the PC as you pair, lights a satellite for each
   permission you allow, then dives through the horizon into Home. Reduce Motion
   shows each stop still.
-- Home's night sky is the same space: the black hole you fell through glows as
-  a small ember beside your PC.
+- Home's night sky is the same space: the black hole you fell through glows as a
+  small ember beside your PC.
 - Wake no longer asks for notification permission when you click it. The
   question comes in setup, with its reason, and Settings › General › Permissions
   can grant it later.
@@ -37,24 +39,24 @@
 ## 2026.10.7 - 2026-10-12
 
 - Home has a speaker control beside Ready or Streaming, and the menu bar panel
-  has a volume slider while you stream. Both set the stream's own volume, so
-  you can turn the game down without touching the Mac's sound or other apps.
+  has a volume slider while you stream. Both set the stream's own volume, so you
+  can turn the game down without touching the Mac's sound or other apps.
 - The stream's volume and mute are kept when you quit and open the app again.
-- With Accessibility allowed for Event Horizon, the Mac's volume keys change
-  the stream's volume while the stream window is key, and the mute key toggles
-  its mute. Without it the keys work as normal.
+- With Accessibility allowed for Event Horizon, the Mac's volume keys change the
+  stream's volume while the stream window is key, and the mute key toggles its
+  mute. Without it the keys work as normal.
 
 ## 2026.10.6 - 2026-10-10
 
-- Clicking the PC's screen, or the cover of the game already on it, brings
-  that game back. It no longer ends the game and starts it again. A different
-  game on Home still replaces the one that is running.
+- Clicking the PC's screen, or the cover of the game already on it, brings that
+  game back. It no longer ends the game and starts it again. A different game on
+  Home still replaces the one that is running.
 
 ## 2026.10.5 - 2026-10-10
 
 - A new Mac's first stream fills the window and the full-screen Space. The
-  default size now stops below the camera notch, so there is no black bar at
-  the top and no gap at the edges.
+  default size now stops below the camera notch, so there is no black bar at the
+  top and no gap at the edges.
 - A PC that reinstalled Sunshine replaces its old entry on Home, instead of
   showing a second one that needs trust again. Its custom name and settings
   carry over.
