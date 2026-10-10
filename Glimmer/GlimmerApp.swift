@@ -135,6 +135,12 @@ struct GlimmerApp: App {
             CommandGroup(replacing: .newItem) {}
             // No help book, so no dead "Event Horizon Help" item; the Help menu keeps macOS's ⌘? menu search.
             CommandGroup(replacing: .help) {}
+            // Building the commands starts the updater, so the daily check runs from launch.
+            #if canImport(Sparkle)
+            CommandGroup(after: .appInfo) {
+                CheckForUpdatesView(updater: UpdaterController.shared.updater, model: model)
+            }
+            #endif
             CommandGroup(after: .appSettings) {
                 Button("Install Command Line Tool…") { CommandLineToolInstaller.install() }
             }

@@ -168,22 +168,70 @@ enum DataFolderMigration {
     }
 }
 
-/// The Application Support folder that holds identity, pinned PCs and companion tokens.
+/// Where this build keeps its data. The shipped app owns the shared names and the
+/// one-time moves from Glimmer. Any other bundle identifier gets its own folder, Logs
+/// folder and keychain service, so a test copy never reads, moves or deletes real data.
 enum AppDataFolders {
 
-    /// `~/Library/Application Support/Event Horizon`. The first access moves the
-    /// Glimmer folder here, so nothing reads or writes the new folder before the move.
+    static let shippedBundleIdentifier = "dev.solenix.eventhorizon"
+
+    /// True under XCTest: every root is then a scratch folder.
+    private static var isTesting: Bool {
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+    }
+
+    private static var scratchRoot: URL {
+        FileManager.default.temporaryDirectory
+            .appendingPathComponent("Event Horizon tests \(ProcessInfo.processInfo.processIdentifier)", isDirectory: true)
+    }
+
+    /// The bundle identifier this process runs under.
+    static var bundleIdentifier: String { Bundle.main.bundleIdentifier ?? shippedBundleIdentifier }
+
+    /// True only for the shipped app. The legacy moves and keychain sweeps run here alone.
+    static var isShippedBuild: Bool { !isTesting && isShipped(bundleIdentifier: bundleIdentifier) }
+
+    static func isShipped(bundleIdentifier id: String) -> Bool { id == shippedBundleIdentifier }
+
+    /// `Event Horizon` for the shipped app, `Event Horizon (<bundle id>)` for any other build.
+    static func folderName(bundleIdentifier id: String) -> String {
+        isShipped(bundleIdentifier: id) ? "Event Horizon" : "Event Horizon (\(id))"
+    }
+
+    /// The shipped service name, unchanged, or the same name with the bundle identifier added.
+    static func keychainService(_ shippedService: String, bundleIdentifier id: String) -> String {
+        isShipped(bundleIdentifier: id) ? shippedService : "\(shippedService).\(id)"
+    }
+
+    /// `<applicationSupport>/Event Horizon`, or its per-build sibling.
+    static func dataRoot(bundleIdentifier id: String, applicationSupport: URL) -> URL {
+        applicationSupport.appendingPathComponent(folderName(bundleIdentifier: id), isDirectory: true)
+    }
+
+    /// `<library>/Logs/Event Horizon`, or its per-build sibling.
+    static func logsDirectory(bundleIdentifier id: String, library: URL) -> URL {
+        library.appendingPathComponent("Logs", isDirectory: true)
+            .appendingPathComponent(folderName(bundleIdentifier: id), isDirectory: true)
+    }
+
+    /// The per-build Logs folder for this process. A scratch folder under XCTest.
+    static let currentLogsDirectory: URL = {
+        if isTesting { return scratchRoot.appendingPathComponent("Logs", isDirectory: true) }
+        return logsDirectory(bundleIdentifier: bundleIdentifier,
+                             library: FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library"))
+    }()
+
+    /// The data folder for this process: identity, pinned PCs and companion tokens. The
+    /// shipped app's first access moves the Glimmer folder in before anything reads it.
     static let root: URL = {
-        // Under XCTest the folder is a scratch one, so no test reads, moves or writes the real data.
-        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
-            return FileManager.default.temporaryDirectory
-                .appendingPathComponent("Event Horizon tests \(ProcessInfo.processInfo.processIdentifier)", isDirectory: true)
-        }
+        if isTesting { return scratchRoot }
         let base = (try? FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask,
                                                  appropriateFor: nil, create: true))
             ?? URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Library/Application Support")
-        let new = base.appendingPathComponent("Event Horizon", isDirectory: true)
-        DataFolderMigration.moveFolder(from: base.appendingPathComponent("Glimmer", isDirectory: true), to: new)
+        let new = dataRoot(bundleIdentifier: bundleIdentifier, applicationSupport: base)
+        if isShippedBuild {
+            DataFolderMigration.moveFolder(from: base.appendingPathComponent("Glimmer", isDirectory: true), to: new)
+        }
         return new
     }()
 }

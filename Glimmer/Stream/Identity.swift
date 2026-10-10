@@ -231,6 +231,8 @@ public actor IdentityManager {
     private static let currentCleanupVersion = 3
 
     private func cleanupOrphanLoginKeychainEntries() {
+        // Only the shipped app owns the legacy items; a test build must not delete them.
+        guard AppDataFolders.isShippedBuild else { return }
         let defaults = UserDefaults.standard
         guard defaults.integer(forKey: Self.cleanupVersionKey) < Self.currentCleanupVersion else {
             return

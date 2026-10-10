@@ -486,45 +486,27 @@ verify:
 
 # --- Auto-update publication (Sparkle) -------------------------------------
 
-# One-time: generate the EdDSA (ed25519) update-signing keypair. The PRIVATE key
-# is stored in the signing creds file (SPARKLE_ED_PRIVATE_KEY) so publishing is
-# prompt-free from any session; the PUBLIC key is printed for Info.plist's
-# SUPublicEDKey. Idempotent - re-running just reprints the public key. BACK UP the
-# private key: it is the ROOT OF UPDATE TRUST; losing it means no client can
-# auto-update past the last signed build, and a leak lets anyone sign a malicious
-# update Event Horizon will install.
+# One-time: generate the EdDSA (ed25519) update-signing keypair with Sparkle's
+# generate_keys. The PRIVATE key lives only in the login keychain; the PUBLIC key is
+# printed for Info.plist's SUPublicEDKey. Idempotent. BACK UP the private key: it is
+# the ROOT OF UPDATE TRUST, and a leak lets anyone sign an update Event Horizon installs.
 sparkle-keys:
 	@set -eu; \
 	TOOLS="$$(scripts/sparkle-tools.sh)"; \
-	if $(CREDS) get SPARKLE_ED_PRIVATE_KEY --optional | grep -q .; then \
-		echo "  • SPARKLE_ED_PRIVATE_KEY already in $$($(CREDS) path)"; \
-	else \
-		TMP="$$(mktemp)"; trap 'rm -f "$$TMP"' EXIT; \
-		"$$TOOLS/generate_keys" >/dev/null 2>&1 || true; \
-		"$$TOOLS/generate_keys" -x "$$TMP" >/dev/null 2>&1; \
-		$(CREDS) set SPARKLE_ED_PRIVATE_KEY "$$(cat "$$TMP")"; \
-		echo "  ✓ private key stored in $$($(CREDS) path) - BACK IT UP"; \
-	fi; \
+	"$$TOOLS/generate_keys" -p >/dev/null 2>&1 || "$$TOOLS/generate_keys" >/dev/null; \
+	echo "  ✓ private key is in the login keychain - BACK IT UP"; \
 	echo "  SUPublicEDKey for Info.plist:"; \
 	"$$TOOLS/generate_keys" -p
 
-# Build + notarize + staple (via `dist`), then publish a Sparkle update: ZIP the
-# notarized bundle, EdDSA-sign it (key from the creds file), upload the ZIP + DMG
-# to the public event-horizon GitHub release, and update the Pages-hosted appcast.xml.
-# Prompt-free once the one-time signing / notary / sparkle-keys setup is done.
-# Bump Glimmer/Version.xcconfig + commit FIRST - the appcast version comes from
-# HEAD; the public repo at the tag is the GPL corresponding source.
-release-publish: dist
+# Build the Release bundle (no notarization until a Developer ID exists), then publish
+# a Sparkle update: ZIP it, EdDSA-sign it with the keychain key, create the GitHub
+# release and upload appcast.xml, which releases/latest/download serves to installs.
+# Bump Glimmer/Version.xcconfig + commit and push FIRST: the release tag is the GPL source.
+release-publish: guard-clean-tree verify release
 	@scripts/publish-release.sh \
 		"$(MARKETING_VERSION)" "$(BUILD_NUMBER)" \
 		"$(DERIVED)/Build/Products/Release/Event Horizon.app" \
 		"$(DIST_DIR)" "$(RELEASES_REPO)"
-	@scripts/homebrew-bump.sh "$(MARKETING_VERSION)" || { \
-		echo "" >&2; \
-		echo "WARNING: Event Horizon $(MARKETING_VERSION) IS published (release + appcast) -" >&2; \
-		echo "  only the Homebrew cask bump failed. Recover with: make brew-bump" >&2; \
-		exit 1; \
-	}
 
 # Point Casks/event-horizon.rb at the published release: download the DMG,
 # checksum it, and write version + sha256 into the file. It changes no other
