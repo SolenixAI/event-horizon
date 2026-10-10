@@ -262,6 +262,59 @@ struct SessionLaunchTests {
         #expect(await session.pendingLaunch == nil)
     }
 
+    /// A Home click on a PC that runs a game resumes it (/resume) and never cancels it. The rule is
+    /// the click's: the desk takes whatever runs, the cover resumes only its own app, and a different
+    /// shelf game replaces what runs, as it always has.
+    @Test func homeClicksResumeTheRunningGameAndNeverCancelIt() {
+        let cases: [(rule: ResumeRule, appID: Int, runningID: Int, step: LaunchStep)] = [
+            (.anyApp, 1, 7, .resume),
+            (.anyApp, 1, 0, .launch),
+            (.sameApp, 7, 7, .resume),
+            (.sameApp, 7, 0, .launch),
+            (.sameApp, 7, 9, .cancelThenLaunch),
+            (.never, 7, 7, .cancelThenLaunch),
+            (.never, 7, 0, .launch),
+        ]
+        for c in cases {
+            let step = StreamAttempt.launchStep(
+                rule: c.rule, appID: c.appID, runningID: c.runningID, busy: c.runningID != 0)
+            #expect(step == c.step, "\(c.rule) for app \(c.appID) on a PC running \(c.runningID)")
+        }
+        // A busy PC with no game named still gets the takeover path, as before.
+        #expect(StreamAttempt.launchStep(rule: .never, appID: 7, runningID: 0, busy: true) == .cancelThenLaunch)
+    }
+
+    /// The desk click opens the game the PC runs; on an idle PC it opens the Desktop, as before.
+    @MainActor @Test func aDeskClickTargetsTheGameThePCIsRunning() {
+        let desktop = LibraryApp(id: 1, name: "Desktop", hdr: false, hidden: false)
+        let game = LibraryApp(id: 7, name: "Hades", hdr: false, hidden: false)
+        let pc = Host(id: "pc-1", name: "den", customName: "Den PC", localAddress: "192.0.2.10", manualAddress: nil,
+                      apps: [desktop, game], lastConnected: nil, serverCertPEM: nil, appVersion: nil, macAddress: nil)
+        let model = AppModel()
+        model.hosts = [pc]
+        #expect(model.deskTarget(of: pc) == desktop)
+        model.hostLiveStatus = HostLiveStatus(
+            hostID: pc.id, state: .streamingApp(name: "Hades"), rttMs: 3, sunshineVersion: nil, capturedAt: Date())
+        #expect(model.deskTarget(of: pc) == game)
+    }
+
+    /// A cover click resumes only the app already on the PC's screen. Any other cover is a plain
+    /// open, which replaces a game that runs (the shelf's switch, as before).
+    @MainActor @Test func aCoverClickResumesOnlyTheAppOnTheScreen() {
+        let game = LibraryApp(id: 7, name: "Hades", hdr: false, hidden: false)
+        let other = LibraryApp(id: 9, name: "Celeste", hdr: false, hidden: false)
+        let pc = Host(id: "pc-1", name: "den", customName: "Den PC", localAddress: "192.0.2.10", manualAddress: nil,
+                      apps: [game, other], lastConnected: nil, serverCertPEM: nil, appVersion: nil, macAddress: nil)
+        let model = AppModel()
+        model.hosts = [pc]
+        model.hostLiveStatus = HostLiveStatus(
+            hostID: pc.id, state: .streamingApp(name: "Hades"), rttMs: 3, sunshineVersion: nil, capturedAt: Date())
+        #expect(model.shelfRule(for: game, on: pc) == .sameApp)
+        #expect(model.shelfRule(for: other, on: pc) == .never)
+        model.hostLiveStatus = nil
+        #expect(model.shelfRule(for: game, on: pc) == .never)
+    }
+
     private static var response: LaunchResponse {
         LaunchResponse(sessionURL: "", gcmKey: Data(), gcmKeyId: Data())
     }

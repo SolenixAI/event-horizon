@@ -4,9 +4,36 @@ struct TakeoverRequired: Error {
     let appID: Int
 }
 
+/// How a launch treats the game a PC already runs. A Home click resumes it; every other
+/// launch replaces it, as it always has.
+public enum ResumeRule: Equatable, Sendable {
+    /// Replace what runs: /cancel, then /launch.
+    case never
+    /// Resume when the PC runs this app; a different game is replaced, as `.never` does.
+    case sameApp
+    /// Resume whatever the PC runs; this app launches only on an idle PC.
+    case anyApp
+}
+
+/// The request a launch sends, decided from the PC's own answer.
+enum LaunchStep: Equatable {
+    case launch
+    case resume
+    case cancelThenLaunch
+}
+
 enum StreamAttempt {
     static func shouldContinue(cancelled: Bool, streaming: Bool, stopping: Bool) -> Bool {
         !cancelled && streaming && !stopping
+    }
+
+    /// The request for `appID` on a PC whose answer says it runs `runningID` (0 = none). A
+    /// resume never cancels; `busy` is the PC's own busy flag.
+    static func launchStep(rule: ResumeRule, appID: Int, runningID: Int, busy: Bool) -> LaunchStep {
+        if runningID != 0, rule == .anyApp || (rule == .sameApp && runningID == appID) {
+            return .resume
+        }
+        return runningID != 0 || busy ? .cancelThenLaunch : .launch
     }
 
     static func requiresTakeover(occupied: Bool, owner: String?, client: String?, authorized: Bool) -> Bool {

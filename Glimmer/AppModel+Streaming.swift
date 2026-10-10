@@ -20,8 +20,8 @@ extension AppModel {
 
     /// Event Horizon never asks. Whatever runs on the PC gives way: the engine cancels
     /// it and launches the chosen app, so the same app or another one is one tap.
-    func requestStream(app: LibraryApp, on host: Host) {
-        stream(app: app, on: host, takeoverAuthorized: true)
+    func requestStream(app: LibraryApp, on host: Host, resume: ResumeRule = .never) {
+        stream(app: app, on: host, takeoverAuthorized: true, resume: resume)
     }
 
     /// The app a launch would quit: nil when the PC is free, and `.some(nil)`
@@ -62,7 +62,7 @@ extension AppModel {
         requestStream(app: attempt.app, on: attempt.host)
     }
 
-    func stream(app: LibraryApp, on host: Host, takeoverAuthorized: Bool = false) {
+    func stream(app: LibraryApp, on host: Host, takeoverAuthorized: Bool = false, resume: ResumeRule = .never) {
         // RE-ENTRANCY GUARD. The native backend runs ONE session at a time
         // (StreamBridgeContext.current is a single process-global slot), and
         // a second entry here would corrupt it wholesale: a second
@@ -146,7 +146,7 @@ extension AppModel {
                 // to restart the stream to see a new chord work. `self` is
                 // captured weakly to avoid a cycle with the session.
                 let events = try await session.start(
-                    server: info, config: cfg, appID: app.id,
+                    server: info, config: cfg, appID: app.id, resume: resume,
                     quitHotkeyProvider: { [weak self] in self?.quitHotkey ?? .defaultQuit },
                     statsHotkeyProvider: { [weak self] in self?.statsHotkey ?? .defaultStats },
                     // Telemetry-bookmark chord (signal 4). Fixed default ⌃B for
