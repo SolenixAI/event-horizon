@@ -16,6 +16,8 @@ repos:
       - id: check-merge-conflict
       - id: check-executables-have-shebangs
       - id: check-shebang-scripts-are-executable
+        # Rust inner attributes (`#![allow(...)]`) start with `#!` but are not shebangs.
+        exclude: '\.rs$'
       - id: check-json
       - id: check-toml
       - id: check-case-conflict
