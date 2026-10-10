@@ -48,6 +48,7 @@ extension AppModel {
         // registration drifted (invalidated by an app update / move), re-assert
         // it now. This is the fix for "doesn't start after reboot" - the next
         // reboot picks up the freshly-reconciled registration.
+        LoginItemManager.rehomeHelperIfNeeded()
         LoginItemManager.reconcile()
         LoginItemManager.syncRelaunchOnLogin(UserDefaults.standard.bool(forKey: "launchAtLogin"))
         // Same self-heal for the privileged AWDL daemon: an app update / reinstall
@@ -55,9 +56,9 @@ extension AppModel {
         // SMAppService registration. Re-assert it so the post-update stream uses
         // the new daemon without the user re-toggling anything.
         AWDLHelperManager.shared.reconcileAfterUpdate()
-        // Age out old Logs/Glimmer files off the main thread, diagnostics on or off.
+        // Age out old Logs/Event Horizon files off the main thread, diagnostics on or off.
         TelemetryExporter.sweepLogsAtLaunch()
-        log.info("Glimmer stream engine: Swift-native")
+        log.info("Event Horizon stream engine: Swift-native")
         // Install step: build the client SecIdentity once, into Glimmer's own
         // keychain, so streams don't prompt the user for keychain access.
         await IdentityManager.shared.preflight()

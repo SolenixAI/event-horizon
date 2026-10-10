@@ -13,7 +13,7 @@ struct StreamVolumeTests {
     private func scratchSuite() throws -> String {
         let suite = "io.ugfugl.Glimmer.tests.stream-volume.\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
-        defaults.removePersistentDomain(forName: suite)
+        ScratchDefaults.drop(suite)
         return suite
     }
 

@@ -9,7 +9,7 @@ public final class AudioDecoder: @unchecked Sendable {
     // The opus + AVAudioEngine CORE state. Non-private (default internal): the
     // lifecycle/recovery and decode extensions above own every path that touches
     // it, and stored properties can't live in extensions.
-    let log = Logger(subsystem: "io.ugfugl.Glimmer", category: "Stream.Audio")
+    let log = Logger(subsystem: "dev.solenix.eventhorizon", category: "Stream.Audio")
 
     /// Serializes the decoder and AVAudioEngine lifecycle against the decode path, which runs on the audio
     /// receive thread while `shutdown` comes from the sink's cleanup or `StreamSession.stop()`. The class is
@@ -39,7 +39,7 @@ public final class AudioDecoder: @unchecked Sendable {
     /// AVAudio's engine lock) OFF the completion handler, which holds the messenger
     /// lock and would deadlock against teardown's `playerNode.stop()`. Non-private:
     /// `applyVarispeedRate` (the resampler extension) writes through it.
-    let varispeedRateQueue = DispatchQueue(label: "io.ugfugl.Glimmer.audio.varispeed-rate")
+    let varispeedRateQueue = DispatchQueue(label: "dev.solenix.eventhorizon.audio.varispeed-rate")
     var inputFormat: AVAudioFormat?
     /// Last-known engine OUTPUT (hardware) format, captured when the engine
     /// starts. The config-change handler (H3) compares against this to decide
@@ -421,7 +421,7 @@ public final class AudioDecoder: @unchecked Sendable {
     /// The default-output-device listener's HALListener key and the queue its handler runs on. Key guarded by
     /// `stateLock`; the handler touches only meter state and Diag.
     var routeListenerKey: Int?
-    let routeListenerQueue = DispatchQueue(label: "io.ugfugl.Glimmer.audio.route", qos: .utility)
+    let routeListenerQueue = DispatchQueue(label: "dev.solenix.eventhorizon.audio.route", qos: .utility)
     /// Bounded retry counter for transient route handoffs; guarded by stateLock.
     /// Internal because the ladder lives in AudioDecoder+Engine.swift.
     var engineRestartRetries = 0

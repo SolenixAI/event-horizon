@@ -94,7 +94,7 @@ public final class VideoDecoder {
     // MARK: Public API
 
     public init() {
-        self.log = Logger(subsystem: "io.ugfugl.Glimmer", category: "Stream.VideoDecoder")
+        self.log = Logger(subsystem: "dev.solenix.eventhorizon", category: "Stream.VideoDecoder")
     }
 
     /// Safety-net teardown for the VTDecompressionSession. Normally
@@ -261,7 +261,7 @@ public final class VideoDecoder {
     // exactly as if we had called sync - param-set rebuilds and the frames that
     // follow them stay correctly sequenced.
     let decodeQueue = DispatchQueue(
-        label: "io.ugfugl.Glimmer.video.decode", qos: .userInteractive)
+        label: "dev.solenix.eventhorizon.video.decode", qos: .userInteractive)
 
     /// Number of frames submitted to VT for async decode but not yet retired by
     /// the VT output callback - our bound on the decode backlog. Mutated from

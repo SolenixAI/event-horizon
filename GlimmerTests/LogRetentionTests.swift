@@ -1,7 +1,7 @@
 //
 //  LogRetentionTests.swift
 //
-//  What survives in Logs/Glimmer: the sweep's age and byte passes (older traces,
+//  What survives in Logs/Event Horizon: the sweep's age and byte passes (older traces,
 //  then older 1Hz, then the latest session; Diag logs and receipts only ever age
 //  out) and the per-frame trace rollover, which keeps the connect segment.
 //
@@ -13,7 +13,7 @@ import Testing
 
 struct LogSweepTests {
 
-    private let log = Logger(subsystem: "io.ugfugl.Glimmer.tests", category: "LogSweep")
+    private let log = Logger(subsystem: "dev.solenix.eventhorizon.tests", category: "LogSweep")
     private let budget = TelemetryExporter.logsByteBudget
     private let day: TimeInterval = 86_400
     private let hour: TimeInterval = 3_600
@@ -52,7 +52,7 @@ struct LogSweepTests {
     @Test func budgetDropsTracesBeforeAnythingElse() throws {
         let dir = try scratchDir()
         defer { try? FileManager.default.removeItem(at: dir) }
-        try make("glimmer-a.log", in: dir, age: 3 * day)
+        try make("event-horizon-a.log", in: dir, age: 3 * day)
         try make("telemetry-session-a.json", in: dir, age: 3 * day)
         try make("telemetry-a.ndjson", in: dir, size: budget / 3, age: 3 * day)
         try make("telemetry-frames-a.ndjson", in: dir, size: budget / 2, age: 2 * day)
@@ -63,7 +63,7 @@ struct LogSweepTests {
         TelemetryExporter.sweepLogsDirectory(dir, log: log)
 
         #expect(try names(in: dir) == [
-            "glimmer-a.log", "telemetry-session-a.json", "telemetry-a.ndjson",
+            "event-horizon-a.log", "telemetry-session-a.json", "telemetry-a.ndjson",
             "telemetry-frames-b.ndjson", "telemetry-b.ndjson", "notes.txt"])
     }
 
@@ -72,14 +72,14 @@ struct LogSweepTests {
     @Test func budgetThenDropsTheOldestNDJSON() throws {
         let dir = try scratchDir()
         defer { try? FileManager.default.removeItem(at: dir) }
-        try make("glimmer-a.log", in: dir, age: 4 * day)
+        try make("event-horizon-a.log", in: dir, age: 4 * day)
         try make("telemetry-a.ndjson", in: dir, size: budget * 3 / 5, age: 3 * day)
         try make("telemetry-b.ndjson", in: dir, size: budget * 3 / 5, age: day)
         try make("telemetry-frames-c.ndjson", in: dir, age: 2 * day)
 
         TelemetryExporter.sweepLogsDirectory(dir, log: log)
 
-        #expect(try names(in: dir) == ["glimmer-a.log", "telemetry-b.ndjson"])
+        #expect(try names(in: dir) == ["event-horizon-a.log", "telemetry-b.ndjson"])
     }
 
     /// Older traces, then older 1Hz files, go before anything from the latest
@@ -114,7 +114,7 @@ struct LogSweepTests {
     @Test func launchSweepOnlyAges() throws {
         let dir = try scratchDir()
         defer { try? FileManager.default.removeItem(at: dir) }
-        try make("glimmer-old.log", in: dir, age: 15 * day)
+        try make("event-horizon-old.log", in: dir, age: 15 * day)
         try make("telemetry-session-old.json", in: dir, age: 15 * day)
         try make("telemetry-frames-old.ndjson", in: dir, age: 15 * day)
         try make("telemetry-frames-new.ndjson", in: dir, size: budget * 2, age: hour)

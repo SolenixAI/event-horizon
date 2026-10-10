@@ -106,7 +106,7 @@ private final class HelperHarness {
             telemetry: { suppressing, _ in self.gauge = suppressing }), defaults: defaults)
     }
 
-    func cleanUp() { defaults.removePersistentDomain(forName: suite) }
+    func cleanUp() { ScratchDefaults.drop(suite) }
 }
 
 @MainActor

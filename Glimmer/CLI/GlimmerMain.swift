@@ -1,7 +1,7 @@
 //
 //  GlimmerMain.swift
 //
-//  The process entry point. Run as `glimmer`, or with a bare word in argv[1],
+//  The process entry point. Run as `event-horizon`, or with a bare word in argv[1],
 //  it's the command line; anything else (no arguments, --launched-at-login,
 //  -psn_*, -NS*, Xcode and test arguments) starts the app; hosted tests skip its launch.
 //
@@ -29,7 +29,7 @@ enum GlimmerMain {
         GlimmerCLI.start(arguments: Array(CommandLine.arguments.dropFirst()))
     }
 
-    /// Run through a symlink (Homebrew's `glimmer`), Bundle.main and so the
+    /// Run through a symlink (Homebrew's `event-horizon`), Bundle.main and so the
     /// defaults domain resolve to the link's folder. Re-exec through the real
     /// path; argv is unchanged, so the verb still routes.
     private static func reexecIfSymlinked() {

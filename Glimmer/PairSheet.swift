@@ -80,7 +80,7 @@ struct PairSheet: View {
         }
         .padding(28)
         .frame(width: 480)
-        // Float above all other Glimmer windows so the PIN being read off isn't
+        // Float above all other Event Horizon windows so the PIN being read off isn't
         // hidden behind the launcher or Settings. Reverts on dismiss.
         .background(FloatingWindowLevel())
         .onDisappear { cancelPairing() }
@@ -250,7 +250,7 @@ struct PairSheet: View {
 private struct HostChooser: View {
     let selected: (_ address: String, _ name: String?) -> Void
     @State private var found: [HostDiscovery.Discovered] = []
-    /// macOS refused Glimmer Local Network access, so nothing can be found.
+    /// macOS refused Event Horizon Local Network access, so nothing can be found.
     @State private var denied = false
     @State private var manual: String = ""
     @State private var showManual = false

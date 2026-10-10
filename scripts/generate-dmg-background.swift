@@ -157,7 +157,7 @@ func render(scale: CGFloat) -> Data? {
     ctx.strokePath()
 
     // Caption, centred below the icons. The only text in the image.
-    let caption = "Drag Glimmer to Applications"
+    let caption = "Drag Event Horizon to Applications"
     let attrs: [NSAttributedString.Key: Any] = [
         .font: NSFont.systemFont(ofSize: 12, weight: .medium),
         .foregroundColor: NSColor(cgColor: captionColor) ?? .white,

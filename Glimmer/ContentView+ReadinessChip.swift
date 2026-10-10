@@ -31,7 +31,7 @@ enum ChipPresentation: Equatable {
         }
     }
 
-    /// The same words untruncated, where there's room (`glimmer list`).
+    /// The same words untruncated, where there's room (`event-horizon list`).
     var fullLabel: String {
         switch self {
         case .noPC: "No PC"

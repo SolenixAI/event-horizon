@@ -20,7 +20,7 @@ struct OpenWindowCapture: View {
     }
 }
 
-/// Sentinel arg passed by Glimmer Login Helper when it relaunches the main
+/// Sentinel arg passed by Event Horizon Login Helper when it relaunches the main
 /// app at login. Read once at App.init and used to gate `.defaultLaunchBehavior`
 /// so the main window stays suppressed on login launches but auto-shows on
 /// every user-initiated launch (Spotlight / Finder / Dock). No heuristics -
@@ -133,7 +133,7 @@ struct GlimmerApp: App {
         .defaultLaunchBehavior(launchedAtLogin ? .suppressed : .automatic)
         .commands {
             CommandGroup(replacing: .newItem) {}
-            // No help book, so no dead "Glimmer Help" item; the Help menu keeps macOS's ⌘? menu search.
+            // No help book, so no dead "Event Horizon Help" item; the Help menu keeps macOS's ⌘? menu search.
             CommandGroup(replacing: .help) {}
             CommandGroup(after: .appSettings) {
                 Button("Install Command Line Tool…") { CommandLineToolInstaller.install() }
@@ -212,7 +212,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let bundle = Bundle.main
         let version = bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
         let build = bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
-        Diag.notice("app launching - Glimmer \(version) (\(build)) commit \(BuildInfo.commit) "
+        Diag.notice("app launching - Event Horizon \(version) (\(build)) commit \(BuildInfo.commit) "
             + "built \(BuildInfo.date) (launchedAtLogin=\(launchedAtLogin))", "Launch")
 
         // Defaults are registered in GlimmerApp.init (`prepareDefaults()`), one

@@ -35,7 +35,7 @@ change needs, and [docs/SECURITY.md](docs/SECURITY.md) covers the root helper.
 | `Glimmer/Stream/`            | The stream around the protocol: decode, display, audio playout, input, pairing, telemetry    |
 | `Glimmer/Stream/Native/`     | Sunshine's protocol: RTSP, the ENet control channel, RTP video and audio, FEC                |
 | `Glimmer/Stream/HIDGamepad/` | Raw-HID game controllers and the generated controller database                               |
-| `Glimmer/CLI/`               | The `glimmer` command line, in the app binary                                                |
+| `Glimmer/CLI/`               | The `event-horizon` command line, in the app binary                                          |
 | `Glimmer/Models/`            | The PC record and a few settings types                                                       |
 | `helper/`                    | The opt-in root daemon that parks AirDrop's radio during a stream                            |
 | `LoginHelper/`               | The login item                                                                               |
@@ -85,7 +85,7 @@ xcodebuild test -project Glimmer.xcodeproj -scheme Glimmer -configuration Debug 
   -destination 'platform=macOS' -only-testing:GlimmerTests/DatagramBatchTests
 ```
 
-Build to look, not to check. Every build of `Glimmer.app` that macOS registers
+Build to look, not to check. Every build of `Event Horizon.app` that macOS registers
 earns its own privacy record, so use `make verify` for correctness and
 `make dev` only when someone will actually use the build. See "don't mint app
 copies" in CONTRIBUTING.
@@ -130,14 +130,14 @@ Each of these gets a pull request sent back.
   new dependency for something the platform or a few lines can do.
 - **No force unwraps, casts or `try!`.** Strict lint catches most of them, but
   not `URL(string:)!` on a literal, which is still not allowed.
-- **Logging** uses `Logger` on subsystem `io.ugfugl.Glimmer`, never `print` (the
+- **Logging** uses `Logger` on subsystem `dev.solenix.eventhorizon`, never `print` (the
   CLI's own output excepted). Host addresses, names and error text stay
   `.private`. `Diag` takes the same `privacy:` argument (public by default):
   private values reach only the in-app viewer, never the session file or the
   system log. Telemetry names the PC and the Mac by per-install pseudonyms.
   Never log keystrokes, keys, PINs, certificates or the URL parameters
   `NetworkClient.sensitiveQueryKeys` lists. Nothing per-frame at `.info`. The
-  root helper is its own process and logs on `io.ugfugl.glimmer.helper`.
+  root helper is its own process and logs on `dev.solenix.eventhorizon.helper`.
 - **Tests.** New tests use Swift Testing (`@Test`, `#expect`). Pure logic gets a
   test; a bug fix gets a test that fails without it. The project does not use
   synchronized folders, so a new file must be added to `project.pbxproj` by

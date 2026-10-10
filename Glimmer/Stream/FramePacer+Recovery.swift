@@ -182,7 +182,7 @@ extension FramePacer {
         // a REAL move/mode change from ProMotion VRR-housekeeping notifications.
         self.boundScreenSignature = Self.screenSignature(for: view)
         // Diag/LogStore breadcrumb (postmortem-visible, unlike the os_log-only
-        // lines, which never reach the glimmer-*.log file sink): every link
+        // lines, which never reach the event-horizon-*.log file sink): every link
         // (re)bind - session start, screen change, watchdog rebuild - lands in
         // the session log with the exact range applied, so a collapse onset can
         // finally be correlated with a (re)bind/re-pin.

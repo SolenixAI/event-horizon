@@ -17,10 +17,47 @@ enum LoginItemManager {
     static let helperBundleID = "dev.solenix.eventhorizon.LoginHelper"
     /// The app build (path + CFBundleVersion) the last successful register ran from.
     private static let registeredBuildKey = "loginItemRegisteredBuild"
+    /// Set once the helper's registration points at "Event Horizon Login Helper.app".
+    static let rehomedKey = "loginHelperRehomedToEventHorizon"
 
     /// What reconcile does about the saved "Open at login" intent.
     enum Reconcile: Equatable {
         case keep, reregister, resubmit, userRemoved
+    }
+
+    /// What the one-time rehome does: replace an old registration, or only record that there was none.
+    enum Rehome: Equatable {
+        case none, reregister, recordOnly
+    }
+
+    static func rehomeAction(done: Bool, helperRegistered: Bool) -> Rehome {
+        if done { return .none }
+        return helperRegistered ? .reregister : .recordOnly
+    }
+
+    /// The helper was "Glimmer Login Helper.app" in earlier builds, so a registration made then still names
+    /// the old path. Register it once more; a failure leaves the flag unset and retries on the next launch.
+    @discardableResult
+    static func rehomeHelperIfNeeded(defaults: UserDefaults = .standard) -> Rehome {
+        let helper = SMAppService.loginItem(identifier: helperBundleID)
+        let action = rehomeAction(done: defaults.bool(forKey: rehomedKey),
+                                  helperRegistered: isRegistered(helper.status))
+        switch action {
+        case .none:
+            break
+        case .recordOnly:
+            defaults.set(true, forKey: rehomedKey)
+        case .reregister:
+            do {
+                try helper.unregister()
+                try helper.register()
+                defaults.set(true, forKey: rehomedKey)
+                Diag.notice("login helper re-registered at its Event Horizon path → \(statusLabel(helper.status))", "LoginItem")
+            } catch {
+                Diag.error("login helper rehome FAILED: \(error.localizedDescription, privacy: .private)", "LoginItem")
+            }
+        }
+        return action
     }
 
     /// The service that backs the user's current intent.

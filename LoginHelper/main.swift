@@ -1,9 +1,9 @@
 //
-//  main.swift - Glimmer Login Helper
+//  main.swift - Event Horizon Login Helper
 //
 //  Auto-launched at login by the system (registered via
 //  SMAppService.loginItem from the main app). Its only job is to relaunch
-//  the main Glimmer.app with the `--launched-at-login` argument so the
+//  the main Event Horizon.app with the `--launched-at-login` argument so the
 //  main app knows to suppress its window auto-show, then exit.
 //
 //  This is the macOS-blessed pattern for "launch at login but stay in
@@ -16,24 +16,24 @@ import AppKit
 import Foundation
 import os
 
-let log = Logger(subsystem: "io.ugfugl.Glimmer", category: "LoginHelper")
+let log = Logger(subsystem: "dev.solenix.eventhorizon", category: "LoginHelper")
 
 // Find the main app: walk up from the helper's bundle to the parent .app.
-// Helper lives at: Glimmer.app/Contents/Library/LoginItems/Glimmer Login Helper.app
+// Helper lives at: Event Horizon.app/Contents/Library/LoginItems/Event Horizon Login Helper.app
 // Main app is 4 levels up.
 let helperURL = Bundle.main.bundleURL
 let mainAppURL = helperURL
     .deletingLastPathComponent()  // LoginItems
     .deletingLastPathComponent()  // Library
     .deletingLastPathComponent()  // Contents
-    .deletingLastPathComponent()  // Glimmer.app
+    .deletingLastPathComponent()  // Event Horizon.app
 
 // Sanity check: only proceed if the resolved path actually points at a
 // .app bundle. If something has moved the helper out of the standard
 // embedded location we'd rather exit silently than launch the wrong app.
 guard mainAppURL.pathExtension == "app",
       FileManager.default.fileExists(atPath: mainAppURL.path) else {
-    log.error("Glimmer Login Helper: couldn't resolve main app at \(mainAppURL.path, privacy: .private) - exiting")
+    log.error("Event Horizon Login Helper: couldn't resolve main app at \(mainAppURL.path, privacy: .private) - exiting")
     exit(0)
 }
 
@@ -45,7 +45,7 @@ config.createsNewApplicationInstance = false
 
 NSWorkspace.shared.openApplication(at: mainAppURL, configuration: config) { _, error in
     if let error {
-        log.error("Glimmer Login Helper: failed to launch main app: \(error, privacy: .private)")
+        log.error("Event Horizon Login Helper: failed to launch main app: \(error, privacy: .private)")
     }
     // Exit either way - the helper has no further job after this.
     DispatchQueue.main.async { exit(0) }

@@ -94,7 +94,7 @@ public enum PinnedCertStore {
     // security pass.
     //
     // New shape: one PEM file per host at
-    //   <ApplicationSupport>/Glimmer/PinnedHosts/<sanitized-id>.pem
+    //   <ApplicationSupport>/Event Horizon/PinnedHosts/<sanitized-id>.pem
     // with mode 0600 (owner-only). Same enforcement pattern as
     // `FileIdentityStore` in Identity.swift - atomic write, stat(2)
     // verify, on-failure delete-and-throw. mode 0600 keeps it
@@ -158,15 +158,10 @@ public enum PinnedCertStore {
 
     // MARK: File-store internals
 
-    /// `~/Library/Application Support/Glimmer/PinnedHosts/`. Created at
+    /// `~/Library/Application Support/Event Horizon/PinnedHosts/`. Created at
     /// mode 0700 on first write.
     private static func directoryURL() throws -> URL {
-        let fm = FileManager.default
-        let base = try fm.url(for: .applicationSupportDirectory,
-                              in: .userDomainMask,
-                              appropriateFor: nil,
-                              create: true)
-        return base.appendingPathComponent("Glimmer/PinnedHosts", isDirectory: true)
+        AppDataFolders.root.appendingPathComponent("PinnedHosts", isDirectory: true)
     }
 
     /// Restrict host-id characters in the filename to a known-safe set

@@ -29,15 +29,8 @@ enum CompanionTokens {
         shared.delete(forHost: hostID)
     }
 
-    /// `~/Library/Application Support/Glimmer/Companion/`, the same root Identity and PinnedHosts use.
-    private static let companionFolder: URL = {
-        let base = (try? FileManager.default.url(for: .applicationSupportDirectory,
-                                                 in: .userDomainMask,
-                                                 appropriateFor: nil,
-                                                 create: true))
-            ?? URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Library/Application Support")
-        return base.appendingPathComponent("Glimmer/Companion", isDirectory: true)
-    }()
+    /// `~/Library/Application Support/Event Horizon/Companion/`, the same root Identity and PinnedHosts use.
+    private static let companionFolder: URL = AppDataFolders.root.appendingPathComponent("Companion", isDirectory: true)
 }
 
 /// Everything the token file holds, plus whether the keychain-era items were already copied over.

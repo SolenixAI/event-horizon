@@ -133,14 +133,14 @@ struct StreamSignalTests {
     // MARK: Leave hint budget
 
     /// Fixed scratch domain, cleaned on both ends (see ContainerMigrationTests).
-    private static let leaveHintDomain = "io.ugfugl.Glimmer.tests.leave-hint"
+    private static let leaveHintDomain = "dev.solenix.eventhorizon.tests.leave-hint"
 
     /// Three shows per chord; rebinding the chord is a new lesson.
     @Test func theLeaveHintShowsThreeTimesPerChord() throws {
         let domain = Self.leaveHintDomain
         let defaults = try #require(UserDefaults(suiteName: domain))
-        defaults.removePersistentDomain(forName: domain)
-        defer { defaults.removePersistentDomain(forName: domain) }
+        ScratchDefaults.drop(domain)
+        defer { ScratchDefaults.drop(domain) }
 
         let text = "Press ⌃⌥Q to stop streaming"
         let shows = (0..<6).filter { _ in StreamSession.claimLeaveHintShow(text, defaults: defaults) }

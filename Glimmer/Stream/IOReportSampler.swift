@@ -140,7 +140,7 @@ final class IOReportSampler: @unchecked Sendable {
     /// is the point.
     private let stateLock = NSLock()
 
-    private let log = Logger(subsystem: "io.ugfugl.Glimmer", category: "Stream.Telemetry")
+    private let log = Logger(subsystem: "dev.solenix.eventhorizon", category: "Stream.Telemetry")
 
     // MARK: - IOReport C entry points (resolved once via dlopen / dlsym)
     //

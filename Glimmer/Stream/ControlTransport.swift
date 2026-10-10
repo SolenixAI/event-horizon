@@ -62,7 +62,7 @@ enum ControlTransport {
         let pinnedCertPEM: String?
     }
 
-    private static let log = Logger(subsystem: "io.ugfugl.Glimmer", category: "Stream.Network.TLS")
+    private static let log = Logger(subsystem: "dev.solenix.eventhorizon", category: "Stream.Network.TLS")
 
     /// Requests wrapped in `StreamAttempt.run` report its deadline as `hostTimedOut`; this
     /// backstop only ends an unwrapped `/launch`, so it lands just after the same deadline.
@@ -100,7 +100,7 @@ enum ControlTransport {
     /// One request's connection and reply. Invariant: `reply` and `continuation` are only
     /// touched on `queue`, which runs every connection callback, the backstop, and the start.
     private final class Exchange: @unchecked Sendable {
-        let queue = DispatchQueue(label: "io.ugfugl.Glimmer.control", qos: .userInitiated)
+        let queue = DispatchQueue(label: "dev.solenix.eventhorizon.control", qos: .userInitiated)
         let host: String
         let port: Int
         let request: Data

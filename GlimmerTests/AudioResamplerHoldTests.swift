@@ -77,9 +77,9 @@ struct AudioResamplerHoldTests {
     }
 
     @Test func skewMemoryIsPerOutputDevice() throws {
-        let suite = "io.ugfugl.Glimmer.tests.\(UUID().uuidString)"
+        let suite = "dev.solenix.eventhorizon.tests.\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
-        defer { defaults.removePersistentDomain(forName: suite) }
+        defer { ScratchDefaults.drop(suite) }
         let speakers = AudioDecoder.resamplerSkewKey(host: "pc", deviceUID: "speakers")
         let dac = AudioDecoder.resamplerSkewKey(host: "pc", deviceUID: "usb-dac")
         AudioDecoder.persistResamplerSkew(key: speakers, ppm: -120, defaults: defaults)

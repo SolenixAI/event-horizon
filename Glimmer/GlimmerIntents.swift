@@ -61,7 +61,7 @@ struct StreamIntent: AppIntent {
         let target = app.flatMap(host.app(named:))
         if let app, target == nil { throw PCIntentError.noApp(app, pc: host.displayName) }
         if model.isStreaming {
-            // Asking for the stream already running just shows it, as activating Glimmer may have.
+            // Asking for the stream already running just shows it, as activating Event Horizon may have.
             guard AppModel.isLiveStream(target, on: host, live: model.lastLaunchAttempt) else {
                 throw PCIntentError.alreadyStreaming
             }

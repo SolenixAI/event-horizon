@@ -56,7 +56,7 @@ public final class MacSystemStats {
         let sampledAt: CFTimeInterval
     }
 
-    private let log = Logger(subsystem: "io.ugfugl.Glimmer", category: "MacSystemStats")
+    private let log = Logger(subsystem: "dev.solenix.eventhorizon", category: "MacSystemStats")
     private var lastCPUTicks: CPUTicks?
     private var batterySnapshot: BatterySnapshot?
     private let pageSize: vm_size_t

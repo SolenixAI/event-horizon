@@ -63,7 +63,7 @@ private struct LoopbackSunshine {
 
     static func start(presenting identity: (certPEM: String, keyPEM: String),
                       accepting clientCertPEM: String) async throws -> LoopbackSunshine {
-        let queue = DispatchQueue(label: "io.ugfugl.Glimmer.tests.tls")
+        let queue = DispatchQueue(label: "dev.solenix.eventhorizon.tests.tls")
         let options = NWProtocolTLS.Options()
         let security = options.securityProtocolOptions
         sec_protocol_options_set_local_identity(

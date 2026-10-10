@@ -28,7 +28,7 @@ import os
 /// confined to `flushQueue`.
 final class FrameTraceWriter: @unchecked Sendable {
 
-    private let log = Logger(subsystem: "io.ugfugl.Glimmer", category: "Stream.Telemetry")
+    private let log = Logger(subsystem: "dev.solenix.eventhorizon", category: "Stream.Telemetry")
 
     /// Drain cadence. 250ms batches plenty of frames (15 at 60fps, 60 at 240fps)
     /// into one write while keeping the on-disk trace within a quarter-second of
@@ -47,7 +47,7 @@ final class FrameTraceWriter: @unchecked Sendable {
     private static let maxFileBytes: UInt64 = 96 * 1024 * 1024
     static let maxTraceFiles = 4
 
-    private let flushQueue = DispatchQueue(label: "io.ugfugl.Glimmer.telemetry.frames", qos: .utility)
+    private let flushQueue = DispatchQueue(label: "dev.solenix.eventhorizon.telemetry.frames", qos: .utility)
     private var fileHandle: FileHandle?
     private var flushTimer: DispatchSourceTimer?
     /// Rollover state (flushQueue-confined): the Logs dir, this session's ISO stamp (the segments'
@@ -70,7 +70,7 @@ final class FrameTraceWriter: @unchecked Sendable {
     deinit { bufferLock.deallocate() }
 
     /// Open the trace file + arm the flush timer. Mirrors the exporter's NDJSON
-    /// path: `~/Library/Logs/Glimmer/telemetry-frames-<ISO8601>.ndjson`.
+    /// path: `~/Library/Logs/Event Horizon/telemetry-frames-<ISO8601>.ndjson`.
     func start(isoStamp: String) {
         flushQueue.async { [weak self] in
             guard let self else { return }

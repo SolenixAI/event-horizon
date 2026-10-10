@@ -326,10 +326,10 @@ extension VideoDecoder {
     /// stream bit depth, layer preferredDynamicRange, NSScreen EDR headroom).
     ///
     /// Read this with:
-    ///   log show --predicate 'process == "Glimmer"' --info --last 1m
+    ///   log show --predicate 'process == "Event Horizon"' --info --last 1m
     ///       --style compact
     /// or while streaming:
-    ///   log stream --predicate 'process == "Glimmer"' --info --style compact
+    ///   log stream --predicate 'process == "Event Horizon"' --info --style compact
     ///
     /// When the user reports "looks overbright / washed out", this single
     /// log entry is the diagnostic answer key:

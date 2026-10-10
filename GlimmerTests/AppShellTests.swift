@@ -2,7 +2,7 @@
 //  AppShellTests.swift
 //
 //  The app around the stream: when Glimmer keeps a Dock icon and Cmd-Tab
-//  entry, and how it answers `glimmer stream` and `glimmer quit`.
+//  entry, and how it answers `event-horizon stream` and `event-horizon quit`.
 //
 
 import AppKit

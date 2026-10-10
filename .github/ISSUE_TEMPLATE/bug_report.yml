@@ -73,9 +73,9 @@ body:
            the next stream, not the running one.
         2. Reproduce the problem in a stream. When it "feels bad", press
            **⌃B** to drop a timestamped bookmark into the telemetry.
-        3. End the stream, then attach from `~/Library/Logs/Glimmer/`:
+        3. End the stream, then attach from `~/Library/Logs/Event Horizon/`:
            - `telemetry-session-<timestamp>.json` - the session scorecard
-           - `glimmer-<timestamp>.log` - the session log
+           - `event-horizon-<timestamp>.log` - the session log
            - (optionally) `telemetry-<timestamp>.ndjson` - per-second metrics,
              if the file isn't too large to attach
 

@@ -51,7 +51,7 @@ struct HostContextMenuTests {
         }
     }
 
-    /// quitRunningApp words a refusal itself; the launcher and `glimmer quit` show it as is.
+    /// quitRunningApp words a refusal itself; the launcher and `event-horizon quit` show it as is.
     @Test func aRefusedOrUnansweredQuitReadsTheSameInTheLauncherAndTheTerminal() {
         let refused = StreamError.launchFailed(
             "Tower wouldn't quit the app. If another device is streaming from it, stop that stream first.")

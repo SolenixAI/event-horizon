@@ -8,8 +8,9 @@ import os.log
 enum ContainerMigration {
 
     static let didMigrateKey = "didMigrateFromContainer"
-    private static let bundleID = "io.ugfugl.Glimmer"
-    private static let log = Logger(subsystem: bundleID, category: "ContainerMigration")
+    /// The bundle id the sandboxed build ran under. Its container still holds the old data.
+    private static let legacyBundleID = "io.ugfugl.Glimmer"
+    private static let log = Logger(subsystem: "dev.solenix.eventhorizon", category: "ContainerMigration")
 
     /// Run the migration if it hasn't run yet. Idempotent and a no-op when the
     /// old container is absent (fresh installs, already-migrated users).
@@ -18,7 +19,7 @@ enum ContainerMigration {
         let fm = FileManager.default
         let home = fm.homeDirectoryForCurrentUser
         let containerLib = home
-            .appendingPathComponent("Library/Containers/\(bundleID)/Data/Library", isDirectory: true)
+            .appendingPathComponent("Library/Containers/\(legacyBundleID)/Data/Library", isDirectory: true)
         let hostLib = home.appendingPathComponent("Library", isDirectory: true)
 
         guard fm.fileExists(atPath: containerLib.path) else {
@@ -39,7 +40,7 @@ enum ContainerMigration {
         // Our prefs plist may have just landed under the host domain; drop
         // CFPreferences' in-memory cache for it so this launch reads the
         // migrated values instead of the empty domain it opened with.
-        CFPreferencesAppSynchronize(bundleID as CFString)
+        CFPreferencesAppSynchronize(legacyBundleID as CFString)
 
         log.notice("container migration copied \(copied, privacy: .public) item(s) from the sandbox container")
         defaults.set(true, forKey: didMigrateKey)

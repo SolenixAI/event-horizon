@@ -95,7 +95,7 @@ final class HostRouteMonitor {
     /// Failed sockets in a row since the last ready one set the retry back-off.
     @ObservationIgnored private var failures = 0
     @ObservationIgnored private let queue = DispatchQueue(
-        label: "io.ugfugl.Glimmer.ui.hostRoute", qos: .utility)
+        label: "dev.solenix.eventhorizon.ui.hostRoute", qos: .utility)
 
     /// Point the monitor at a new destination (nil tears down to `.unknown`).
     func monitor(address: String?) {

@@ -77,7 +77,7 @@ extension FramePacer {
     /// The real install breadcrumb (installLink, FramePacer+Recovery.swift)
     /// fires when the stream window first shows - BEFORE StreamSession's
     /// telemetry wiring installs `SessionLogFileSink` - so an affected
-    /// session's glimmer-*.log carried ZERO 'link installed' lines and the item-9
+    /// session's event-horizon-*.log carried ZERO 'link installed' lines and the item-9
     /// verification clause (the floor a session started from) was un-greppable
     /// postmortem. Re-emit the LIVE link's range once per file-sink install
     /// (keyed on the sink instance, so every session replays exactly once and

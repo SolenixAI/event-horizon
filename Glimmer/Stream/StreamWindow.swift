@@ -48,7 +48,7 @@ import os.log
 
 @MainActor
 public final class StreamWindow {
-    let log = Logger(subsystem: "io.ugfugl.Glimmer", category: "Stream.Window")
+    let log = Logger(subsystem: "dev.solenix.eventhorizon", category: "Stream.Window")
 
     public let window: NSWindow
     /// The OS-driven display layer. VideoDecoder enqueues CMSampleBuffers

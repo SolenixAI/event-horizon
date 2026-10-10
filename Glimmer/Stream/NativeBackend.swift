@@ -27,7 +27,7 @@ import Network
 import os
 
 public final class NativeBackend: StreamingBackend, @unchecked Sendable {
-    let log = Logger(subsystem: "io.ugfugl.Glimmer", category: "Stream.NativeBackend")
+    let log = Logger(subsystem: "dev.solenix.eventhorizon", category: "Stream.NativeBackend")
     static let logCategory = "NativeConnection"
 
     let stateLock = NSLock()

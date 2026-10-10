@@ -61,7 +61,7 @@ final class VideoRtpReceiver: VideoDepacketizerDelegate, @unchecked Sendable {
     /// under load, which let the kernel socket buffer back up and serviced
     /// frames in bursts.
     private let recvQueue = DispatchQueue(
-        label: "io.ugfugl.Glimmer.videortp", qos: .userInteractive)
+        label: "dev.solenix.eventhorizon.videortp", qos: .userInteractive)
     /// Unconnected bound UDP socket fd: bind to a wildcard ephemeral local port,
     /// recvfrom from ANY source. A connected NWConnection would drop video that
     /// Sunshine sources from a port != videoPort.

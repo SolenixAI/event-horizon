@@ -21,7 +21,7 @@ struct HostsStoreTests {
     /// plist behind in ~/Library/Preferences every time (see MoonlightQtIdentityImportTests).
     private func pairedTower(_ domain: String, apps: [App] = [desktopStandIn]) throws -> UserDefaults {
         let defaults = try #require(UserDefaults(suiteName: domain))
-        defaults.removePersistentDomain(forName: domain)
+        ScratchDefaults.drop(domain)
         defaults.set(1, forKey: "hosts.size")
         defaults.set("tower", forKey: "hosts.1.hostname")
         defaults.set("TOWER-ID", forKey: "hosts.1.uuid")
@@ -38,9 +38,9 @@ struct HostsStoreTests {
     }
 
     @Test func aFreshListReplacesThePairingStandIn() throws {
-        let domain = "io.ugfugl.Glimmer.tests.hosts-fresh-list"
+        let domain = "dev.solenix.eventhorizon.tests.hosts-fresh-list"
         let defaults = try pairedTower(domain)
-        defer { defaults.removePersistentDomain(forName: domain) }
+        defer { ScratchDefaults.drop(domain) }
         let fresh = [App(id: 1, name: "Desktop", hdr: false, hidden: false),
                      App(id: 2, name: "Steam Big Picture", hdr: true, hidden: false)]
         #expect(AppModel.storeApps(fresh, hostID: "TOWER-ID", in: defaults))
@@ -50,10 +50,10 @@ struct HostsStoreTests {
     }
 
     @Test func aShorterListLeavesNoStaleApps() throws {
-        let domain = "io.ugfugl.Glimmer.tests.hosts-shorter-list"
+        let domain = "dev.solenix.eventhorizon.tests.hosts-shorter-list"
         let defaults = try pairedTower(domain, apps: [App(id: 1, name: "Desktop", hdr: false, hidden: false),
                                                       App(id: 2, name: "Old Game", hdr: false, hidden: false)])
-        defer { defaults.removePersistentDomain(forName: domain) }
+        defer { ScratchDefaults.drop(domain) }
         #expect(AppModel.storeApps([App(id: 1, name: "Desktop", hdr: false, hidden: false)],
                                    hostID: "TOWER-ID", in: defaults))
         #expect(storedNames(defaults) == ["Desktop"])
@@ -61,9 +61,9 @@ struct HostsStoreTests {
     }
 
     @Test func appsHiddenOnThisMacStayHidden() throws {
-        let domain = "io.ugfugl.Glimmer.tests.hosts-hidden-apps"
+        let domain = "dev.solenix.eventhorizon.tests.hosts-hidden-apps"
         let defaults = try pairedTower(domain, apps: [App(id: 1, name: "Desktop", hdr: false, hidden: true)])
-        defer { defaults.removePersistentDomain(forName: domain) }
+        defer { ScratchDefaults.drop(domain) }
         #expect(AppModel.storeApps([App(id: 1, name: "Desktop", hdr: false, hidden: false),
                                     App(id: 2, name: "Elden Ring", hdr: true, hidden: false)],
                                    hostID: "TOWER-ID", in: defaults))
@@ -72,9 +72,9 @@ struct HostsStoreTests {
     }
 
     @Test func anEmptyListOrUnknownPCChangesNothing() throws {
-        let domain = "io.ugfugl.Glimmer.tests.hosts-empty-list"
+        let domain = "dev.solenix.eventhorizon.tests.hosts-empty-list"
         let defaults = try pairedTower(domain)
-        defer { defaults.removePersistentDomain(forName: domain) }
+        defer { ScratchDefaults.drop(domain) }
         #expect(!AppModel.storeApps([], hostID: "TOWER-ID", in: defaults))
         #expect(!AppModel.storeApps([App(id: 1, name: "Desktop", hdr: false, hidden: false)],
                                     hostID: "OTHER-ID", in: defaults))
@@ -83,9 +83,9 @@ struct HostsStoreTests {
     }
 
     @Test func aMovedPCKeepsTheAddressTheUserTyped() throws {
-        let domain = "io.ugfugl.Glimmer.tests.hosts-moved-pc"
+        let domain = "dev.solenix.eventhorizon.tests.hosts-moved-pc"
         let defaults = try pairedTower(domain)
-        defer { defaults.removePersistentDomain(forName: domain) }
+        defer { ScratchDefaults.drop(domain) }
         #expect(AppModel.storeAddress("192.0.2.77", hostID: "TOWER-ID", in: defaults))
         #expect(defaults.string(forKey: "hosts.1.localaddress") == "192.0.2.77")
         #expect(defaults.string(forKey: "hosts.1.manualaddress") == "192.0.2.10")
@@ -421,9 +421,9 @@ struct HostsStoreTests {
     }
 
     @MainActor @Test func cancellationDuringTheSavedAddressProbeCannotPersistOrReload() async throws {
-        let domain = "io.ugfugl.Glimmer.tests.cancel-address-probe"
+        let domain = "dev.solenix.eventhorizon.tests.cancel-address-probe"
         let defaults = try pairedTower(domain)
-        defer { defaults.removePersistentDomain(forName: domain) }
+        defer { ScratchDefaults.drop(domain) }
         let model = AppModel()
         let host = Self.host("TOWER-ID", address: "192.0.2.10")
         model.selectedHost = host

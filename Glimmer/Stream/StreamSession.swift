@@ -33,7 +33,7 @@ import Foundation
 import AppKit
 import os
 public actor StreamSession {
-    let log = Logger(subsystem: "io.ugfugl.Glimmer", category: "Stream.Session")
+    let log = Logger(subsystem: "dev.solenix.eventhorizon", category: "Stream.Session")
 
     /// UserDefaults key: the leave-hint text its show budget was counted
     /// against. A different text (a rebound chord) starts the budget over.

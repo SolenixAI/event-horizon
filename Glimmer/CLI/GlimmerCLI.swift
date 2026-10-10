@@ -1,7 +1,7 @@
 //
 //  GlimmerCLI.swift
 //
-//  `glimmer <verb> ...`: moonlight-style commands run by the app binary itself,
+//  `event-horizon <verb> ...`: moonlight-style commands run by the app binary itself,
 //  headless, through the app's own model. Text goes to stdout and stderr, the
 //  result to the exit code. Verbs live in GlimmerCLI+*.swift.
 //
@@ -47,7 +47,7 @@ enum GlimmerCLI {
     ]
 
     nonisolated static let usage = """
-        Usage: glimmer <command> [options]
+        Usage: event-horizon <command> [options]
 
         Commands:
           pair <address> [--pin NNNN]    Pair with a PC running Sunshine
@@ -62,15 +62,15 @@ enum GlimmerCLI {
           wake <pc> [--wait]             Send Wake on LAN, and wait for the PC to answer
           help                           Show this help
 
-        <pc> is a paired PC's name or address. Run glimmer with no command to open the app.
+        <pc> is a paired PC's name or address. Run event-horizon with no command to open the app.
         Exit status: 0 success, 1 failure, 2 usage error, 3 PC unreachable, 4 PC not paired.
         """
 
-    /// Run as `glimmer` (the cask's link), it's always the CLI; otherwise a bare
+    /// Run as `event-horizon` (the cask's link), it's always the CLI; otherwise a bare
     /// word or -h/--help is. Login, Launch Services, Sparkle, Xcode and tests run
     /// `.../MacOS/Glimmer` with dashed arguments or none, so they reach the app.
     nonisolated static func isInvocation(_ argv: [String]) -> Bool {
-        if let name = argv.first, (name as NSString).lastPathComponent == "glimmer" { return true }
+        if let name = argv.first, (name as NSString).lastPathComponent == "event-horizon" { return true }
         guard argv.count > 1 else { return false }
         return !argv[1].hasPrefix("-") || argv[1] == "--help" || argv[1] == "-h"
     }
@@ -80,7 +80,7 @@ enum GlimmerCLI {
         guard let first = args.first else { throw UsageError(message: usage) }
         if args.contains("--help") || args.contains("-h") { return Command(verb: .help) }
         guard let verb = Verb(rawValue: first) else {
-            throw UsageError(message: "Unknown command “\(first)”. Run “glimmer help” for the list.")
+            throw UsageError(message: "Unknown command “\(first)”. Run “event-horizon help” for the list.")
         }
         var command = Command(verb: verb)
         var rest = args.dropFirst()
@@ -92,7 +92,7 @@ enum GlimmerCLI {
                 }
             } else if arg.hasPrefix("-") {
                 guard allowedFlags[verb]?.contains(arg) == true else {
-                    throw UsageError(message: "“glimmer \(verb.rawValue)” doesn't take \(arg).")
+                    throw UsageError(message: "“event-horizon \(verb.rawValue)” doesn't take \(arg).")
                 }
                 command.flags.insert(arg)
             } else {
@@ -100,7 +100,7 @@ enum GlimmerCLI {
             }
         }
         guard arity[verb]?.contains(command.arguments.count) == true else {
-            throw UsageError(message: "Wrong arguments for “glimmer \(verb.rawValue)”. Run “glimmer help”.")
+            throw UsageError(message: "Wrong arguments for “event-horizon \(verb.rawValue)”. Run “event-horizon help”.")
         }
         return command
     }
@@ -117,7 +117,7 @@ enum GlimmerCLI {
     }
 
     static func run(_ args: [String]) async -> Int32 {
-        // `glimmer` on its own opens the one app, never a copy in this process.
+        // `event-horizon` on its own opens the one app, never a copy in this process.
         guard !args.isEmpty else { return await openGlimmer() == nil ? Exit.failed : Exit.ok }
         let command: Command
         do {
@@ -167,7 +167,7 @@ enum GlimmerCLI {
 
     static func resolveHost(_ query: String, model: AppModel) -> Host? {
         if let host = matchHost(query, in: model.hosts) { return host }
-        printError("No paired PC matches “\(query)”. Run “glimmer list” to see them, or pair it with “glimmer pair”.")
+        printError("No paired PC matches “\(query)”. Run “event-horizon list” to see them, or pair it with “event-horizon pair”.")
         return nil
     }
 
@@ -214,6 +214,6 @@ enum GlimmerCLI {
     }
 
     nonisolated static func notPairedMessage(_ host: Host) -> String {
-        "\(host.displayName) needs pairing again. Run: glimmer pair \(AppModel.routeAddress(host))"
+        "\(host.displayName) needs pairing again. Run: event-horizon pair \(AppModel.routeAddress(host))"
     }
 }

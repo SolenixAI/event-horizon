@@ -39,7 +39,7 @@ extension FramePacer {
     // MARK: - Event handling (OFF the lock)
 
     /// Log the transitions and reconcile the off-tick timer. Callable from any
-    /// thread; Diag/LogStore lines land in the glimmer-*.log file sink so every
+    /// thread; Diag/LogStore lines land in the event-horizon-*.log file sink so every
     /// engage/disengage is postmortem-visible (the os_log-only breadcrumb class
     /// this pass retires).
     func handleTickDeficitEvents(_ events: [TickDeficitEvent]) {

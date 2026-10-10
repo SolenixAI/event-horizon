@@ -309,7 +309,7 @@ final class RtspClient: @unchecked Sendable {
         defer { setActiveConnection(nil) }
         // An interrupt() that landed before the store above had nothing to cancel.
         if interrupted.isSet { throw RtspError.interrupted }
-        let queue = DispatchQueue(label: "io.ugfugl.Glimmer.rtsp")
+        let queue = DispatchQueue(label: "dev.solenix.eventhorizon.rtsp")
 
         // 1) Wait for the connection to become ready (or fail).
         try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in

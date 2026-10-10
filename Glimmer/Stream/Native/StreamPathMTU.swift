@@ -109,7 +109,7 @@ struct RttStats: Sendable, Equatable {
 final class RttSampler: @unchecked Sendable {
     private let host: String
     private let port: UInt16
-    private let queue = DispatchQueue(label: "io.ugfugl.Glimmer.rttSampler", qos: .userInitiated)
+    private let queue = DispatchQueue(label: "dev.solenix.eventhorizon.rttSampler", qos: .userInitiated)
     private let lock = NSLock()
     private var samples: [Double] = []
     private var stopped = false
@@ -257,7 +257,7 @@ struct RouteAsk: Sendable, Equatable {
 
 /// What the connect-time gate actually decided, latched for the telemetry
 /// exporter. This exists because the per-session diagnostic log
-/// (`glimmer-<ts>.log`) does not begin capturing until the backend starts
+/// (`event-horizon-<ts>.log`) does not begin capturing until the backend starts
 /// connecting - every `Diag` line emitted while the config is still being built,
 /// including this gate's and the pre-existing "Stream config:" line, lands in a
 /// blind spot. The gate now silently changes picture quality, so leaving its

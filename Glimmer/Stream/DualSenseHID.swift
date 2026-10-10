@@ -74,7 +74,7 @@ struct HIDReportRate: Equatable, Sendable {
 final class DualSenseHID: @unchecked Sendable {
     static let shared = DualSenseHID()
 
-    private let log = Logger(subsystem: "io.ugfugl.Glimmer", category: "DualSenseHID")
+    private let log = Logger(subsystem: "dev.solenix.eventhorizon", category: "DualSenseHID")
     private let manager: IOHIDManager
     private let lock = NSLock()
 
@@ -105,7 +105,7 @@ final class DualSenseHID: @unchecked Sendable {
     /// path reached the device).
     private var loggedWriteSuccess = false
 
-    private let writeQueue = DispatchQueue(label: "io.ugfugl.Glimmer.dualsense-hid-write",
+    private let writeQueue = DispatchQueue(label: "dev.solenix.eventhorizon.dualsense-hid-write",
                                            qos: .userInitiated)
 
     /// Called on the main queue whenever the decoded buttons change - lets the

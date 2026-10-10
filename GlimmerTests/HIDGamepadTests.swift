@@ -201,9 +201,9 @@ struct HIDGamepadTests {
 
     /// Not Now quiets one pad until relaunch; Don't Ask Again outlives it.
     @Test func permissionOfferAnswersAreKeptPerPad() throws {
-        let suite = "io.ugfugl.Glimmer.tests.\(UUID().uuidString)"
+        let suite = "dev.solenix.eventhorizon.tests.\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
-        defer { defaults.removePersistentDomain(forName: suite) }
+        defer { ScratchDefaults.drop(suite) }
         var offers = HIDPermissionOffers(defaults: defaults)
         offers.answer("2DC8:301B", dontAskAgain: false)
         offers.answer("0F0D:00C1", dontAskAgain: true)

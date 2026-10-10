@@ -33,7 +33,7 @@ final class SingleResume<T: Sendable>: @unchecked Sendable {
 
 /// Keeps interrupted connections alive so launchd can relaunch the idle daemon.
 actor HelperClient {
-    private let log = Logger(subsystem: "io.ugfugl.Glimmer", category: "AWDLHelper")
+    private let log = Logger(subsystem: "dev.solenix.eventhorizon", category: "AWDLHelper")
     private var connection: NSXPCConnection?
     /// Which connection a late invalidation or deadline belongs to. Not ObjectIdentifier:
     /// that is an address, and a freed connection's replacement can reuse it.
@@ -176,7 +176,7 @@ final class AWDLHelperManager: ObservableObject {
     private var restorationTask: Task<Void, Never>?
     private var requestID = 0
     private var streamRequested = false
-    private let log = Logger(subsystem: "io.ugfugl.Glimmer", category: "AWDLHelper")
+    private let log = Logger(subsystem: "dev.solenix.eventhorizon", category: "AWDLHelper")
     private static let promptSuppressedKey = "awdlHelperPromptSuppressed"
     /// Saved intent lets registration self-heal after an update without undoing an explicit off choice.
     private static let enabledIntentKey = "awdlHelperEnabled"

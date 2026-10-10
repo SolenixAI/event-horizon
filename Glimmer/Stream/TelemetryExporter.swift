@@ -39,7 +39,7 @@
 //    1. A tiny HTTP server (Network.framework `NWListener`, port 9847) serving
 //       `GET /metrics` in Prometheus text exposition format.
 //    2. One NDJSON line per ~1s appended to
-//       ~/Library/Logs/Glimmer/telemetry-<ISO8601>.ndjson (dir created).
+//       ~/Library/Logs/Event Horizon/telemetry-<ISO8601>.ndjson (dir created).
 //  Both render the SAME `TelemetrySnapshot`, captured once per second on a
 //  dedicated serial queue - the StatsCollector read reuses its existing lock
 //  (no second hot-path lock is added).
@@ -104,7 +104,7 @@ final class TelemetryExporter: @unchecked Sendable {
     static let connectionDeadlineSeconds: TimeInterval = 10
     // Module-internal (not private) so the write-out sinks in
     // TelemetryExporter+Sinks.swift log through the same category.
-    let log = Logger(subsystem: "io.ugfugl.Glimmer", category: "Stream.Telemetry")
+    let log = Logger(subsystem: "dev.solenix.eventhorizon", category: "Stream.Telemetry")
 
     /// LAN-bind opt-in, resolved ONCE at construction (the TelemetryGate
     /// read-at-session-start discipline - no mid-session bind tearing).
@@ -148,7 +148,7 @@ final class TelemetryExporter: @unchecked Sendable {
 
     /// Single serial queue: capture, listener-connection handling, file append.
     /// Everything mutable is confined here so no extra locks are needed.
-    let workQueue = DispatchQueue(label: "io.ugfugl.Glimmer.telemetry", qos: .utility)
+    let workQueue = DispatchQueue(label: "dev.solenix.eventhorizon.telemetry", qos: .utility)
 
     private var listener: NWListener?
     /// Accepted `/metrics` connections still alive, so the per-connection
@@ -336,28 +336,33 @@ final class TelemetryExporter: @unchecked Sendable {
 
     // MARK: - C2 Logs-directory sweep
 
-    /// Byte budget for the per-frame traces + 1Hz NDJSON in Logs/Glimmer,
+    /// Byte budget for the per-frame traces + 1Hz NDJSON in Logs/Event Horizon,
     /// enforced at each diagnostics session start (before its files exist, so
     /// the session being recorded may exceed it).
     static let logsByteBudget: UInt64 = 300 * 1024 * 1024
-    /// Age limit (seconds): any Glimmer log file older than this is pruned,
+    /// Age limit (seconds): any Event Horizon log file older than this is pruned,
     /// Diag logs and receipts included. 14 days.
     private static let logsMaxAgeSeconds: TimeInterval = 14 * 24 * 3600
 
-    /// `~/Library/Logs/Glimmer`: the Diag logs, telemetry rows, frame traces and receipts.
+    /// `~/Library/Logs/Event Horizon`: the Diag logs, telemetry rows, frame traces and receipts.
     static let logsDirectory = FileManager.default.homeDirectoryForCurrentUser
+        .appendingPathComponent("Library/Logs/Event Horizon", isDirectory: true)
+
+    /// The Logs folder of earlier builds. Its files move into `logsDirectory` once, at launch.
+    static let legacyLogsDirectory = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Logs/Glimmer", isDirectory: true)
 
     /// Age-only sweep at app launch, whatever the diagnostics setting, so the
     /// 14-day rule runs even when no diagnostics session ever starts again.
     static func sweepLogsAtLaunch() {
-        let log = Logger(subsystem: "io.ugfugl.Glimmer", category: "Stream.Telemetry")
+        let log = Logger(subsystem: "dev.solenix.eventhorizon", category: "Stream.Telemetry")
         Task.detached(priority: .utility) {
+            DataFolderMigration.moveLogs(from: legacyLogsDirectory, to: logsDirectory)
             sweepLogsDirectory(logsDirectory, log: log, enforceBudget: false)
         }
     }
 
-    /// Prune the Glimmer Logs dir: age for every family, then (if `enforceBudget`) bytes over
+    /// Prune the Event Horizon Logs dir: age for every family, then (if `enforceBudget`) bytes over
     /// traces + 1Hz NDJSON, the latest session last. Diag logs + receipts only ever age out.
     static func sweepLogsDirectory(_ dir: URL, log: Logger, enforceBudget: Bool = true) {
         let fm = FileManager.default
@@ -367,7 +372,7 @@ final class TelemetryExporter: @unchecked Sendable {
         // Our own log families only - never delete a foreign file.
         let ours = entries.filter { url in
             let name = url.lastPathComponent
-            return name.hasPrefix("telemetry-") || name.hasPrefix("glimmer-")
+            return name.hasPrefix("telemetry-") || name.hasPrefix("event-horizon-")
         }
         struct Entry { let url: URL; let created: Date; let modified: Date; let size: UInt64 }
         var files: [Entry] = []
@@ -394,7 +399,7 @@ final class TelemetryExporter: @unchecked Sendable {
         // each group: rollover segments, then base segments, then 1Hz, oldest-first.
         let bulky = survivors.filter {
             let name = $0.url.lastPathComponent
-            return !name.hasPrefix("glimmer-") && !name.hasPrefix("telemetry-session-")
+            return !name.hasPrefix("event-horizon-") && !name.hasPrefix("telemetry-session-")
         }
         let family = { (entry: Entry) -> Int in
             let name = entry.url.lastPathComponent
@@ -418,7 +423,7 @@ final class TelemetryExporter: @unchecked Sendable {
             }
         }
         if pruned > 0 {
-            log.notice("Telemetry: swept \(pruned, privacy: .public) old log file(s) from Logs/Glimmer")
+            log.notice("Telemetry: swept \(pruned, privacy: .public) old log file(s) from Logs/Event Horizon")
         }
     }
 
