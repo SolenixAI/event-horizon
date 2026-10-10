@@ -40,7 +40,8 @@ impl Commands for FakeCommands {
             .unwrap()
             .push(format!("run {program} {}", args.join(" ")));
         if self.failing.contains(program) {
-            return Err(format!("{program} ended with 1"));
+            // As the real runner words it: the arguments are in the error.
+            return Err(format!("{program} {} ended with 1", args.join(" ")));
         }
         if program == "systemctl" {
             return self.systemctl(args);
@@ -417,8 +418,8 @@ fn outside_kde_on_wayland_it_skips_the_screen_and_says_why() {
     let VirtualScreen::Skipped(reason) = outcome else {
         panic!("no virtual screen outside KDE on Wayland");
     };
-    assert!(reason.contains("KDE"), "{reason}");
-    assert!(reason.contains("Wayland"), "{reason}");
+    assert!(reason.contains("KDE"));
+    assert!(reason.contains("Wayland"));
     assert!(files.read(&layout.screen_unit()).is_none());
     assert!(files.read(&layout.sunshine_conf()).is_none());
 }
@@ -433,7 +434,7 @@ fn without_krfb_it_skips_the_screen_and_names_the_package() {
     let VirtualScreen::Skipped(reason) = outcome else {
         panic!("no virtual screen without krfb-virtualmonitor");
     };
-    assert!(reason.contains("krfb"), "{reason}");
+    assert!(reason.contains("krfb"));
 }
 
 #[test]
@@ -452,6 +453,17 @@ fn skipping_the_screen_still_gives_sunshine_its_login() {
         .read(&layout.config_dir.join("companion.env"))
         .expect("companion.env is written");
     assert!(env.contains("SUNSHINE_PASSWORD=deadbeef"));
+}
+
+#[test]
+fn a_failed_sunshine_login_does_not_put_the_password_in_the_error() {
+    let (mut cmd, files) = pc();
+    cmd.failing.insert("flatpak".into());
+
+    let error = install(&cmd, &files, &kde_layout()).unwrap_err();
+
+    assert!(!error.contains("deadbeef"), "the password leaked: {error}");
+    assert!(error.contains("Sunshine"), "{error}");
 }
 
 #[test]

@@ -1,6 +1,7 @@
 //! The rules of the Linux virtual screen: its size, its unit, its placement,
 //! Sunshine's settings, and when it applies at all.
 
+use event_horizon_companion::linux_install;
 use event_horizon_companion::virtual_screen::{
     DEFAULT_SIZE, Size, is_kde_wayland, placement_args, screen_size, unit_text, with_setting,
 };
@@ -69,14 +70,15 @@ fn the_placement_is_none_until_kscreen_lists_the_screen() {
 
 #[test]
 fn the_unit_quotes_a_path_that_has_a_space() {
+    let password = linux_install::random_secret();
     let text = unit_text(
         Path::new("/opt/Krfb Tools/krfb-virtualmonitor"),
         Path::new("/home/friend/.local/bin/event-horizon-companion"),
         DEFAULT_SIZE,
-        "deadbeef",
+        &password,
     );
 
-    assert!(text.contains(
-        "ExecStart=\"/opt/Krfb Tools/krfb-virtualmonitor\" --resolution 2560x1600 --name sunshine-vmon --port 5905 --password deadbeef"
-    ));
+    assert!(text.contains(&format!(
+        "ExecStart=\"/opt/Krfb Tools/krfb-virtualmonitor\" --resolution 2560x1600 --name sunshine-vmon --port 5905 --password {password}"
+    )));
 }

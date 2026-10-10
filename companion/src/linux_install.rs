@@ -254,10 +254,12 @@ fn sunshine_login(
     secret: &dyn Fn() -> String,
 ) -> Result<(), String> {
     let password = secret();
+    // The error names the command, and the command carries the password: say less.
     cmd.run(
         "flatpak",
         &["run", SUNSHINE_APP, "--creds", SUNSHINE_USER, &password],
-    )?;
+    )
+    .map_err(|_| "Sunshine did not take the companion's login".to_string())?;
     let env_path = layout.companion_env();
     files.write(&env_path, &companion_env(files, layout, &password))?;
     files.restrict(&env_path);
