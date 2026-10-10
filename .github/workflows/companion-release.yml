@@ -43,7 +43,26 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           sha256sum EventHorizonCompanion-Windows.exe event-horizon-companion-linux-x86_64 > SHA256SUMS
+          cat > notes.md <<'EOF'
+          Run it on your gaming PC. It installs Sunshine and pairs with Event Horizon on your Mac with one click on Allow.
+
+          **Linux (x86_64)**
+
+          If you downloaded the file, run this in its folder:
+
+              chmod +x event-horizon-companion-linux-x86_64 && ./event-horizon-companion-linux-x86_64
+
+          Or download and run it in one line:
+
+              curl -fsSL https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/event-horizon-companion-linux-x86_64 -o event-horizon-companion-linux-x86_64 && chmod +x event-horizon-companion-linux-x86_64 && ./event-horizon-companion-linux-x86_64
+
+          **Windows**
+
+          Run EventHorizonCompanion-Windows.exe, then click Allow when Windows asks.
+
+          When the PC says it is ready, open Event Horizon on your Mac.
+          EOF
           gh release create "${{ github.ref_name }}" --repo "${{ github.repository }}" \
             --title "PC companion ${{ github.ref_name }}" --latest=false \
-            --notes "Run it on your gaming PC: it installs Sunshine and pairs with Event Horizon on your Mac with one click on Allow." \
+            --notes-file notes.md \
             EventHorizonCompanion-Windows.exe event-horizon-companion-linux-x86_64 SHA256SUMS
