@@ -22,12 +22,13 @@ at `https://api.linear.app/graphql` with a personal API key (`LINEAR_API_KEY`).
 ## Conventions
 
 - **Create an issue**: start from the team template "Default issue". With MCP,
-  `save_issue` with `template` "Default issue"; with GraphQL, `issueCreate`
-  with `teamId` (SOL) and `templateId` (find "Default issue" with
-  `list_templates`). Add `projectId` (Event Horizon), `title` and the
-  assignee: `me` when the work is yours, `null` for an unclaimed wayfinder
-  ticket. A description replaces the template body, so pass none. Then fill
-  each `{…}` slot: update the issue with `save_issue` (set `id`) and a `patch`.
+  `save_issue` with `template` "Default issue". With GraphQL, `issueCreate`
+  with `teamId` (the id of team SOL, from the `teams` query) and `templateId`
+  (the id of "Default issue", from the `templates` query). Add `projectId`
+  (Event Horizon), `title` and the assignee: `me` when the work is yours,
+  `null` for an unclaimed wayfinder ticket. A description replaces the
+  template body, so pass none. Then fill each `{…}` slot: call `save_issue`
+  with the issue `id` and its `patch` parameter (one replace per slot).
 - **Read an issue**: `get_issue` with its identifier (`SOL-123`), plus
   `list_comments`.
 - **List issues**: `list_issues` filtered by project **Event Horizon**, state
