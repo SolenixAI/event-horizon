@@ -9,6 +9,7 @@ pub mod link;
 pub mod os;
 pub mod play;
 mod ports;
+pub mod setup;
 pub mod steam;
 pub mod sunshine;
 pub mod tls;
