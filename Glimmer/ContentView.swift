@@ -21,7 +21,10 @@ struct MainWindow: View {
                                                         hasPCs: !model.hosts.isEmpty)
         return Group {
             if open {
-                OnboardingView(finish: finishOnboarding)
+                OnboardingView(start: OnboardingGate.startingFlow(
+                    forced: forcedOnboarding,
+                    previewStep: UserDefaults.standard.string(forKey: OnboardingGate.previewStepKey).flatMap { Int($0) }),
+                               finish: finishOnboarding)
             } else if model.hosts.isEmpty {
                 EmptyPairingState(showPair: $showPair)
             } else {

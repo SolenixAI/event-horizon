@@ -434,12 +434,47 @@ radius is the screen's radius plus its 5pt inset.
   the PC's Ready screen. Each screen has one title (title2, bold), one short
   body and one footer action. The find and pair screens are the pairing view
   in its embedded form, so the pairing state survives the step change.
-- **Progress:** five 22 by 4pt capsules above the title. The current and done
-  steps are filled at 70% label, the rest at 15%. VoiceOver reads "Step n of 5".
+- **Progress:** five 3pt capsules above the title: the current step 30pt wide,
+  the rest 16pt. Done and current steps are 85% white, the rest 18%. VoiceOver
+  reads "Step n of 5".
 - **Explain first:** every system prompt sits behind a Mac-side explanation
   with one button, "Continue". Discovery starts on Continue, so the Local
   Network prompt follows the reason on screen. The PC's own Allow follows the
   Mac's explanation, never comes first.
+- **One space:** onboarding and Home live in the same world, the space field.
+  It is a Schwarzschild black hole ray traced in 3D every frame
+  (`SpaceField.metal`, `SpaceFieldView`): photon paths are traced once per frame
+  into a lensing map, each pixel reads its own, and an HDR image blooms at two
+  scales before a filmic curve. The shadow, the photon ring and the disk's
+  lensed far side come out of the physics. The sky's nebulae and the disk's gas
+  are baked once at launch; stars are a traced pixel wide or more and hold
+  steady, dimmed where the lens stretches them into arcs.
+- **The stage:** the whole onboarding window looks into that world, and one 3D
+  camera (`StageCamera`) flies through it. The shader and the overlay share the
+  camera, so a node sits exactly where its light is. On launch the camera flies
+  in from deep space. Find, Pair and Controls orbit up and around the hole and
+  pull back, framing it right of the words. Find sends wavefronts out from the
+  Mac and lights each PC found. Pair draws a blue beam from the Mac to the PC
+  that bends toward the hole, as gravity bends light, and locks on Allow.
+  Controls powers each granted permission as a blue satellite on a tilted orbit
+  that the shadow hides when it passes behind. Ready dives through the horizon,
+  holds a beat of dark, then comes out far away in calm space: Home's view.
+- **Home's night sky** is that same world from where the dive comes out, the
+  hole a small ember in the upper right margin, clear of the PC. It draws at 30
+  frames a second and holds still whenever the live flow is frozen. Dawn keeps
+  its painted sky, because the black hole needs a dark ground.
+- **Stage light is scene light:** the black hole is an object in the scene, not
+  field light. Its disk is the one warm light on a field, and it never marks a
+  control or a live state. Gold stays on the one press, and blue stays on live
+  marks, as in the rest of the app.
+- **The stage is always night:** it is space in both appearances, because the
+  black hole and the stars need a dark ground. The words sit on a dark scrim in
+  the lower left; only the parts a person works with sit on Liquid Glass.
+- **Reduce Motion:** the camera snaps to each stop, the drift and the shader's
+  clock stop, and the sonar, the beam's pulse and the lock flash stop. The still
+  stage holds every mark in place.
+- **Budget:** about 3.5 ms of GPU a frame at full Retina resolution on an M5,
+  logged by `FrameTiming` (category `space-field`).
 
 ### Permission Card and Rail
 
