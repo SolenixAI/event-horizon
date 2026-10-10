@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026.10.5 - 2026-10-10
+
+- A new Mac's first stream fills the window and the full-screen Space. The
+  default size now stops below the camera notch, so there is no black bar at
+  the top and no gap at the edges.
+
 ## 2026.10.4 - 2026-10-03
 
 - On a 16-inch MacBook Pro, the HiDPI quality asks the PC for 1728 × 1116

@@ -323,6 +323,7 @@
 		DEC0DE202609255900000001 /* AV1SequenceHeaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202609255900000002 /* AV1SequenceHeaderTests.swift */; };
 		D2000091 /* ContainerMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2000090 /* ContainerMigrationTests.swift */; };
 		D2000095 /* QualityPresetMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2000094 /* QualityPresetMigrationTests.swift */; };
+		DEC0DE105000000000000001 /* NotchStreamSizeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE105000000000000002 /* NotchStreamSizeTests.swift */; };
 		DEC0DE840000000000000011 /* StreamDisplayModeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE840000000000000012 /* StreamDisplayModeTests.swift */; };
 		DEC0DE840000000000000013 /* TerminationGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE840000000000000014 /* TerminationGateTests.swift */; };
 		DEC0DE202609222500000001 /* StreamAwareUpdateAlertsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202609222500000002 /* StreamAwareUpdateAlertsTests.swift */; };
@@ -758,6 +759,7 @@
 		DEC0DE202609255900000002 /* AV1SequenceHeaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AV1SequenceHeaderTests.swift; sourceTree = "<group>"; };
 		D2000090 /* ContainerMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerMigrationTests.swift; sourceTree = "<group>"; };
 		D2000094 /* QualityPresetMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QualityPresetMigrationTests.swift; sourceTree = "<group>"; };
+		DEC0DE105000000000000002 /* NotchStreamSizeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchStreamSizeTests.swift; sourceTree = "<group>"; };
 		DEC0DE840000000000000012 /* StreamDisplayModeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamDisplayModeTests.swift; sourceTree = "<group>"; };
 		DEC0DE840000000000000014 /* TerminationGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminationGateTests.swift; sourceTree = "<group>"; };
 		DEC0DE202609222500000002 /* StreamAwareUpdateAlertsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamAwareUpdateAlertsTests.swift; sourceTree = "<group>"; };
@@ -1230,6 +1232,7 @@
 				DEC0DE202609255900000002 /* AV1SequenceHeaderTests.swift */,
 				D2000090 /* ContainerMigrationTests.swift */,
 				D2000094 /* QualityPresetMigrationTests.swift */,
+				DEC0DE105000000000000002 /* NotchStreamSizeTests.swift */,
 				DEC0DE840000000000000012 /* StreamDisplayModeTests.swift */,
 				DEC0DE840000000000000014 /* TerminationGateTests.swift */,
 				DEC0DE202609222500000002 /* StreamAwareUpdateAlertsTests.swift */,
@@ -1747,6 +1750,7 @@
 				DEC0DE202609255900000001 /* AV1SequenceHeaderTests.swift in Sources */,
 				D2000091 /* ContainerMigrationTests.swift in Sources */,
 				D2000095 /* QualityPresetMigrationTests.swift in Sources */,
+				DEC0DE105000000000000001 /* NotchStreamSizeTests.swift in Sources */,
 				DEC0DE840000000000000011 /* StreamDisplayModeTests.swift in Sources */,
 				DEC0DE840000000000000013 /* TerminationGateTests.swift in Sources */,
 				DEC0DE202609222500000001 /* StreamAwareUpdateAlertsTests.swift in Sources */,
