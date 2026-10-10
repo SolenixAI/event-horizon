@@ -357,6 +357,7 @@
 		DEC0DE105000000000000001 /* NotchStreamSizeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE105000000000000002 /* NotchStreamSizeTests.swift */; };
 		DEC0DE105000000000000003 /* ReinstalledPCSaveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE105000000000000004 /* ReinstalledPCSaveTests.swift */; };
 		B483F54E3718AC92CA611601 /* BuildMarkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCCBA74C05978BE55C78B92D /* BuildMarkTests.swift */; };
+		D7297E1FEC935211C5C141A8 /* PastIdentityRetirementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4913A4F3BCE5F0B071EE4604 /* PastIdentityRetirementTests.swift */; };
 		DEC0DE840000000000000011 /* StreamDisplayModeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE840000000000000012 /* StreamDisplayModeTests.swift */; };
 		DEC0DE840000000000000013 /* TerminationGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE840000000000000014 /* TerminationGateTests.swift */; };
 		DEC0DE202609222500000001 /* StreamAwareUpdateAlertsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202609222500000002 /* StreamAwareUpdateAlertsTests.swift */; };
@@ -835,6 +836,7 @@
 		DEC0DE105000000000000002 /* NotchStreamSizeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchStreamSizeTests.swift; sourceTree = "<group>"; };
 		DEC0DE105000000000000004 /* ReinstalledPCSaveTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReinstalledPCSaveTests.swift; sourceTree = "<group>"; };
 		FCCBA74C05978BE55C78B92D /* BuildMarkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildMarkTests.swift; sourceTree = "<group>"; };
+		4913A4F3BCE5F0B071EE4604 /* PastIdentityRetirementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastIdentityRetirementTests.swift; sourceTree = "<group>"; };
 		DEC0DE840000000000000012 /* StreamDisplayModeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamDisplayModeTests.swift; sourceTree = "<group>"; };
 		DEC0DE840000000000000014 /* TerminationGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminationGateTests.swift; sourceTree = "<group>"; };
 		DEC0DE202609222500000002 /* StreamAwareUpdateAlertsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamAwareUpdateAlertsTests.swift; sourceTree = "<group>"; };
@@ -1350,6 +1352,7 @@
 				DEC0DE105000000000000002 /* NotchStreamSizeTests.swift */,
 				DEC0DE105000000000000004 /* ReinstalledPCSaveTests.swift */,
 				FCCBA74C05978BE55C78B92D /* BuildMarkTests.swift */,
+				4913A4F3BCE5F0B071EE4604 /* PastIdentityRetirementTests.swift */,
 				DEC0DE840000000000000012 /* StreamDisplayModeTests.swift */,
 				DEC0DE840000000000000014 /* TerminationGateTests.swift */,
 				DEC0DE202609222500000002 /* StreamAwareUpdateAlertsTests.swift */,
@@ -1910,6 +1913,7 @@
 				DEC0DE105000000000000001 /* NotchStreamSizeTests.swift in Sources */,
 				DEC0DE105000000000000003 /* ReinstalledPCSaveTests.swift in Sources */,
 				B483F54E3718AC92CA611601 /* BuildMarkTests.swift in Sources */,
+				D7297E1FEC935211C5C141A8 /* PastIdentityRetirementTests.swift in Sources */,
 				DEC0DE840000000000000011 /* StreamDisplayModeTests.swift in Sources */,
 				DEC0DE840000000000000013 /* TerminationGateTests.swift in Sources */,
 				DEC0DE202609222500000001 /* StreamAwareUpdateAlertsTests.swift in Sources */,
