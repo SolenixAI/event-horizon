@@ -17,6 +17,15 @@ jobs:
       - uses: actions/checkout@v5
       - name: Build and test
         run: make test
+  skills:
+    # Every agent skill stays model-invocable: the unlock script must find
+    # nothing to change in a commit.
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - name: No locked skills
+        run: scripts/unlock-skills.sh && git diff --exit-code .agents .claude
   companion:
     # The PC companion: its core and both OS adapters, on the PCs it runs on.
     strategy:
