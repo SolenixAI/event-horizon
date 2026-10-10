@@ -54,7 +54,7 @@ extension AppModel {
             }
             guard let token else { return }
             while !Task.isCancelled {
-                if await !companion.lease(token: token) { return }
+                if await companion.lease(token: token) == .refused { return }
                 try? await Task.sleep(for: CompanionClient.leaseInterval)
             }
         }
