@@ -77,14 +77,14 @@ CREDS           := scripts/signing-creds.sh
 SIGN_KEYCHAIN   ?= $(HOME)/Library/Keychains/developer-id.keychain-db
 # Version single source of truth: Glimmer/Version.xcconfig (NOT pbxproj).
 MARKETING_VERSION := $(shell sed -n 's/^MARKETING_VERSION = \(.*\)/\1/p' Glimmer/Version.xcconfig | tr -d ' ')
-DMG_NAME        := Glimmer-$(MARKETING_VERSION).dmg
+DMG_NAME        := Event-Horizon-$(MARKETING_VERSION).dmg
 DIST_DIR        := $(DERIVED)/dist
 # Build number (CFBundleVersion) - the monotonic stamp Sparkle keys updates on.
 BUILD_NUMBER    := $(shell sed -n 's/^CURRENT_PROJECT_VERSION = \(.*\)/\1/p' Glimmer/Version.xcconfig | tr -d ' ')
 # Repo that hosts the Sparkle appcast (GitHub Pages) + release assets - the
 # public source repo itself.
 RELEASES_REPO   ?= SolenixAI/event-horizon
-# Homebrew tap that carries the cask (`brew install --cask se7enbrc/glimmer/glimmer`).
+# Homebrew tap that carries the cask (`brew install --cask solenixai/event-horizon/event-horizon`).
 TAP_REPO        ?= SolenixAI/homebrew-event-horizon
 export RELEASES_REPO TAP_REPO
 # Which release `make brew-bump` points the cask at - the one being built by default.
@@ -396,12 +396,12 @@ notarize: sign
 	@test -n "$(strip $(DEVELOPER_ID))" || { echo "ERR: no Developer ID cert - can't notarize" >&2; exit 1; }
 	@$(MAKE) --no-print-directory ensure-signing
 	@echo "▶ Notarizing $(GLIMMER_APP_SRC)..."
-	@rm -f "$(DERIVED)/Glimmer-notarize.zip"
-	ditto -c -k --sequesterRsrc --keepParent "$(GLIMMER_APP_SRC)" "$(DERIVED)/Glimmer-notarize.zip"
-	xcrun notarytool submit "$(DERIVED)/Glimmer-notarize.zip" \
+	@rm -f "$(DERIVED)/Event-Horizon-notarize.zip"
+	ditto -c -k --sequesterRsrc --keepParent "$(GLIMMER_APP_SRC)" "$(DERIVED)/Event-Horizon-notarize.zip"
+	xcrun notarytool submit "$(DERIVED)/Event-Horizon-notarize.zip" \
 		--keychain-profile "$(NOTARY_PROFILE)" --keychain "$(SIGN_KEYCHAIN)" --wait
 	xcrun stapler staple "$(GLIMMER_APP_SRC)"
-	@rm -f "$(DERIVED)/Glimmer-notarize.zip"
+	@rm -f "$(DERIVED)/Event-Horizon-notarize.zip"
 	@echo "  ✓ notarized + stapled"
 	@spctl --assess --type execute --verbose=2 "$(GLIMMER_APP_SRC)" || true
 
@@ -494,7 +494,7 @@ verify:
 # SUPublicEDKey. Idempotent - re-running just reprints the public key. BACK UP the
 # private key: it is the ROOT OF UPDATE TRUST; losing it means no client can
 # auto-update past the last signed build, and a leak lets anyone sign a malicious
-# update Glimmer will install.
+# update Event Horizon will install.
 sparkle-keys:
 	@set -eu; \
 	TOOLS="$$(scripts/sparkle-tools.sh)"; \
@@ -512,7 +512,7 @@ sparkle-keys:
 
 # Build + notarize + staple (via `dist`), then publish a Sparkle update: ZIP the
 # notarized bundle, EdDSA-sign it (key from the creds file), upload the ZIP + DMG
-# to the public glimmer GitHub release, and update the Pages-hosted appcast.xml.
+# to the public event-horizon GitHub release, and update the Pages-hosted appcast.xml.
 # Prompt-free once the one-time signing / notary / sparkle-keys setup is done.
 # Bump Glimmer/Version.xcconfig + commit FIRST - the appcast version comes from
 # HEAD; the public repo at the tag is the GPL corresponding source.

@@ -24,7 +24,7 @@ import sys
 # Relative links in the changelog (docs/SECURITY.md) resolve against the repo on
 # GitHub; inside Sparkle's WebView there is nothing to resolve them against, so
 # they are absolutized on the way out.
-LINK_BASE = "https://github.com/Se7enbrc/glimmer/blob/main/"
+LINK_BASE = "https://github.com/SolenixAI/event-horizon/blob/main/"
 
 # The prose is hand-written Markdown; only the constructs the changelog
 # actually uses are supported (h3, flat bullet lists, paragraphs, and the

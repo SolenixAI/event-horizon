@@ -35,7 +35,7 @@ ICON_Y=200
 
 [ -d "$APP" ] || { echo "ERR: app bundle not found at $APP" >&2; exit 1; }
 
-WORK="$(mktemp -d -t glimmer-dmg)"
+WORK="$(mktemp -d -t event-horizon-dmg)"
 STAGE="$WORK/stage"
 RW="$WORK/rw.dmg"
 DEV=""
