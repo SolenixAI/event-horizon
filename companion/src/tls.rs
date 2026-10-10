@@ -7,7 +7,7 @@ use rustls::ServerConfig;
 use rustls::crypto::CryptoProvider;
 use rustls::pki_types::{CertificateDer, PrivateKeyDer, PrivatePkcs8KeyDer};
 use sha2::{Digest, Sha256};
-use std::io::{self, Write};
+use std::io;
 use std::net::SocketAddr;
 use std::path::Path;
 use std::sync::Arc;
@@ -92,6 +92,7 @@ fn generate() -> io::Result<(Vec<u8>, Vec<u8>)> {
 fn write_private(path: &Path, bytes: &[u8]) -> io::Result<()> {
     #[cfg(unix)]
     {
+        use std::io::Write;
         use std::os::unix::fs::OpenOptionsExt;
         let mut file = std::fs::OpenOptions::new()
             .write(true)
