@@ -110,6 +110,16 @@ where
     let outcome = ask.answer.await.unwrap_or(PairOutcome::Expired);
     let (status, name) = match outcome {
         PairOutcome::Paired { sunshine_client } => {
+            // Sunshine refuses a certificate that more than one record holds, so
+            // the Mac's earlier record goes once its new one exists. When Sunshine
+            // could not say which record is new, the earlier one stays.
+            let earlier = sunshine_client_of(&link.macs, &ask.mac_id);
+            if let (Some(earlier), Some(new)) = (&earlier, &sunshine_client)
+                && earlier != new
+                && let Err(error) = link.host.sunshine().unpair(earlier).await
+            {
+                eprintln!("pairing: could not remove the earlier Sunshine record: {error:?}");
+            }
             let token = new_token();
             remember(&link.macs, &ask.mac_id, &ask.mac_name, &token, sunshine_client);
             return (
@@ -238,6 +248,16 @@ fn save(macs: &FsPath, document: &Value) {
         macs,
         serde_json::to_string_pretty(document).expect("JSON serialises"),
     );
+}
+
+/// The Sunshine client this companion recorded for a Mac, if any.
+fn sunshine_client_of(macs: &FsPath, mac_id: &str) -> Option<String> {
+    load(macs)["macs"]
+        .as_array()?
+        .iter()
+        .find(|m| m["mac_id"] == mac_id)?["sunshine_client"]
+        .as_str()
+        .map(str::to_string)
 }
 
 /// Store the Mac's token hash and its Sunshine client; a newer pairing of the

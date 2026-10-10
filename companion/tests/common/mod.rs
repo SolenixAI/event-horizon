@@ -73,7 +73,8 @@ impl SunshineApi for FakeSunshine {
         Ok(())
     }
 
-    /// Sunshine's client id for the new pairing is `uuid-<mac id>`.
+    /// Like Sunshine, every pairing adds a new client: `uuid-<mac id>` the first
+    /// time, `uuid-<mac id>-<n>` for the nth pairing of the same Mac.
     async fn submit_pin(
         &self,
         mac_id: &str,
@@ -83,11 +84,14 @@ impl SunshineApi for FakeSunshine {
         if self.is_down() {
             return Err(SunshineError::Unreachable("fake: down".into()));
         }
-        self.pins
-            .lock()
-            .unwrap()
-            .push((mac_name.to_string(), pin.to_string()));
-        Ok(Some(format!("uuid-{mac_id}")))
+        let mut pins = self.pins.lock().unwrap();
+        pins.push((mac_name.to_string(), pin.to_string()));
+        let pairings = pins.iter().filter(|(name, _)| name == mac_name).count();
+        Ok(Some(if pairings == 1 {
+            format!("uuid-{mac_id}")
+        } else {
+            format!("uuid-{mac_id}-{pairings}")
+        }))
     }
 
     async fn unpair(&self, client: &str) -> Result<(), SunshineError> {
