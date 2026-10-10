@@ -1,3 +1,14 @@
+---
+type: Agent Config
+sources:
+  - https://github.com/mattpocock/skills/blob/main/skills/engineering/wayfinder/SKILL.md
+  - https://linear.app/docs/assigning-issues
+generated: 2026-10-10T18:33-02:30
+verified: 2026-10-10T18:33-02:30
+status: current
+stale_after: 2026-11-10
+---
+
 # Issue tracker: Linear
 
 Issues and specs for this repo live in **Linear**: workspace `solenix`, team
@@ -10,11 +21,13 @@ at `https://api.linear.app/graphql` with a personal API key (`LINEAR_API_KEY`).
 
 ## Conventions
 
-- **Create an issue**: `save_issue` (MCP) or `issueCreate` with the team
-  template "Default issue", `projectId` (Event Horizon), `title` and an
-  explicit assignee: yourself when the work is yours, none for an unclaimed
-  wayfinder ticket. Pass no description: it replaces the template body. Fill
-  each `{…}` slot afterwards with a patch edit.
+- **Create an issue**: start from the team template "Default issue". With MCP,
+  `save_issue` with `template` "Default issue"; with GraphQL, `issueCreate`
+  with `teamId` (SOL) and `templateId` (find "Default issue" with
+  `list_templates`). Add `projectId` (Event Horizon), `title` and the
+  assignee: `me` when the work is yours, `null` for an unclaimed wayfinder
+  ticket. A description replaces the template body, so pass none. Then fill
+  each `{…}` slot: update the issue with `save_issue` (set `id`) and a `patch`.
 - **Read an issue**: `get_issue` with its identifier (`SOL-123`), plus
   `list_comments`.
 - **List issues**: `list_issues` filtered by project **Event Horizon**, state
@@ -41,7 +54,6 @@ Read it as in **Read an issue** above.
 
 ## Wayfinding operations
 
-Used by `/wayfinder`. The rules (map, ticket labels, claim, blocking, frontier,
-resolve) live in one place for every repo: the Linear team skill
-**Wayfinder on Linear**. Read it with the Linear tools (`list_agent_skills`,
-then `get_agent_skill`) before you chart or work a map.
+Used by `/wayfinder`. The rules live in one place for every repo: the Linear
+team skill **Wayfinder on Linear**. Read it with the Linear tools
+(`list_agent_skills`, then `get_agent_skill`) before you chart or work a map.
