@@ -61,7 +61,9 @@ Stage Manager and Mac shortcuts stay the user's, while the PC feels local.
 - Works against a current, unmodified Sunshine.
 - Analytics only with consent: PostHog measures solenix.dev and checkout; the
   app sends anonymous usage only after the user opts in (once, in Settings,
-  never a popup). No other third-party calls.
+  never a popup). No other third-party calls: otherwise the app talks only to
+  the PC, to its local network for discovery and Wake on LAN, and to its update
+  feed.
 - Stack: Vercel (deploys), GitHub (code), Linear (planning, source of truth),
   PostHog (analytics), Stripe (money: Checkout + Managed Payments, licence keys
   via a Vercel function). Their full feature sets cover every need before

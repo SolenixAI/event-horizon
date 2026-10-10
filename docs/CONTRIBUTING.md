@@ -291,7 +291,7 @@ Credentials never belong in the tree; see [SECURITY.md](SECURITY.md).
 ## Style
 
 - 4-space indent, opening brace on the same line, trailing newline. Match
-  neighbouring files.
+  neighbouring files, with names that read as English at the call site.
 - File / type names match the load-bearing type they contain
   (`VideoDecoder.swift` → `class VideoDecoder`). Extensions split out by feature
   (`VideoDecoder+HDR.swift`, `VideoDecoder+Bitstream.swift`).
@@ -449,12 +449,13 @@ there. Common prefixes:
 - `docs` or `docs(area)`: these files
 
 Subject line: imperative mood, lowercase after the prefix, no trailing period.
-Body wrapped at about 72 columns when one's needed.
+The body explains why, wrapped at about 72 columns.
 
 **No attribution to tools or agents.** No `Co-Authored-By` trailer, no session
 trailers or links, no “Generated with” line, no model or tool names: not in
 commits, pull request titles or bodies, the changelog, or code comments. Hard
-rule of repo policy. No emoji in commit messages either.
+rule of repo policy. Turn your harness's attribution off before the first
+commit. No emoji in commit messages either.
 
 Never commit with `--no-verify`: a failing hook is telling you something. If
 `swiftlint --fix` rewrote files, review them and stage them again. No keys,
@@ -466,8 +467,13 @@ in logs or in pull request text.
 When a change would make Event Horizon worse (less tasteful, noisier, slower,
 less reliable, less like a Mac app, or more complex than it earns), say no at
 once and plainly. Name the cost in a sentence or two, then describe the version
-that would be accepted. “Add a setting” is not an answer to a design problem: a
-toggle that exists because nobody made the decision is a bug.
+that would be accepted. Do not soften it into “you might consider”, do not
+quietly build half of it, and do not write it up as ready. “Add a setting” is
+not an answer to a design problem: a toggle that exists because nobody made the
+decision is a bug.
+
+Hold your own work to the same standard. A change that compiles, passes the
+tests and makes the app worse is a regression with a green check mark.
 
 **“It builds clean” is table stakes, not evidence.** Neither is “the tests
 pass”. Both are necessary; neither says anything about whether the thing is any
@@ -507,8 +513,9 @@ Practically, before you call something done:
 - `event-horizon` is the default branch; releases are tags on it.
 - Fork, push your branch to the fork, and open the PR from there against
   `event-horizon`. Only the maintainer can push branches to this repository or
-  merge into `main`.
-- Keep a PR scoped to one area, so it can land independently.
+  merge into `event-horizon`.
+- Keep a PR scoped to one area, so it can land independently. No drive-by
+  reformatting, renames or unrelated cleanup riding along.
 - Leave `CHANGELOG.md` and `Glimmer/Version.xcconfig` alone: the maintainer
   picks the version and writes the release notes when a change ships. Each
   release there is a `## <version> - <date>` heading over a flat list of
@@ -519,7 +526,7 @@ Practically, before you call something done:
   request: Sparkle orders updates by `CURRENT_PROJECT_VERSION`, so a build
   number that doesn't rise is never offered.
 - The pull request says what changed and why, what you ran and looked at, and
-  what you did not verify.
+  what you did not verify. An honest gap beats a confident guess.
 - Before you ask for a merge, run the thing and look at it. [The bar](#the-bar)
   is the checklist.
 
@@ -536,6 +543,9 @@ What gets closed:
 - New dependencies for what the platform already does.
 - Speculative abstractions, dead or commented-out code, `TODO`s with no issue.
 - Tool or agent attribution anywhere, secrets anywhere, or `--no-verify`.
+
+What gets merged is small, verified, reads like the code around it, and makes
+Event Horizon feel more like part of macOS than it did before.
 
 ## Working in a fork
 
