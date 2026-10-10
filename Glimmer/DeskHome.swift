@@ -24,11 +24,18 @@ struct DeskHome: View {
     @Environment(\.scenePhase) private var scenePhase
     /// The bezel's width: the status row and the shelf line up with it.
     @State private var deskWidth: CGFloat = 0
+    /// Mirrors StreamWindow.homeShowing, which is not observable: it is copied
+    /// here on each change so Home re-renders when the stream leaves or returns to the desk.
+    @State private var streamOnDesk = StreamWindow.homeShowing
 
-    /// The backdrop drifts only while someone can see it move: Reduce Motion
-    /// is off, this window is key and the app is in front, and no PC streams.
-    private var backdropDrifts: Bool {
-        !reduceMotion && controlActiveState == .key && scenePhase == .active && !model.isStreaming
+    /// How the space's live flow runs. Hidden under Reduce Motion. Frozen while
+    /// this window is not key or the app is in the background, and while a
+    /// stream fills the window (on the desk, the stream's bitrate still flows).
+    private var spaceFlow: SpaceFlow {
+        if reduceMotion { return .hidden }
+        if controlActiveState != .key || scenePhase != .active { return .paused }
+        if model.isStreaming && !streamOnDesk { return .paused }
+        return .running
     }
 
     var body: some View {
@@ -60,10 +67,11 @@ struct DeskHome: View {
         .frame(minWidth: 640, idealWidth: 1040, maxWidth: .infinity,
                minHeight: 600, idealHeight: 780, maxHeight: .infinity)
         // Home's surroundings: the deep-space field behind the PC, under the
-        // whole window, title bar included. Its trace is anchored to the bezel.
+        // whole window, title bar included. The live flow is anchored to the bezel.
         .backgroundPreferenceValue(BezelFrameKey.self) { bezel in
             GeometryReader { proxy in
-                SpaceBackdrop(drifts: backdropDrifts, bezel: bezel.map { proxy[$0] })
+                SpaceBackdrop(flow: spaceFlow, bezel: bezel.map { proxy[$0] },
+                              sample: { await model.liveFlowReading() })
             }
             .ignoresSafeArea()
         }
@@ -82,6 +90,9 @@ struct DeskHome: View {
             .padding(.top, 1)
             .padding(.trailing, 10)
             .ignoresSafeArea(.container, edges: .top)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: StreamWindow.homeShowingDidChange)) { _ in
+            streamOnDesk = StreamWindow.homeShowing
         }
         .task(id: model.selectedHost?.id) {
             guard let host = model.selectedHost else { return }

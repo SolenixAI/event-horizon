@@ -32,7 +32,15 @@ extension StreamWindow {
 
     /// Home is showing with a live PC on the desk. The user chose Home, so a
     /// ⌘Tab back into Event Horizon lands there, not in the stream.
-    static var homeShowing = false
+    static var homeShowing = false {
+        didSet {
+            guard homeShowing != oldValue else { return }
+            NotificationCenter.default.post(name: homeShowingDidChange, object: nil)
+        }
+    }
+
+    /// Posted when `homeShowing` flips, so SwiftUI views that depend on it re-render.
+    static let homeShowingDidChange = Notification.Name("EventHorizonHomeShowingDidChange")
 
     /// The desk frame in the content view's own coordinates, or nil while Home
     /// has not laid it out.

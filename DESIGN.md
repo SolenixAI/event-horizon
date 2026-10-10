@@ -151,7 +151,9 @@ Two logo colours on a plain system window, with the macOS status colours.
 - **Horizon Blue**: the logo's cool ring (`Color.horizonBlue`). It marks what
   is live on the PC: the Running label and its 7pt dot, the ring and name of the
   cover that is on screen, the soft halo behind the logo on the idle screen, and
-  the blue half of a cover's fallback gradient.
+  the blue half of a cover's fallback gradient. On the field it also carries
+  the live connection: particles and a pulse (Space Backdrop), at full strength,
+  like the Running label. Blue means live, wherever it appears.
   **Open decision:** on the dawn field, the Running label measures about 2.3:1,
   below WCAG 4.5:1. It did the same on the old system window. A deeper live blue
   for light appearance would fix it, but that changes the signal colour, so the
@@ -189,8 +191,9 @@ games' cover art.
 the field, at most 16% opacity at night and 20% at dawn. It is atmosphere, never
 a signal: it never marks a control and never marks a live state. Press gold and
 live blue stay at full strength. Against the field they measure at least 3:1,
-while the horizon light stays near 1.2:1. Any new light on the field must stay
-under this bar.
+while the horizon light stays near 1.2:1. This rule covers field light only.
+Any new field light must stay under this bar. The live flow's particles and
+pulse are live marks, not field light, so they use full live blue.
 
 ## Typography
 
@@ -375,16 +378,33 @@ radius is the screen's radius plus its 5pt inset.
 ### Space Backdrop
 
 - **What it is:** the field behind Home, under the whole window, title bar
-  included. A static sky, the stars (night only), the horizon light and the
-  orbit trace: the figure-eight from `brand/orbit.svg`. Three faint, neutral
-  bodies move along the trace, one lap every four minutes.
-- **Drift:** the three bodies run on the render server, as a path animation at
-  the display's refresh rate (up to 120 Hz), with no main-thread frames. The
-  field, the stars, the horizon light and the grain are static layers painted at
-  the window's backing scale. The trace is a one-pixel hairline. It stops under
-  Reduce Motion, when the window is not key, when the app is in the background,
-  and while a PC streams, and it resumes without a jump.
-- **Accessibility:** hidden from VoiceOver. It carries no information.
+  included. A static sky, the stars (night only) and the horizon light. Over
+  them, the live connection flows as faint blue particles on an undrawn round
+  trip: from the Mac's side of the bottom horizon, along the margin left of the
+  PC's bezel, and back. Nothing is stroked; the path is felt through the motion.
+- **Density follows the bitrate.** Up to 36 particle slots show, all at the
+  stream's bitrate of 80 Mbps. Idle shows none.
+- **The pulse follows the latency.** One crisp pulse makes the round trip. Its
+  lap is 1 s plus 0.12 s per ms, up to 9 s, so a quick ping reads quick and a
+  spike reads stretched.
+- **Where the numbers come from.** While the PC is ready, the readiness ping
+  behind the chip (the same figure the chip shows). While a PC streams, the
+  stream's own latency and bitrate, the same stats the stats overlay reads. No
+  new network call. The numbers are sampled once a second, smoothed, and applied
+  only when they change by more than 2%.
+- **Still:** with no live data (asleep, unreachable, checking, connecting), the
+  flow shows nothing and runs no animation.
+- **Drift:** the flow runs on the render server as keyframe path animations on
+  CALayers, with no main-thread frames. Density changes fade particles in and
+  out over 0.6 s, and each particle keeps its phase, so the others never jump.
+  The field, the stars, the horizon light and the grain are static layers
+  painted at the window's backing scale. The flow freezes when the window is
+  not key or the app is in the background, and while a stream fills the window.
+  It is hidden under Reduce Motion, and it resumes without a jump.
+- **Placement:** the flow stays in the margin beside the bezel. It never
+  crosses the status row, the readiness chip or the game shelf.
+- **Accessibility:** hidden from VoiceOver. The chip and the stream's stats
+  already speak the same numbers, so the flow adds nothing for a screen reader.
 - **Contrast:** labels keep WCAG contrast on the field. Night labels measure at
   least 12.9:1 and their secondary text at least 5.7:1. Dawn labels measure at
   least 14:1 and their secondary text at least 5:1.
@@ -415,8 +435,9 @@ radius is the screen's radius plus its 5pt inset.
   only other gradient is a cover's fallback tile.
 - **Don't** add a toolbar to the main window. Full screen is all PC.
 - **Don't** open the PC in a second window. The PC opens in this window.
-- **Don't** use a coloured glow, except the logo's own halo on the idle screen
-  and the horizon light on the field. The horizon light is never a signal.
+- **Don't** use a coloured glow, except the logo's own halo on the idle screen,
+  the horizon light on the field, and the live flow's particles and pulse,
+  which are live marks. The horizon light is never a signal.
 - **Don't** redraw, recolour or reinterpret the app icon (the three-body
   figure-eight orbit).
 - **Don't** show "Glimmer" anywhere a person reads, except the engine credit.

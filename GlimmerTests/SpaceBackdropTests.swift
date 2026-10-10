@@ -77,44 +77,17 @@ struct SpaceBackdropTests {
         #expect(contrast(liveBlue, SpacePalette.night.skyBottom) >= 3)
     }
 
-    /// The bodies are neutral light: no signal colour, so none reads as live.
-    @Test func bodiesAreNeutral() {
+    /// The live flow is a live mark: the logo's blue at full strength, as the
+    /// chip and the Running label show it. Only the field's horizon light is
+    /// atmosphere, kept under its bar.
+    @Test func liveFlowIsFullStrengthLogoBlue() {
+        let liveBlue = SpaceRGB(0.227, 0.627, 1.0)
         for palette in [SpacePalette.night, SpacePalette.dawn] {
-            let b = palette.body
-            let spread = max(b.red, b.green, b.blue) - min(b.red, b.green, b.blue)
-            #expect(spread <= 0.2)
+            #expect(palette.live.opacity == 1)
+            #expect(abs(palette.live.red - liveBlue.red) < 0.001)
+            #expect(abs(palette.live.green - liveBlue.green) < 0.001)
+            #expect(abs(palette.live.blue - liveBlue.blue) < 0.001)
+            #expect(palette.horizonBlue.opacity <= 0.2)
         }
-    }
-
-    @Test func traceStaysInsideItsFrame() {
-        let frame = CGRect(x: 10, y: 20, width: 300, height: 133)
-        for step in 0..<400 {
-            let p = FigureEightTrace.point(at: CGFloat(step) / 400, in: frame)
-            #expect(p.x >= frame.minX - 0.001 && p.x <= frame.maxX + 0.001)
-            #expect(p.y >= frame.minY - 0.001 && p.y <= frame.maxY + 0.001)
-        }
-    }
-
-    /// The loop sits beside the PC: inside the bezel's height, centred on it,
-    /// never wider than the window allows, and keeping the figure-eight's shape.
-    @Test func traceStaysInsideTheBezelSpan() {
-        let sizes = [CGSize(width: 1040, height: 780), CGSize(width: 1600, height: 900)]
-        for size in sizes {
-            let bezel = CGRect(x: size.width * 0.2, y: 60, width: size.width * 0.6, height: 614)
-            let frame = SpaceBackdrop.traceFrame(in: size, bezel: bezel)
-            #expect(frame.minY >= bezel.minY && frame.maxY <= bezel.maxY)
-            #expect(abs(frame.midY - bezel.midY) < 0.5)
-            #expect(frame.width <= size.width * SpaceBackdrop.traceMaxWidthShare + 0.5)
-            #expect(abs(frame.width / frame.height - FigureEightTrace.aspect) < 0.01)
-        }
-    }
-
-    @Test func traceIsAClosedLoop() {
-        let frame = CGRect(x: 0, y: 0, width: 1, height: 1)
-        let start = FigureEightTrace.point(at: 0, in: frame)
-        let end = FigureEightTrace.point(at: 1, in: frame)
-        #expect(abs(start.x - end.x) < 0.001 && abs(start.y - end.y) < 0.001)
-        #expect(FigureEightTrace.arc.first == 0 && FigureEightTrace.arc.last == 1)
-        #expect(zip(FigureEightTrace.arc, FigureEightTrace.arc.dropFirst()).allSatisfy { $0 <= $1 })
     }
 }
