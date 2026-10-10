@@ -20,14 +20,14 @@ jobs:
             asset: event-horizon-companion-linux-x86_64
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Build
         working-directory: companion
         run: cargo build --release
       - name: Name the asset
         shell: bash
         run: cp "${{ matrix.built }}" "${{ matrix.asset }}"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.asset }}
           path: ${{ matrix.asset }}
@@ -35,7 +35,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           merge-multiple: true
       - name: Publish
