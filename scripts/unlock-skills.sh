@@ -2,7 +2,7 @@
 # Every skill in this repo is model-invocable, for every agent: any agent
 # that starts here may run any skill itself. Upstream skill packs mark some
 # skills user-only, and an update restores that, so this runs after every
-# install or update (see .github/workflows/skills-update.yml).
+# install or update; CI's "No locked skills" step fails a commit it would change.
 #   Claude Code, Cursor, Copilot: `disable-model-invocation: true` in SKILL.md
 #   Codex: `allow_implicit_invocation: false` in agents/openai.yaml
 set -euo pipefail
