@@ -16,6 +16,15 @@ struct OnboardingFlow: Equatable, Sendable {
     /// The chosen PC paired, so the Pair screen may continue.
     private(set) var pcPaired = false
 
+    init() {}
+
+    /// A pass opened straight on one screen, for screenshots. Screens past Pair
+    /// open with the PC counted as paired, so nothing is paired again to see them.
+    init(previewing step: OnboardingStep) {
+        self.step = step
+        pcPaired = step.rawValue > OnboardingStep.pair.rawValue
+    }
+
     /// Welcome to Find: no prompt yet, so it always moves on.
     mutating func continueFromWelcome() {
         guard step == .welcome else { return }
@@ -61,6 +70,14 @@ enum OnboardingGate {
     static let completedKey = "onboardingCompleted"
     /// Launch argument `-forceOnboarding YES`: shows the pass for screenshots and never writes the completed flag.
     static let forceKey = "forceOnboarding"
+    /// Launch argument `-onboardingPreviewStep 3`: with `-forceOnboarding`, opens the pass on that screen (0 to 4).
+    static let previewStepKey = "onboardingPreviewStep"
+
+    /// The flow a launch opens with: the preview screen when one is asked for with the forced pass.
+    static func startingFlow(forced: Bool, previewStep: Int?) -> OnboardingFlow {
+        guard forced, let previewStep, let step = OnboardingStep(rawValue: previewStep) else { return OnboardingFlow() }
+        return OnboardingFlow(previewing: step)
+    }
 
     static func showsFlow(forced: Bool, completed: Bool, hasPCs: Bool) -> Bool {
         forced || (!completed && !hasPCs)
