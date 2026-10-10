@@ -50,8 +50,23 @@ extension AppModel {
         return runningAppName(on: host)
     }
 
+    /// What a click on the PC's screen opens: the game the PC runs, else the Desktop.
+    func deskTarget(of host: Host) -> LibraryApp? {
+        if let name = runningAppName(on: host), let running = host.apps.first(where: { $0.name == name }) {
+            return running
+        }
+        return desktopApp(of: host)
+    }
+
+    /// The launch rule for a click on a shelf cover: the app already on the PC's screen
+    /// resumes; any other app replaces what runs.
+    func shelfRule(for app: LibraryApp, on host: Host) -> ResumeRule {
+        appOnScreen(on: host) == app.name ? .sameApp : .never
+    }
+
     /// Click on the PC's screen: back into a stream that is on the desk, or
-    /// open the Desktop (waking the PC or pairing again first when it needs it).
+    /// open the game the PC runs (resumed, never cancelled), else the Desktop
+    /// (waking the PC or pairing again first when it needs it).
     func openDesk(_ host: Host) {
         if isStreaming {
             if nativeStreamBackgrounded { resumeStreamWindow() }
@@ -62,14 +77,18 @@ extension AppModel {
         case .waking: cancelWake(host)
         case .pairAgain: requestPairing(for: host)
         default:
-            if let desktop = desktopApp(of: host) { requestStream(app: desktop, on: host) } else { streamHeroApp() }
+            if let target = deskTarget(of: host) {
+                requestStream(app: target, on: host, resume: .anyApp)
+            } else {
+                streamHeroApp()
+            }
         }
     }
 
     /// Open an app from the shelf. The one already on screen comes back; a
     /// different one replaces it (Sunshine runs one app at a time).
     func openFromShelf(_ app: LibraryApp, on host: Host) {
-        guard isStreaming else { requestStream(app: app, on: host); return }
+        guard isStreaming else { requestStream(app: app, on: host, resume: shelfRule(for: app, on: host)); return }
         if lastLaunchAttempt?.app.id == app.id {
             if nativeStreamBackgrounded { resumeStreamWindow() }
             return

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026.10.6 - 2026-10-10
+
+- Clicking the PC's screen, or the cover of the game already on it, brings
+  that game back. It no longer ends the game and starts it again. A different
+  game on Home still replaces the one that is running.
+
 ## 2026.10.5 - 2026-10-10
 
 - A new Mac's first stream fills the window and the full-screen Space. The

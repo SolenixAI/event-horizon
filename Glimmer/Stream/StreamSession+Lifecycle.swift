@@ -213,25 +213,62 @@ extension StreamSession {
     // MARK: - Launch with busy recovery
 
     /// Idle host: /launch. Anything else: /cancel + /launch, so the host
-    /// renegotiates our config instead of /resume-ing a stale one.
+    /// renegotiates our config instead of /resume-ing a stale one. A Home click
+    /// (`rule`) resumes the game the PC runs instead, and never cancels it.
     func launchWithBusyRecovery(
-        network: NetworkClient, appID: Int, config: StreamConfig, info: ServerInfo, deadline: Date
+        network: NetworkClient, appID: Int, config: StreamConfig, info: ServerInfo, deadline: Date,
+        rule: ResumeRule = .never
     ) async throws -> LaunchResponse {
         try checkAttempt(deadline: deadline)
-        try await authorizeOccupancy(info, network: network, deadline: deadline)
+        let first = StreamAttempt.launchStep(
+            rule: rule, appID: appID, runningID: info.currentGameID, busy: info.currentGameID != 0 || info.isBusy)
         do {
-            if info.currentGameID != 0 || info.isBusy {
-                return try await cancelThenLaunch(network: network, appID: appID, config: config, deadline: deadline)
-            }
-            return try await launchHost(network: network, appID: appID, config: config, deadline: deadline)
-        } catch let first as StreamError {
-            log.error("primary launch path failed: \(String(describing: first), privacy: .private)")
+            return try await launchPlanned(first, network: network, appID: appID, config: config,
+                                           info: info, deadline: deadline)
+        } catch let error as StreamError {
+            log.error("primary launch path failed: \(String(describing: error), privacy: .private)")
             try checkAttempt(deadline: deadline)
             let fresh = try await network.fetchServerInfo()
             try checkAttempt(deadline: deadline)
-            try await authorizeOccupancy(fresh, network: network, deadline: deadline)
-            return try await cancelThenLaunch(network: network, appID: appID, config: config, deadline: deadline)
+            // A resuming rule never falls back to /cancel: the retry decides from the fresh answer.
+            let retry = rule == .never ? LaunchStep.cancelThenLaunch : StreamAttempt.launchStep(
+                rule: rule, appID: appID, runningID: fresh.currentGameID,
+                busy: fresh.currentGameID != 0 || fresh.isBusy)
+            return try await launchPlanned(retry, network: network, appID: appID, config: config,
+                                           info: fresh, deadline: deadline)
         }
+    }
+
+    private func launchPlanned(
+        _ step: LaunchStep, network: NetworkClient, appID: Int, config: StreamConfig,
+        info: ServerInfo, deadline: Date
+    ) async throws -> LaunchResponse {
+        switch step {
+        case .resume:
+            return try await resumeHost(network: network, config: config, runningID: info.currentGameID,
+                                        deadline: deadline)
+        case .cancelThenLaunch:
+            try await authorizeOccupancy(info, network: network, deadline: deadline)
+            return try await cancelThenLaunch(network: network, appID: appID, config: config, deadline: deadline)
+        case .launch:
+            try await authorizeOccupancy(info, network: network, deadline: deadline)
+            return try await launchHost(network: network, appID: appID, config: config, deadline: deadline)
+        }
+    }
+
+    /// Resume the game the PC already runs with /resume, which never cancels it. The session
+    /// then owns that game, as a launch would, and a reconnect checks against its id.
+    private func resumeHost(
+        network: NetworkClient, config: StreamConfig, runningID: Int, deadline: Date
+    ) async throws -> LaunchResponse {
+        let client = await network.clientUniqueID
+        try checkAttempt(deadline: deadline)
+        reconnectAppID = runningID
+        let response = try await launchAndRecordOwnership(client: client, appID: runningID) {
+            try await network.resume(config: config)
+        }
+        try checkAttempt(deadline: deadline)
+        return response
     }
 
     func authorizeOccupancy(_ info: ServerInfo, network: NetworkClient, deadline: Date) async throws {
@@ -367,7 +404,8 @@ extension StreamSession {
 
     /// The launch under one wall-clock deadline; a stop() mid-launch cancels it.
     func launchWithDeadline(
-        network: NetworkClient, appID: Int, config: StreamConfig, info: ServerInfo, deadline: Date? = nil
+        network: NetworkClient, appID: Int, config: StreamConfig, info: ServerInfo, deadline: Date? = nil,
+        rule: ResumeRule = .never
     ) async throws -> LaunchResponse {
         let end = deadline ?? Date().addingTimeInterval(Self.launchOverallDeadlineSeconds)
         await network.setRequestDeadline(end)
@@ -375,7 +413,7 @@ extension StreamSession {
         let task = Task {
             try await StreamAttempt.run(until: end) {
                 try await self.launchWithBusyRecovery(
-                    network: network, appID: appID, config: config, info: info, deadline: end)
+                    network: network, appID: appID, config: config, info: info, deadline: end, rule: rule)
             }
         }
         launchTask = task

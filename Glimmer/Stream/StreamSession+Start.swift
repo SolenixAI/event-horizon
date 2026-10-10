@@ -31,6 +31,7 @@ extension StreamSession {
         server: ServerInfo,
         config: StreamConfig,
         appID: Int,
+        resume: ResumeRule = .never,
         quitHotkeyProvider: @escaping @MainActor () -> HotkeyChord = { .defaultQuit },
         statsHotkeyProvider: @escaping @MainActor () -> HotkeyChord = { .defaultStats },
         bookmarkHotkeyProvider: @escaping @MainActor () -> HotkeyChord = { .defaultBookmark },
@@ -106,7 +107,8 @@ extension StreamSession {
         try checkAttempt()
         rttSampler.markLaunch()
 
-        let launch = try await launchWithDeadline(network: network, appID: appID, config: config, info: serverInfo)
+        let launch = try await launchWithDeadline(
+            network: network, appID: appID, config: config, info: serverInfo, rule: resume)
         try checkAttempt()
         takeoverAuthorized = false
         await network.setRequestDeadline(nil)
