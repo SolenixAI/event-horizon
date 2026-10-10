@@ -3,8 +3,10 @@
 mod common;
 
 use common::{FakeGames, FakeSunshine};
-use event_horizon_companion::library::{Change, LibraryGame, sync};
+use event_horizon_companion::library::{Change, LibraryGame, keep_in_step, sync};
 use serde_json::json;
+use std::time::Duration;
+use tokio::time::Instant;
 
 fn game(id: &str, name: &str) -> LibraryGame {
     LibraryGame {
@@ -70,4 +72,58 @@ async fn a_synced_pc_takes_no_saves() {
 
     assert!(sync(&sunshine, &games).await.unwrap().is_empty());
     assert_eq!(*sunshine.saves.lock().unwrap(), saves);
+}
+
+#[tokio::test(start_paused = true)]
+async fn the_first_sync_retries_with_backoff_until_sunshine_answers() {
+    let sunshine = FakeSunshine::default();
+    sunshine.go_down();
+    let games = FakeGames(vec![game("1", "ARC Raiders")]);
+    let up = sunshine.clone();
+    tokio::spawn(async move {
+        tokio::time::sleep(Duration::from_secs(12)).await;
+        up.come_up();
+    });
+    let start = Instant::now();
+    let mut attempts = Vec::new();
+
+    let _ = tokio::time::timeout(
+        Duration::from_secs(700),
+        keep_in_step(&sunshine, &games, |outcome| {
+            attempts.push((start.elapsed().as_secs(), outcome.is_ok()));
+        }),
+    )
+    .await;
+
+    assert_eq!(
+        attempts,
+        vec![(0, false), (2, false), (6, false), (14, true), (614, true)]
+    );
+    assert_eq!(
+        sunshine.apps.lock().unwrap()["apps"][0]["name"],
+        "ARC Raiders"
+    );
+}
+
+#[tokio::test(start_paused = true)]
+async fn after_sunshine_answers_a_later_outage_waits_ten_minutes() {
+    let sunshine = FakeSunshine::default();
+    let games = FakeGames(vec![game("1", "ARC Raiders")]);
+    let down = sunshine.clone();
+    tokio::spawn(async move {
+        tokio::time::sleep(Duration::from_secs(601)).await;
+        down.go_down();
+    });
+    let start = Instant::now();
+    let mut attempts = Vec::new();
+
+    let _ = tokio::time::timeout(
+        Duration::from_secs(1300),
+        keep_in_step(&sunshine, &games, |outcome| {
+            attempts.push((start.elapsed().as_secs(), outcome.is_ok()));
+        }),
+    )
+    .await;
+
+    assert_eq!(attempts, vec![(0, true), (600, true), (1200, false)]);
 }

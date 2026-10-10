@@ -38,6 +38,11 @@ impl FakeSunshine {
         self.down.store(true, Ordering::SeqCst);
     }
 
+    /// Sunshine answers again.
+    pub fn come_up(&self) {
+        self.down.store(false, Ordering::SeqCst);
+    }
+
     fn is_down(&self) -> bool {
         self.down.load(Ordering::SeqCst)
     }
@@ -45,11 +50,17 @@ impl FakeSunshine {
 
 impl SunshineApi for FakeSunshine {
     async fn apps(&self) -> Result<serde_json::Value, SunshineError> {
+        if self.is_down() {
+            return Err(SunshineError::Unreachable("fake: down".into()));
+        }
         Ok(self.apps.lock().unwrap().clone())
     }
 
     /// Like Sunshine: -1 adds, an index replaces, then the list is sorted by name.
     async fn save_app(&self, index: i64, app: serde_json::Value) -> Result<(), SunshineError> {
+        if self.is_down() {
+            return Err(SunshineError::Unreachable("fake: down".into()));
+        }
         let mut document = self.apps.lock().unwrap();
         let list = document["apps"].as_array_mut().unwrap();
         if index == -1 {

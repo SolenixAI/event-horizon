@@ -157,14 +157,12 @@ async fn main() {
         };
         let sunshine = sunshine.clone();
         tokio::spawn(async move {
-            loop {
-                match library::sync(&sunshine, &source).await {
-                    Ok(changes) if !changes.is_empty() => println!("library: {changes:?}"),
-                    Ok(_) => {}
-                    Err(e) => eprintln!("library: {e:?}"),
-                }
-                tokio::time::sleep(std::time::Duration::from_secs(600)).await;
-            }
+            library::keep_in_step(&sunshine, &source, |outcome| match outcome {
+                Ok(changes) if !changes.is_empty() => println!("library: {changes:?}"),
+                Ok(_) => {}
+                Err(e) => eprintln!("library: {e:?}"),
+            })
+            .await;
         });
     }
 
