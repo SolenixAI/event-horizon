@@ -7,9 +7,8 @@
 #[tokio::main]
 async fn main() {
     use event_horizon_companion::{
-        Host, discovery, games, library, link, play, sunshine::LocalSunshine, tls,
+        Host, discovery, games, library, link, play, setup, sunshine::LocalSunshine, tls,
     };
-    use std::collections::HashMap;
 
     // `play <appid>`: what Sunshine runs to open a game.
     let args: Vec<String> = std::env::args().collect();
@@ -23,10 +22,14 @@ async fn main() {
     }
 
     let dir = config_dir();
+    let companion_env = std::fs::read_to_string(dir.join("companion.env")).unwrap_or_default();
 
-    // `install`: turn this PC into an Event Horizon host.
+    // `install`, or a run with no argument on a PC not set up yet: turn this
+    // PC into an Event Horizon host.
+    let installing = args.get(1).map(String::as_str) == Some("install")
+        || setup::is_first_run(&args, &companion_env);
     #[cfg(target_os = "linux")]
-    if args.get(1).map(String::as_str) == Some("install") {
+    if installing {
         match event_horizon_companion::os::linux::install(&dir) {
             Ok(()) => println!("This PC is ready. Open Event Horizon on your Mac."),
             Err(e) => {
@@ -37,7 +40,7 @@ async fn main() {
         return;
     }
     #[cfg(windows)]
-    if args.get(1).map(String::as_str) == Some("install") {
+    if installing {
         let elevated_child = args.iter().any(|a| a == "--elevated");
         let result = event_horizon_companion::os::windows::install(&dir, elevated_child).await;
         // One message at the end (not on CI, where nobody can click it).
@@ -54,17 +57,7 @@ async fn main() {
         }
         return;
     }
-    let env: HashMap<String, String> = std::fs::read_to_string(dir.join("companion.env"))
-        .unwrap_or_default()
-        .lines()
-        .filter_map(|line| line.split_once('='))
-        .map(|(k, v)| {
-            (
-                k.trim().to_string(),
-                v.trim().trim_matches(|c| c == '"' || c == '\'').to_string(),
-            )
-        })
-        .collect();
+    let env = setup::parse_env(&companion_env);
     let get = |key: &str| {
         env.get(key)
             .cloned()
