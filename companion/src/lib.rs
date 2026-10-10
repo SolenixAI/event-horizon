@@ -11,6 +11,7 @@ pub mod play;
 mod ports;
 pub mod steam;
 pub mod sunshine;
+pub mod tls;
 
-pub use host::{Host, LEASE_TTL, PAIR_TIMEOUT, PairOutcome, PairRequest};
+pub use host::{Host, LEASE_TTL, PAIR_TIMEOUT, PairOutcome, PairRequest, new_code};
 pub use ports::{Awake, Decision, GameSources, Prompt, SunshineApi, SunshineError};

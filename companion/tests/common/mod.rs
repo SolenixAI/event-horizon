@@ -3,16 +3,18 @@
 //! through its interface; these stand in for the PC.
 
 use event_horizon_companion::{Awake, Decision, Prompt, SunshineApi, SunshineError};
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-/// Sunshine that records every PIN it is given.
+/// Sunshine that records every PIN it is given and every client it unpairs.
 #[derive(Clone)]
 pub struct FakeSunshine {
     /// (Mac name, PIN) for every PIN Sunshine was given.
     pub pins: Arc<Mutex<Vec<(String, String)>>>,
-    pub down: bool,
+    /// Sunshine's client id for every Mac it unpaired, in order.
+    pub unpaired: Arc<Mutex<Vec<String>>>,
+    pub down: Arc<AtomicBool>,
     /// Sunshine's apps document, and how many saves it took.
     pub apps: Arc<Mutex<serde_json::Value>>,
     pub saves: Arc<Mutex<usize>>,
@@ -22,10 +24,22 @@ impl Default for FakeSunshine {
     fn default() -> Self {
         Self {
             pins: Default::default(),
-            down: false,
+            unpaired: Default::default(),
+            down: Default::default(),
             apps: Arc::new(Mutex::new(serde_json::json!({ "apps": [], "env": {} }))),
             saves: Default::default(),
         }
+    }
+}
+
+impl FakeSunshine {
+    /// From now on every call fails, as if Sunshine stopped.
+    pub fn go_down(&self) {
+        self.down.store(true, Ordering::SeqCst);
+    }
+
+    fn is_down(&self) -> bool {
+        self.down.load(Ordering::SeqCst)
     }
 }
 
@@ -48,23 +62,39 @@ impl SunshineApi for FakeSunshine {
         Ok(())
     }
 
-    async fn submit_pin(&self, mac_name: &str, pin: &str) -> Result<(), SunshineError> {
-        if self.down {
+    /// Sunshine's client id for the new pairing is `uuid-<mac id>`.
+    async fn submit_pin(
+        &self,
+        mac_id: &str,
+        mac_name: &str,
+        pin: &str,
+    ) -> Result<Option<String>, SunshineError> {
+        if self.is_down() {
             return Err(SunshineError::Unreachable("fake: down".into()));
         }
         self.pins
             .lock()
             .unwrap()
             .push((mac_name.to_string(), pin.to_string()));
+        Ok(Some(format!("uuid-{mac_id}")))
+    }
+
+    async fn unpair(&self, client: &str) -> Result<(), SunshineError> {
+        if self.is_down() {
+            return Err(SunshineError::Unreachable("fake: down".into()));
+        }
+        self.unpaired.lock().unwrap().push(client.to_string());
         Ok(())
     }
 }
 
-/// The person at the PC: answers after `delay`, or never.
+/// The person at the PC: answers after `delay`, or never. Records each code
+/// it was asked to show.
 #[derive(Clone)]
 pub struct FakePrompt {
     pub answer: Option<Decision>,
     pub delay: Duration,
+    pub codes: Arc<Mutex<Vec<String>>>,
 }
 
 impl FakePrompt {
@@ -72,12 +102,22 @@ impl FakePrompt {
         Self {
             answer: Some(answer),
             delay: Duration::from_secs(3),
+            codes: Default::default(),
+        }
+    }
+
+    pub fn after(answer: Option<Decision>, delay: Duration) -> Self {
+        Self {
+            answer,
+            delay,
+            codes: Default::default(),
         }
     }
 }
 
 impl Prompt for FakePrompt {
-    async fn ask_allow(&self, _mac_name: &str, _code: &str) -> Decision {
+    async fn ask_allow(&self, _mac_name: &str, code: &str) -> Decision {
+        self.codes.lock().unwrap().push(code.to_string());
         tokio::time::sleep(self.delay).await;
         match self.answer {
             Some(answer) => answer,

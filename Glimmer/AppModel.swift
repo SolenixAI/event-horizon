@@ -417,6 +417,10 @@ final class AppModel {
     /// sheet asks for a click on Allow there, not a code typed into Sunshine.
     var pairingViaCompanion = false
 
+    /// The six-digit code the companion's PC shows for this pairing. The sheet
+    /// shows it, so the person can check it matches the PC before Allow.
+    var companionCode: String?
+
     /// Renews the companion's lease while a stream runs, so the PC stays awake.
     @ObservationIgnored var companionLeaseTask: Task<Void, Never>?
 

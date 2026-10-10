@@ -70,7 +70,8 @@ jobs:
       - name: The companion answers on the network
         run: |
           Start-Sleep -Seconds 5
-          $hello = Invoke-RestMethod http://127.0.0.1:47970/hello
+          # The Link is HTTPS with the companion's own certificate; the Rust tests pin it.
+          $hello = Invoke-RestMethod -SkipCertificateCheck https://127.0.0.1:47970/hello
           if ($hello.app -ne 'event-horizon-companion') { throw "unexpected hello: $hello" }
       - name: The companion's Sunshine login works
         run: |

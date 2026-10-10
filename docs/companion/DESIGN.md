@@ -80,8 +80,9 @@ impl Host {
     /// until shutdown. Idempotent: a second run repairs, never duplicates.
     pub async fn run(config: Config, ports: Ports, shutdown: Shutdown) -> Result<(), HostError>;
 
-    /// What the Link layer calls. Three requests are the whole protocol.
-    pub async fn pair(&self, request: PairRequest) -> PairOutcome;     // needs a click on Allow
+    /// What the Link layer calls. The Link shows `code` to the Mac and the
+    /// PC's Allow dialog, then waits for the answer.
+    pub async fn pair(&self, request: PairRequest, code: String) -> PairOutcome; // needs a click on Allow
     pub async fn lease(&self, mac: &MacId) -> Lease;                   // keeps the PC awake
     pub async fn status(&self, mac: &MacId) -> Status;                 // what is running + library
 }
@@ -89,11 +90,11 @@ impl Host {
 
 Inside the core (internal seams, tested through `Host`):
 
-- **Pairing.** It holds a pending request, asks `Prompt`, and on Allow
-  submits the Mac's PIN to Sunshine. Two timers: the companion waits 2
-  minutes for a click; Sunshine holds the Mac's started pairing for 5. A
-  second request from the same Mac replaces the first. Sunshine matches the
-  PIN to the Mac by its pending pairing (`GET /api/pin`, then `POST
+- **Pairing.** It holds a pending request, asks `Prompt` with the code, and
+  on Allow submits the Mac's PIN to Sunshine. Two timers: the companion waits
+  2 minutes for a click; Sunshine holds the Mac's started pairing for 5. A
+  second request from the same Mac replaces the first. The Mac's id matches
+  the PIN to its pending pairing in Sunshine (`GET /api/pin`, then `POST
   /api/pin` with `pairing_id`, `pin` and `name`).
 - **Lease.** The Mac renews a lease every 30 s while it streams. While any
   lease is fresh, the core holds one `Awake` guard. When the last lease is
@@ -125,17 +126,41 @@ set) plus a fake, so it is an internal seam for tests, not an OS seam.
 
 ### Link: the Mac's way in
 
-- **Discovery.** mDNS service `_eventhorizon._tcp` with TXT `v=1`, the
-  Sunshine host's unique id, and the companion's certificate fingerprint.
-  The Mac matches it to the Sunshine host it already sees.
-- **Trust (v1).** Before pairing, only `POST /pair` answers, and it does
-  nothing without a click on Allow on the PC and the Mac's Sunshine PIN. On
-  Allow the companion gives the Mac a random 256-bit token; it keeps only
-  the token's SHA-256, in one file, so a restart keeps every Mac paired.
-  `/lease` and `/status` need the token. Later: the same over TLS, with the
-  companion's certificate fingerprint in the mDNS TXT record.
-- **Protocol.** JSON over HTTPS: `POST /pair`, `POST /lease`, `GET /status`.
-  Three requests; versioned by the `v` TXT field.
+- **Discovery.** mDNS service `_eventhorizon._tcp` with TXT `v=1` and
+  `fp=<SHA-256 of the companion's certificate, DER, in lowercase hex>`. The
+  Mac does not browse this service yet, so it learns the fingerprint on
+  first use (next bullet).
+- **Transport.** HTTPS on TCP 47970 with the companion's own self-signed
+  certificate, made on first run and kept as `companion-cert.der` and
+  `companion-key.der` beside `macs.json` (the key file is 0600 on Unix). No
+  certificate authority: the Mac pins the fingerprint, not a name.
+- **Trust (v1).** Trust on first use, then pinned. The Mac trusts the first
+  certificate a PC shows and keeps its fingerprint in the Keychain beside
+  the token; every later request must show that fingerprint. Pairing trusts
+  the PC afresh, because the code on both screens is the check made at that
+  moment. A man in the middle during the first pairing could relay the code,
+  so that first step has no defence beyond the code check; the TXT record
+  closes it once the Mac browses the service.
+- **Pairing (two steps).** `POST /pair` with `{mac_id, mac_name, pin?}`
+  answers at once with `{code, ticket}`. The code is six random digits. The
+  PC shows it on its Allow dialog, with the Mac's name. The Mac shows the
+  same code, then waits on `GET /pair/{ticket}` for up to 2 minutes. The
+  ticket is random, so only the Mac that asked can collect the answer. On
+  Allow the companion gives Sunshine the PIN, and the answer is `{outcome:
+  "paired", token}`: a random 256-bit token, of which the companion keeps
+  only the SHA-256. The Sunshine PIN goes only over TLS and is never shown
+  as the code. A second `POST /pair` from the same Mac replaces the first,
+  whose answer is `replaced` (409).
+- **Lease.** `POST /lease` with the token keeps the PC awake for 90 s. The
+  Mac renews every 30 s.
+- **Unpair.** `DELETE /pair` with the Mac's own token removes its record
+  here and its client in Sunshine (see Rules). If Sunshine cannot be
+  reached, nothing is removed and the answer is 502, so the Mac can try
+  again. On the PC, `event-horizon-companion --list-macs` and `--unpair
+  <mac id>` do the same without the Link running.
+- **Protocol.** JSON over HTTPS: `GET /hello`, `POST /pair`, `GET
+  /pair/{ticket}`, `POST /lease`, `DELETE /pair`. Versioned by the `v` TXT
+  field and by `/hello`. `GET /status` is the next slice.
 
 ## Rules learned the hard way
 
@@ -145,9 +170,29 @@ set) plus a fake, so it is an internal seam for tests, not an OS seam.
   duplicate is removed (seen on the tower, 2026-10-09T19:23-02:30). The Mac
   checks `PairStatus` before it pairs, and never pairs a PC it is paired
   with.
-- **No system OpenSSL.** On Linux the companion uses Rust's own TLS; the
-  OS's TLS on Windows. Sunshine's local certificate is self-signed, so the
-  client accepts it on the loopback address only.
+- **No system OpenSSL.** Sunshine's API uses reqwest: rustls on Linux, the
+  OS's TLS on Windows and macOS (dev). Sunshine's local certificate is
+  self-signed, so that client accepts it on the loopback address only. The
+  Link's server uses rustls on the same provider as reqwest on each OS:
+  aws-lc-rs on Linux, ring on Windows and macOS (ring builds without NASM
+  or CMake).
+- **Sunshine names a pairing by its device name, not a client id.** Its
+  pending list (`GET /api/pin`) gives an approval id, a name and an address,
+  and nothing that identifies the client. So the Mac names its Sunshine
+  pairing with its own id (the `devicename` it sends Sunshine), and the
+  companion matches on that id. Two Macs with one display name never match
+  each other's pairing. The client is then listed under the display name.
+- **Sunshine's client id is its own.** Sunshine gives each paired client a
+  random uuid, not the Mac's id, and `GET /api/clients/list` does not show
+  which client is which Mac. The companion lists the clients before and after
+  a pairing, under one lock, and keeps the new uuid in `macs.json`. Unpair
+  posts that uuid to `POST /api/clients/unpair`. A Mac paired with Sunshine
+  before the companion has no recorded uuid, so Unpair removes only the
+  companion's record; that Sunshine client stays until it is removed in
+  Sunshine's own web page.
+- **Unpairing the last client ends Sunshine's apps.** Sunshine's unpair
+  stops its running apps when no client is left (`src/confighttp.cpp`,
+  `unpair`). That is harmless when the last Mac leaves a stream.
 - **Sunshine skips its CSRF check for API clients** (no `Origin` or
   `Referer` header), so the companion needs only its Basic login.
 
@@ -166,6 +211,11 @@ set) plus a fake, so it is an internal seam for tests, not an OS seam.
   pairing (Allow, Deny, expiry, replace), lease (hold, renew, release, two
   Macs), library merge (add, keep user apps, remove gone games), and status
   mapping. No OS, no network, no Sunshine.
+- `Link` tests run the real HTTPS server on a loopback port over the fakes:
+  the two-step pairing and its code, replace, lease with the token, unpair
+  here and in Sunshine, and a client that pins the advertised fingerprint
+  connects while another does not. Sunshine's pending pairings are matched
+  by the Mac's id, with two Macs of one display name.
 - Each OS adapter has a small contract test that runs on its own OS in CI:
   free GitHub runners for Windows and Linux.
 - One end-to-end test per OS installs the real Sunshine on the runner and

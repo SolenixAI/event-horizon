@@ -15,15 +15,18 @@ public actor PairingClient {
 
     private let network: NetworkClient
     private var server: ServerInfo
+    /// The name Sunshine lists this pairing under while it waits for the PIN.
+    private let deviceName: String
 
     private let log = Logger(subsystem: "io.ugfugl.Glimmer",
                              category: "Stream.Pairing")
 
     // MARK: Init
 
-    public init(network: NetworkClient, server: ServerInfo) {
+    public init(network: NetworkClient, server: ServerInfo, deviceName: String) {
         self.network = network
         self.server = server
+        self.deviceName = deviceName
     }
 
     // MARK: Public API
@@ -272,7 +275,7 @@ public actor PairingClient {
             "PairingStep",
             id: signpostID,
             "step=\(stepLabel)")
-        var fullQuery = ["devicename": NetworkClient.pairingDeviceName, "updateState": "1"]
+        var fullQuery = ["devicename": deviceName, "updateState": "1"]
         for (key, value) in query { fullQuery[key] = value }
         let response = try await network.request(
             path: "pair",

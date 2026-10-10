@@ -7,7 +7,7 @@
 #[tokio::main]
 async fn main() {
     use event_horizon_companion::{
-        Host, discovery, games, library, link, play, sunshine::LocalSunshine,
+        Host, discovery, games, library, link, play, sunshine::LocalSunshine, tls,
     };
     use std::collections::HashMap;
 
@@ -72,6 +72,42 @@ async fn main() {
             .unwrap_or_default()
     };
     let sunshine = LocalSunshine::new(get("SUNSHINE_USER"), get("SUNSHINE_PASSWORD"));
+    let macs = dir.join("macs.json");
+
+    // `--list-macs` and `--unpair <mac id>`: the Macs this PC trusts, from the
+    // PC itself. They work whether or not the companion is running.
+    match args.get(1).map(String::as_str) {
+        Some("--list-macs") => {
+            for (mac_id, mac_name) in link::list(&macs) {
+                println!("{mac_id}  {mac_name}");
+            }
+            return;
+        }
+        Some("--unpair") => {
+            let Some(mac_id) = args.get(2) else {
+                eprintln!("usage: event-horizon-companion --unpair <mac id>");
+                std::process::exit(2);
+            };
+            match link::unpair_mac(&sunshine, &macs, mac_id).await {
+                Ok(true) => println!("This Mac is no longer paired."),
+                Ok(false) => println!("No paired Mac has that id."),
+                Err(e) => {
+                    eprintln!("Sunshine did not forget it, so nothing changed: {e:?}");
+                    std::process::exit(1);
+                }
+            }
+            return;
+        }
+        _ => {}
+    }
+
+    let identity = match tls::load_or_create(&dir) {
+        Ok(identity) => identity,
+        Err(e) => {
+            eprintln!("the companion's certificate: {e}");
+            std::process::exit(1);
+        }
+    };
 
     #[cfg(target_os = "linux")]
     let host = Host::new(
@@ -133,7 +169,7 @@ async fn main() {
     }
 
     let pc_name = hostname();
-    let _announced = discovery::announce(&pc_name)
+    let _announced = discovery::announce(&pc_name, &identity.fingerprint)
         .map_err(|e| eprintln!("discovery: {e}"))
         .ok();
     let listener = tokio::net::TcpListener::bind(("0.0.0.0", discovery::PORT))
@@ -143,7 +179,7 @@ async fn main() {
         "Event Horizon companion on {pc_name}, port {}",
         discovery::PORT
     );
-    link::serve(listener, host, dir.join("macs.json")).await;
+    link::serve(listener, identity.acceptor, host, macs).await;
 }
 
 #[cfg(any(target_os = "linux", windows))]
