@@ -24,3 +24,5 @@ reviews:
       instructions: Changes only files under .github/.
     - label: accessibility
       instructions: Changes keyboard, VoiceOver, contrast or motion behaviour.
+  mutually_exclusive_groups:
+    change_type: [bug, enhancement, documentation, dependencies, github_actions]
