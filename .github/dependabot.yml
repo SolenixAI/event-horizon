@@ -1,0 +1,23 @@
+# Dependencies stay current: one grouped pull request a week per ecosystem, each release at least
+# 7 days old (a bad release is usually pulled within days). Security updates still come at once.
+# Swift packages are resolved inside Glimmer.xcodeproj, which Dependabot cannot read yet.
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: /companion
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]
