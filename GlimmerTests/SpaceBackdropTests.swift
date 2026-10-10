@@ -95,6 +95,20 @@ struct SpaceBackdropTests {
         }
     }
 
+    /// The loop sits beside the PC: inside the bezel's height, centred on it,
+    /// never wider than the window allows, and keeping the figure-eight's shape.
+    @Test func traceStaysInsideTheBezelSpan() {
+        let sizes = [CGSize(width: 1040, height: 780), CGSize(width: 1600, height: 900)]
+        for size in sizes {
+            let bezel = CGRect(x: size.width * 0.2, y: 60, width: size.width * 0.6, height: 614)
+            let frame = SpaceBackdrop.traceFrame(in: size, bezel: bezel)
+            #expect(frame.minY >= bezel.minY && frame.maxY <= bezel.maxY)
+            #expect(abs(frame.midY - bezel.midY) < 0.5)
+            #expect(frame.width <= size.width * SpaceBackdrop.traceMaxWidthShare + 0.5)
+            #expect(abs(frame.width / frame.height - FigureEightTrace.aspect) < 0.01)
+        }
+    }
+
     @Test func traceIsAClosedLoop() {
         let frame = CGRect(x: 0, y: 0, width: 1, height: 1)
         let start = FigureEightTrace.point(at: 0, in: frame)

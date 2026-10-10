@@ -378,9 +378,12 @@ radius is the screen's radius plus its 5pt inset.
   included. A static sky, the stars (night only), the horizon light and the
   orbit trace: the figure-eight from `brand/orbit.svg`. Three faint, neutral
   bodies move along the trace, one lap every four minutes.
-- **Drift:** only while someone can see it move, at four frames a second. It
-  stops under Reduce Motion, when the window is not key, when the app is in the
-  background, and while a PC streams. No per-frame work runs beside the stream.
+- **Drift:** the three bodies run on the render server, as a path animation at
+  the display's refresh rate (up to 120 Hz), with no main-thread frames. The
+  field, the stars, the horizon light and the grain are static layers painted at
+  the window's backing scale. The trace is a one-pixel hairline. It stops under
+  Reduce Motion, when the window is not key, when the app is in the background,
+  and while a PC streams, and it resumes without a jump.
 - **Accessibility:** hidden from VoiceOver. It carries no information.
 - **Contrast:** labels keep WCAG contrast on the field. Night labels measure at
   least 12.9:1 and their secondary text at least 5.7:1. Dawn labels measure at

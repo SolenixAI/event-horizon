@@ -60,10 +60,12 @@ struct DeskHome: View {
         .frame(minWidth: 640, idealWidth: 1040, maxWidth: .infinity,
                minHeight: 600, idealHeight: 780, maxHeight: .infinity)
         // Home's surroundings: the deep-space field behind the PC, under the
-        // whole window, title bar included.
-        .background {
-            SpaceBackdrop(drifts: backdropDrifts)
-                .ignoresSafeArea()
+        // whole window, title bar included. Its trace is anchored to the bezel.
+        .backgroundPreferenceValue(BezelFrameKey.self) { bezel in
+            GeometryReader { proxy in
+                SpaceBackdrop(drifts: backdropDrifts, bezel: bezel.map { proxy[$0] })
+            }
+            .ignoresSafeArea()
         }
         // No toolbar, so full screen is all PC; Settings (and ⌘,) sits on the
         // title-bar line, across from the window buttons.
@@ -89,6 +91,14 @@ struct DeskHome: View {
 }
 
 // MARK: - The PC's screen
+
+/// The PC's bezel frame on Home, so the backdrop can anchor its trace to it.
+struct BezelFrameKey: PreferenceKey {
+    static let defaultValue: Anchor<CGRect>? = nil
+    static func reduce(value: inout Anchor<CGRect>?, nextValue: () -> Anchor<CGRect>?) {
+        value = value ?? nextValue()
+    }
+}
 
 /// The PC as a screen on the desk. Its frame is where the live stream sits
 /// while Home shows; without a stream it says what a click will do.
@@ -143,6 +153,7 @@ private struct DeskScreen: View {
                     .opacity(hovering ? 1 : 0)
             }
             .shadow(color: .black.opacity(colorScheme == .dark ? 0 : 0.18), radius: 18, y: 10)
+            .anchorPreference(key: BezelFrameKey.self, value: .bounds) { $0 }
         }
         .buttonStyle(.plain)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
