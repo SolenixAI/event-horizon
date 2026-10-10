@@ -149,10 +149,11 @@ async fn main() {
                 .is_dir();
         let (play, covers) = if sunshine_flatpak {
             // Flatpak Sunshine runs commands in its sandbox and reads only its own folders.
+            // `--wait`: flatpak-spawn returns when play does, which is when Sunshine ends the app.
             let sunshine_config = std::path::Path::new(&get("HOME"))
                 .join(".var/app/dev.lizardbyte.app.Sunshine/config/sunshine");
             (
-                format!("flatpak-spawn --host setsid {exe} play"),
+                format!("flatpak-spawn --host setsid --wait {exe} play"),
                 sunshine_config.join("covers"),
             )
         } else {

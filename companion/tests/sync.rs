@@ -49,9 +49,9 @@ async fn adds_every_missing_game_and_keeps_the_users_apps() {
 async fn fixes_a_drifted_game_in_place_even_after_sunshine_reorders() {
     let sunshine = FakeSunshine::default();
     *sunshine.apps.lock().unwrap() = json!({ "apps": [
-        { "name": "ARC Raiders", "detached": ["old"] },
+        { "name": "ARC Raiders", "cmd": "old" },
         { "name": "Desktop" },
-        { "name": "Palworld", "detached": ["old"] },
+        { "name": "Palworld", "cmd": "old" },
     ], "env": {} });
     let games = FakeGames(vec![game("2", "Palworld"), game("1", "ARC Raiders")]);
 
@@ -59,8 +59,8 @@ async fn fixes_a_drifted_game_in_place_even_after_sunshine_reorders() {
 
     let apps = sunshine.apps.lock().unwrap().clone();
     assert_eq!(apps["apps"].as_array().unwrap().len(), 3, "no duplicates");
-    assert_eq!(apps["apps"][0]["detached"], json!(["play 1"]));
-    assert_eq!(apps["apps"][2]["detached"], json!(["play 2"]));
+    assert_eq!(apps["apps"][0]["cmd"], "play 1");
+    assert_eq!(apps["apps"][2]["cmd"], "play 2");
 }
 
 #[tokio::test]

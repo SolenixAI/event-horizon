@@ -18,7 +18,8 @@ const MAX_RETRY: Duration = Duration::from_secs(30);
 pub struct LibraryGame {
     pub id: String,
     pub name: String,
-    /// The command Sunshine runs, detached, to open it.
+    /// The command Sunshine runs to open it. Sunshine keeps the game current
+    /// until this exits, so it must stay running while the game does.
     pub launch: String,
     /// A PNG Sunshine can serve as the cover.
     pub cover: Option<String>,
@@ -39,13 +40,12 @@ pub fn merge(document: &mut Value, games: &[LibraryGame]) -> Vec<Change> {
     let apps = document["apps"].as_array_mut().expect("apps is an array");
     let mut changes = Vec::new();
     for game in games {
-        let wanted_launch = json!([game.launch]);
         match apps.iter_mut().find(|app| app["name"] == game.name) {
             None => {
                 let mut app = json!({
                     "name": game.name,
-                    "detached": wanted_launch,
-                    "auto-detach": true,
+                    "cmd": game.launch,
+                    "auto-detach": false,
                     "wait-all": true,
                     "exit-timeout": 5,
                 });
@@ -56,24 +56,58 @@ pub fn merge(document: &mut Value, games: &[LibraryGame]) -> Vec<Change> {
                 changes.push(Change::Added(game.name.clone()));
             }
             Some(app) => {
-                let mut drifted = false;
-                if app["detached"] != wanted_launch {
-                    app["detached"] = wanted_launch;
-                    drifted = true;
-                }
-                if let Some(cover) = &game.cover
-                    && app["image-path"] != json!(cover)
-                {
-                    app["image-path"] = json!(cover);
-                    drifted = true;
-                }
-                if drifted {
+                if settle(app, game) {
                     changes.push(Change::Updated(game.name.clone()));
                 }
             }
         }
     }
     changes
+}
+
+/// Sets the fields that keep the game current in Sunshine, and its cover.
+/// Returns whether anything changed.
+fn settle(app: &mut Value, game: &LibraryGame) -> bool {
+    let mut drifted = retire_old_launcher(app, game);
+    for (field, wanted) in [
+        ("cmd", json!(game.launch)),
+        ("auto-detach", json!(false)),
+        ("wait-all", json!(true)),
+    ] {
+        if app[field] != wanted {
+            app[field] = wanted;
+            drifted = true;
+        }
+    }
+    if let Some(cover) = &game.cover
+        && app["image-path"] != json!(cover)
+    {
+        app["image-path"] = json!(cover);
+        drifted = true;
+    }
+    drifted
+}
+
+/// Older companions ran the game's `play` command as a detached command, with
+/// or without the flatpak wrapper. Removes it, and keeps any other command.
+fn retire_old_launcher(app: &mut Value, game: &LibraryGame) -> bool {
+    let Some(commands) = app["detached"].as_array() else {
+        return false;
+    };
+    let suffix = format!("play {}", game.id);
+    let is_old = |c: &Value| c.as_str().is_some_and(|s| s.ends_with(&suffix));
+    let kept: Vec<Value> = commands.iter().filter(|c| !is_old(c)).cloned().collect();
+    if kept.len() == commands.len() {
+        return false;
+    }
+    if kept.is_empty() {
+        if let Some(object) = app.as_object_mut() {
+            object.remove("detached");
+        }
+    } else {
+        app["detached"] = json!(kept);
+    }
+    true
 }
 
 /// Bring Sunshine's apps in line with the PC's games, one save per change.

@@ -27,24 +27,86 @@ fn installed(steam_root: &Path, appid: &str) -> bool {
         .unwrap_or(false)
 }
 
-/// Open the game and stay until it runs, relaunching once after an update.
-/// Gives up after 15 minutes.
-pub fn run(steam_root: &Path, appid: &str) {
-    let since = chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
-    open(steam_root, appid);
+/// What `play` asks of the PC: Steam, the game's process, and the clock.
+/// `run` uses the real PC; tests use fakes.
+pub trait GameSession {
+    /// Ask Steam to open the game.
+    fn open(&self);
+    /// Is the game's process running right now?
+    fn running(&self) -> bool;
+    /// Did Steam refuse to launch the game since `since` (Steam's local time)?
+    fn refused_since(&self, since: &str) -> bool;
+    /// Is the game installed and up to date?
+    fn up_to_date(&self) -> bool;
+    /// Steam's local time, `YYYY-MM-DD HH:MM:SS`.
+    fn now(&self) -> String;
+    /// Wait before the next check.
+    fn pause(&self, every: Duration);
+}
+
+/// Open the game, relaunch once after an update, and stay open while the
+/// game runs, so Sunshine keeps it current. Gives up after 15 minutes if
+/// the game never starts.
+pub fn play_game(game: &impl GameSession) {
+    let since = game.now();
+    game.open();
     let mut relaunched = false;
+    let mut started = false;
     for _ in 0..300 {
-        std::thread::sleep(Duration::from_secs(3));
-        if running(appid) {
-            return;
+        game.pause(POLL);
+        if game.running() {
+            started = true;
+            break;
         }
-        let log =
-            std::fs::read_to_string(steam_root.join("logs/console_log.txt")).unwrap_or_default();
-        if !relaunched && refused_since(&log, appid, &since) && installed(steam_root, appid) {
+        if !relaunched && game.refused_since(&since) && game.up_to_date() {
             relaunched = true;
-            std::thread::sleep(Duration::from_secs(2));
-            open(steam_root, appid);
+            game.pause(Duration::from_secs(2));
+            game.open();
         }
+    }
+    while started && game.running() {
+        game.pause(POLL);
+    }
+}
+
+const POLL: Duration = Duration::from_secs(3);
+
+/// `play <appid>` on this PC: the game's install folder is in `steam_root`.
+pub fn run(steam_root: &Path, appid: &str) {
+    play_game(&SteamGame { steam_root, appid });
+}
+
+/// The real PC: Steam in `steam_root`, the game `appid`.
+struct SteamGame<'a> {
+    steam_root: &'a Path,
+    appid: &'a str,
+}
+
+impl GameSession for SteamGame<'_> {
+    fn open(&self) {
+        open(self.steam_root, self.appid);
+    }
+
+    fn running(&self) -> bool {
+        running(self.appid)
+    }
+
+    fn refused_since(&self, since: &str) -> bool {
+        let log = std::fs::read_to_string(self.steam_root.join("logs/console_log.txt"))
+            .unwrap_or_default();
+        refused_since(&log, self.appid, since)
+    }
+
+    fn up_to_date(&self) -> bool {
+        installed(self.steam_root, self.appid)
+    }
+
+    fn now(&self) -> String {
+        chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string()
+    }
+
+    fn pause(&self, every: Duration) {
+        std::thread::sleep(every);
     }
 }
 
@@ -75,9 +137,13 @@ fn open(steam_root: &Path, appid: &str) {
     };
     #[cfg(not(windows))]
     let result = {
+        // Its own process group: Sunshine ends the app's group when play
+        // exits, and must not take Steam down with it.
+        use std::os::unix::process::CommandExt;
         let command = launch_command(steam_root, appid);
         std::process::Command::new(&command[0])
             .args(&command[1..])
+            .process_group(0)
             .spawn()
             .map(|_| ())
     };
