@@ -68,7 +68,7 @@ pub fn merge(document: &mut Value, games: &[LibraryGame]) -> Vec<Change> {
 /// Sets the fields that keep the game current in Sunshine, and its cover.
 /// Returns whether anything changed.
 fn settle(app: &mut Value, game: &LibraryGame) -> bool {
-    let mut drifted = retire_old_launcher(app, &game.launch);
+    let mut drifted = retire_old_launcher(app, game);
     for (field, wanted) in [
         ("cmd", json!(game.launch)),
         ("auto-detach", json!(false)),
@@ -88,20 +88,18 @@ fn settle(app: &mut Value, game: &LibraryGame) -> bool {
     drifted
 }
 
-/// Older companions ran the launcher as a detached command. Removes it,
-/// and keeps any other detached command the user added.
-fn retire_old_launcher(app: &mut Value, launch: &str) -> bool {
+/// Older companions ran the game's `play` command as a detached command, with
+/// or without the flatpak wrapper. Removes it, and keeps any other command.
+fn retire_old_launcher(app: &mut Value, game: &LibraryGame) -> bool {
     let Some(commands) = app["detached"].as_array() else {
         return false;
     };
-    if !commands.iter().any(|c| c.as_str() == Some(launch)) {
+    let suffix = format!("play {}", game.id);
+    let is_old = |c: &Value| c.as_str().is_some_and(|s| s.ends_with(&suffix));
+    let kept: Vec<Value> = commands.iter().filter(|c| !is_old(c)).cloned().collect();
+    if kept.len() == commands.len() {
         return false;
     }
-    let kept: Vec<Value> = commands
-        .iter()
-        .filter(|c| c.as_str() != Some(launch))
-        .cloned()
-        .collect();
     if kept.is_empty() {
         if let Some(object) = app.as_object_mut() {
             object.remove("detached");

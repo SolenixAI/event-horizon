@@ -77,6 +77,20 @@ fn the_migration_settles_after_one_sync() {
 }
 
 #[test]
+fn the_flatpak_launcher_from_before_the_fix_is_retired_too() {
+    // Its launcher lacked `--wait`, so it never equals the new `cmd`.
+    let mut apps = json!({ "apps": [ {
+        "name": "ARC Raiders",
+        "detached": ["flatpak-spawn --host setsid /var/home/zephyr/.local/bin/event-horizon-companion play 1808500"]
+    } ] });
+
+    merge(&mut apps, &[game("1808500", "ARC Raiders")]);
+
+    assert!(apps["apps"][0].get("detached").is_none());
+    assert_eq!(apps["apps"][0]["cmd"], "steam-play 1808500");
+}
+
+#[test]
 fn a_detached_command_the_user_added_survives_the_migration() {
     let mut apps = json!({ "apps": [ {
         "name": "ARC Raiders", "detached": ["my-overlay", "steam-play 1808500"]
