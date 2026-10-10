@@ -149,7 +149,7 @@ What `HOST_SETUP.md` claims for VDD: "Sunshine enables the VDD on stream start, 
 - KWin has a virtual backend. `kwin_wayland --virtual` renders to a virtual framebuffer. `--output-count N` sets how many outputs to create, with a default of 1. Both are set at startup. Source: `https://github.com/KDE/kwin/blob/c55a16fcc589c18f5edac1907b6136d80f40bbdc/src/main_wayland.cpp` (about lines 353, 372-375, 510-511, 554-580; commit 2026-10-08T23:24-02:30).
 - The virtual backend exposes `addOutput` and `setVirtualOutputs`. Source: `https://github.com/KDE/kwin/blob/c55a16fcc589c18f5edac1907b6136d80f40bbdc/src/backends/virtual/virtual_backend.h` (lines 52-53; same commit).
 - A search of the KWin source at that commit found no D-Bus or Wayland call that creates or removes a virtual output while KWin runs `<?>`. The search covered `VirtualOutput` in `src/`. A runtime-created virtual output would need a new KWin feature or a different approach. Test on KDE Plasma 6.
-- Recommendation for v1 on Linux: no virtual display. Use the physical or existing output. Ask the user to set the mode on the PC if needed. Re-test this decision.
+- Revised 2026-10-10: this recommendation is superseded. The KWin source search above missed `krfb-virtualmonitor`, which makes a runtime output through a userspace tool. The founder's PC runs it. Sunshine captures it with `capture = kwin`. Build: `companion/src/linux_install.rs`. Sources and open items are in the PR; the clean-PC test is still open.
 
 ---
 
