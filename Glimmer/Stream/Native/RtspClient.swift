@@ -289,6 +289,11 @@ final class RtspClient: @unchecked Sendable {
         }
     }
 
+    /// Arms the response deadline. Tests take over the timer and fire it on their own event.
+    var scheduleResponseDeadline: (DispatchQueue, TimeInterval, DispatchWorkItem) -> Void = { queue, seconds, item in
+        queue.asyncAfter(deadline: .now() + seconds, execute: item)
+    }
+
     /// A single connect → send → recv-until-EOF → close cycle, the reply bounded by `responseTimeout`.
     func oneShot(_ bytes: Data, responseTimeout: TimeInterval = RtspClient.responseTimeoutSeconds) async throws -> Data {
         let tcpOptions = NWProtocolTCP.Options()
@@ -320,7 +325,7 @@ final class RtspClient: @unchecked Sendable {
         // (an error or a bare EOF); the flag tells that apart from a transport failure sendAndReceive retries.
         let timedOut = ManagedAtomicFlag()
         let deadline = DispatchWorkItem { timedOut.set(); connection.cancel() }
-        queue.asyncAfter(deadline: .now() + responseTimeout, execute: deadline)
+        scheduleResponseDeadline(queue, responseTimeout, deadline)
         defer { deadline.cancel() }
         let response: Data
         do {

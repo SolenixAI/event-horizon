@@ -210,9 +210,9 @@ struct SessionSafetyTests {
     }
 
     /// A PC that closes without replying fails the request instead of taking the app down.
-    /// High priority, like `cancelClosesBlockedControlRequest`: on a busy test pool a
-    /// default-priority request may not start before the accept's setup limit.
-    @Test func peerClosingWithoutAReplyFailsTheRequest() async throws {
+    /// No setup limit: the request starts when the pool schedules it, however late, and
+    /// `.timeLimit` is the only hang guard. A limit here fails whenever the pool is busy.
+    @Test(.timeLimit(.minutes(1))) func peerClosingWithoutAReplyFailsTheRequest() async throws {
         try await Task(priority: .high) {
             let port = try #require(LoopbackPort(listening: true))
             let finished = ManagedAtomicFlag()
@@ -220,13 +220,14 @@ struct SessionSafetyTests {
                 defer { finished.set() }
                 return try await Self.plainGet(host: "127.0.0.1", port: Int(port.port))
             }
-            close(try await acceptControlConnection(on: port.fd, requestFinished: finished))
+            close(try await acceptControlConnection(on: port.fd, requestFinished: finished, setupLimit: nil))
             await #expect(throws: StreamError.self) { try await request.value }
         }.value
     }
 
     /// A hostname must reach an IPv4-only listener even when it also resolves to IPv6.
-    @Test func localhostReachesAnIPv4OnlyListener() async throws {
+    /// Same rule as above: the reply is what is asserted, so no setup limit.
+    @Test(.timeLimit(.minutes(1))) func localhostReachesAnIPv4OnlyListener() async throws {
         try await Task(priority: .high) {
             let port = try #require(LoopbackPort(listening: true))
             let finished = ManagedAtomicFlag()
@@ -234,7 +235,7 @@ struct SessionSafetyTests {
                 defer { finished.set() }
                 return try await Self.plainGet(host: "localhost", port: Int(port.port))
             }
-            let peer = try await acceptControlConnection(on: port.fd, requestFinished: finished)
+            let peer = try await acceptControlConnection(on: port.fd, requestFinished: finished, setupLimit: nil)
             let reply = Array("HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nok".utf8)
             _ = reply.withUnsafeBytes { write(peer, $0.baseAddress, $0.count) }
             close(peer)
@@ -244,10 +245,11 @@ struct SessionSafetyTests {
         }.value
     }
 
+    /// The request's timeout is a hang guard only: its tests assert the reply, never its speed.
     private static func plainGet(host: String, port: Int) async throws -> ControlTransport.Response {
         try await ControlTransport.get(
             host: host, port: port, target: "/serverinfo", userAgent: "GlimmerTests", tls: false,
-            credential: .init(clientCertPEM: nil, clientKeyPEM: nil, pinnedCertPEM: nil), timeout: 5)
+            credential: .init(clientCertPEM: nil, clientKeyPEM: nil, pinnedCertPEM: nil), timeout: 30)
     }
 
     @Test func quitWaitsForOverlappingStop() async {

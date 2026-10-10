@@ -64,15 +64,25 @@ struct WakeOnLANTests {
                      apps: [], lastConnected: nil, serverCertPEM: nil, appVersion: nil, macAddress: mac)
     }
 
+    /// "Stops at once" means one send attempt and no wait for an answer, counted rather than
+    /// timed: a timed check also measures main-actor hops shared with every other test.
     @MainActor @Test func aWakeThatSendsNothingStopsAtOnce() async {
-        let started = OSAllocatedUnfairLock(initialState: ContinuousClock.now)
-        let outcome = await AppModel().sendWakeAndWait(tower(mac: "aa:bb:cc:dd:ee:ff"), waitSeconds: 90) { _, _ in
-            started.withLock { $0 = .now }
-            return 0
-        }
+        let sends = OSAllocatedUnfairLock(initialState: 0)
+        let waits = OSAllocatedUnfairLock(initialState: 0)
+        let outcome = await AppModel().sendWakeAndWait(
+            tower(mac: "aa:bb:cc:dd:ee:ff"), waitSeconds: 90,
+            send: { _, _ in
+                sends.withLock { $0 += 1 }
+                return 0
+            },
+            waitForAnswer: { _, _ in
+                waits.withLock { $0 += 1 }
+                return false
+            })
         #expect(outcome == .couldNotSend)
         #expect(outcome.failureReason == .couldNotSend)
-        #expect(ContinuousClock.now - started.withLock { $0 } < .seconds(5))
+        #expect(sends.withLock { $0 } == 1)
+        #expect(waits.withLock { $0 } == 0)
     }
 
     @MainActor @Test func aPCWithoutAMacIsNotWoken() async {

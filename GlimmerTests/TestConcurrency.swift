@@ -32,10 +32,12 @@ extension DispatchQueue {
     }
 }
 
-// Only cancellation-to-EOF is a latency assertion; the generous setup limit
-// just keeps a request that stalls before sending from hanging the suite.
-func acceptControlConnection(on listener: Int32, requestFinished: ManagedAtomicFlag) async throws -> Int32 {
-    let deadline = ContinuousClock.now + .seconds(10)
+// Only cancellation-to-EOF is a latency assertion. The setup limit keeps a request that stalls
+// before sending from hanging the suite; a test whose outcome must not depend on load passes
+// nil and lets its own .timeLimit trait be the hang guard.
+func acceptControlConnection(on listener: Int32, requestFinished: ManagedAtomicFlag,
+                             setupLimit: Duration? = .seconds(10)) async throws -> Int32 {
+    let deadline = setupLimit.map { ContinuousClock.now + $0 }
     let flags = fcntl(listener, F_GETFL, 0)
     guard flags >= 0, fcntl(listener, F_SETFL, flags | O_NONBLOCK) == 0 else {
         throw TestSocketError.setupFailed
@@ -54,10 +56,10 @@ func acceptControlConnection(on listener: Int32, requestFinished: ManagedAtomicF
 }
 
 private func waitForControlReadability(
-    _ fd: Int32, requestFinished: ManagedAtomicFlag, until deadline: ContinuousClock.Instant
+    _ fd: Int32, requestFinished: ManagedAtomicFlag, until deadline: ContinuousClock.Instant?
 ) async throws {
     while !requestFinished.isSet {
-        guard ContinuousClock.now < deadline else { throw TestSocketError.setupTimedOut }
+        if let deadline, ContinuousClock.now >= deadline { throw TestSocketError.setupTimedOut }
         var pending = pollfd(fd: fd, events: Int16(POLLIN), revents: 0)
         let ready = poll(&pending, 1, 0)
         guard ready >= 0 else { throw TestSocketError.setupFailed }

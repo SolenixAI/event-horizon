@@ -354,7 +354,7 @@ extension AudioDecoder {
     /// Caller holds stateLock, never audioMeterLock, across AV calls.
     /// Failed edges remain un-primed and retry after 100 ms.
     func startPlayoutAtPrimeEdge() -> Bool {
-        let now = DispatchTime.now().uptimeNanoseconds
+        let now = primeEdgeNowNanos()
         guard now >= primeEdgeRetryAtNanos else { return false }
         if !engine.isRunning {
             // Guarded start: the test suite's empty-graph decoder proved an

@@ -119,6 +119,10 @@ final class RttSampler: @unchecked Sendable {
     /// sample that fills the window, the time cap, cancellation or `harvest()`.
     private var windowWaiter: (minSamples: Int, continuation: CheckedContinuation<Void, Never>)?
     private let startedAt = DispatchTime.now()
+    /// Arms the pre-launch window cap at `start + maxWaitMs`. Tests fire it on their own schedule.
+    var scheduleWindowCap: (DispatchTime, Int, @escaping @Sendable () -> Void) -> Void = { start, maxWaitMs, release in
+        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: start + .milliseconds(maxWaitMs), execute: release)
+    }
 
     /// Gap between handshakes. Fast enough to fill the pre-launch window on a
     /// quiet host without hammering its web port.
@@ -173,8 +177,7 @@ final class RttSampler: @unchecked Sendable {
                 }
                 windowWaiter = (minSamples, continuation)
                 lock.unlock()
-                DispatchQueue.global(qos: .userInitiated).asyncAfter(
-                    deadline: waitStart + .milliseconds(maxWaitMs)) { [weak self] in
+                scheduleWindowCap(waitStart, maxWaitMs) { [weak self] in
                     self?.releaseWindowWaiter()
                 }
             }

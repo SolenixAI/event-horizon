@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import os
 import QuartzCore
 import Testing
 @testable import Glimmer
@@ -435,16 +436,17 @@ struct RtpVideoQueueRecoveryTests {
     }
 
     /// The env-signal fold credits a window with video only when the datagram
-    /// clock moved between ticks.
+    /// clock moved between ticks. The controller gets its own clock: the shared one
+    /// is written by every suite running in parallel.
     @Test func envWindowSeesVideoOnlyWhenDatagramsArrive() {
-        let queue = makeQueue()
+        let datagramUs = OSAllocatedUnfairLock(initialState: UInt64(0))
         let controller = EnvSignalController()
+        controller.latestDatagramUs = { datagramUs.withLock { $0 } }
         controller.degradedRun = 1
         controller.observeCaptureTick(route: nil, wifi: nil)
         controller.observeCaptureTick(route: nil, wifi: nil)
         #expect(controller.degradedRun == 1)
-        controller.observeCaptureTick(route: nil, wifi: nil)
-        queue.addRawDatagram([0, 0, 0], receiveTimeUs: DispatchTime.now().uptimeNanoseconds / 1000)
+        datagramUs.withLock { $0 = 1_000 }
         controller.observeCaptureTick(route: nil, wifi: nil)
         #expect(controller.degradedRun != 1)
     }

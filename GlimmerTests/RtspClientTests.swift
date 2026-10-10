@@ -14,6 +14,20 @@ import os
 import Testing
 @testable import Glimmer
 
+/// The response deadline a client armed, held so a test can fire it on its own event.
+private final class ArmedDeadline: @unchecked Sendable {
+    private let lock = NSLock()
+    private var armed: (seconds: TimeInterval, fire: DispatchWorkItem)?
+
+    func arm(_ seconds: TimeInterval, _ fire: DispatchWorkItem) {
+        lock.withLock { armed = (seconds, fire) }
+    }
+
+    var current: (seconds: TimeInterval, fire: DispatchWorkItem)? {
+        lock.withLock { armed }
+    }
+}
+
 struct RtspClientTests {
 
     private static let key: [UInt8] = Array(0..<16).map { UInt8($0) }
@@ -123,21 +137,34 @@ struct RtspClientTests {
     }
 
     /// A PC that takes the connection and never answers fails at the response deadline, and that
-    /// failure reaches the launcher as the shared couldn't-reach copy rather than a hang.
-    @Test func silentPeerFailsAtTheResponseDeadline() async throws {
-        let server = try await Self.loopbackListener { _ in }
+    /// failure reaches the launcher as the shared couldn't-reach copy rather than a hang. The test
+    /// fires the armed deadline once the peer has the request, so no clock decides the result.
+    @Test(.timeLimit(.minutes(1))) func silentPeerFailsAtTheResponseDeadline() async throws {
+        let (requestSeen, markSeen) = AsyncStream<Void>.makeStream()
+        let server = try await Self.loopbackListener { conn in
+            conn.receive(minimumIncompleteLength: 1, maximumLength: 4096) { _, _, _, _ in
+                markSeen.yield()
+                markSeen.finish()
+            }
+        }
         defer { server.accepted.cancelAll(); server.listener.cancel() }
-        let started = DispatchTime.now()
+        let armed = ArmedDeadline()
+        let client = Self.makeClient(port: server.port)
+        client.scheduleResponseDeadline = { _, seconds, item in armed.arm(seconds, item) }
+        let attempt = Task { try await client.oneShot(Data("OPTIONS".utf8), responseTimeout: 0.3) }
+        for await _ in requestSeen { break }
+        let deadline = try #require(armed.current)
+        #expect(deadline.seconds == 0.3)
+        deadline.fire.perform()
         do {
-            _ = try await Self.makeClient(port: server.port).oneShot(Data("OPTIONS".utf8), responseTimeout: 0.3)
+            _ = try await attempt.value
             Issue.record("a silent peer was waited on past the deadline")
         } catch let error as RtspError {
-            guard case .responseTimeout = error else {
+            guard case .responseTimeout(let seconds) = error else {
                 Issue.record("expected RtspError.responseTimeout, got \(error)")
                 return
             }
-            let waitedMs = (DispatchTime.now().uptimeNanoseconds - started.uptimeNanoseconds) / 1_000_000
-            #expect(waitedMs < 3_000)
+            #expect(seconds == 0.3)
             let failure = AppModel.connectFailure(for: NativeBackend.mapToStreamError(error), hostName: "Tower")
             #expect(failure.kind == .unreachable)
             #expect(failure.message == AppModel.unreachableMessage("Tower"))
