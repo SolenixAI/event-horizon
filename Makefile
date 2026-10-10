@@ -84,9 +84,7 @@ BUILD_NUMBER    := $(shell sed -n 's/^CURRENT_PROJECT_VERSION = \(.*\)/\1/p' Gli
 # Repo that hosts the Sparkle appcast (GitHub Pages) + release assets - the
 # public source repo itself.
 RELEASES_REPO   ?= SolenixAI/event-horizon
-# Homebrew tap that carries the cask (`brew install --cask solenixai/event-horizon/event-horizon`).
-TAP_REPO        ?= SolenixAI/homebrew-event-horizon
-export RELEASES_REPO TAP_REPO
+export RELEASES_REPO
 # Which release `make brew-bump` points the cask at - the one being built by default.
 VERSION         ?= $(MARKETING_VERSION)
 SPARKLE_VERSION ?= 2.10.0
@@ -528,11 +526,11 @@ release-publish: dist
 		exit 1; \
 	}
 
-# Point the Homebrew cask at the published release: download the DMG, checksum
-# it, and push version + sha256 to the tap ($(TAP_REPO)). `release-publish` runs
-# this last; run it by hand to recover from a failed bump, or to re-point the
-# cask at an older tag with `make brew-bump VERSION=2026.8.13`.
-# Idempotent - a cask already matching the published DMG makes no commit.
+# Point Casks/event-horizon.rb at the published release: download the DMG,
+# checksum it, and write version + sha256 into the file. It changes no other
+# repository; commit the file on a branch and open a pull request. `release-publish`
+# runs this last; run it by hand to recover, or to re-point the cask at an older
+# tag with `make brew-bump VERSION=2026.8.13`. An unchanged cask writes nothing.
 brew-bump:
 	@scripts/homebrew-bump.sh "$(VERSION)"
 
