@@ -344,11 +344,11 @@ final class TelemetryExporter: @unchecked Sendable {
     /// Diag logs and receipts included. 14 days.
     private static let logsMaxAgeSeconds: TimeInterval = 14 * 24 * 3600
 
-    /// `~/Library/Logs/Event Horizon`: the Diag logs, telemetry rows, frame traces and receipts.
-    static let logsDirectory = FileManager.default.homeDirectoryForCurrentUser
-        .appendingPathComponent("Library/Logs/Event Horizon", isDirectory: true)
+    /// `~/Library/Logs/Event Horizon`, or this build's own Logs folder: the Diag logs,
+    /// telemetry rows, frame traces and receipts.
+    static let logsDirectory = AppDataFolders.currentLogsDirectory
 
-    /// The Logs folder of earlier builds. Its files move into `logsDirectory` once, at launch.
+    /// The Logs folder of earlier builds. Only the shipped app moves its files in.
     static let legacyLogsDirectory = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Logs/Glimmer", isDirectory: true)
 
@@ -357,7 +357,9 @@ final class TelemetryExporter: @unchecked Sendable {
     static func sweepLogsAtLaunch() {
         let log = Logger(subsystem: "dev.solenix.eventhorizon", category: "Stream.Telemetry")
         Task.detached(priority: .utility) {
-            DataFolderMigration.moveLogs(from: legacyLogsDirectory, to: logsDirectory)
+            if AppDataFolders.isShippedBuild {
+                DataFolderMigration.moveLogs(from: legacyLogsDirectory, to: logsDirectory)
+            }
             sweepLogsDirectory(logsDirectory, log: log, enforceBudget: false)
         }
     }

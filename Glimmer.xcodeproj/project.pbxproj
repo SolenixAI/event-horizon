@@ -352,6 +352,7 @@
 		DEC0DE840000000000000013 /* TerminationGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE840000000000000014 /* TerminationGateTests.swift */; };
 		DEC0DE202609222500000001 /* StreamAwareUpdateAlertsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202609222500000002 /* StreamAwareUpdateAlertsTests.swift */; };
 		DEC0DE202610100000000003 /* UpdatePolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202610100000000004 /* UpdatePolicyTests.swift */; };
+		DEC0DE202610100000000005 /* AppDataIsolationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202610100000000006 /* AppDataIsolationTests.swift */; };
 		DEC0DE202610100000000001 /* UpdaterConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202610100000000002 /* UpdaterConfigurationTests.swift */; };
 		DEC0DE84000000000000001B /* WindowPointerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE84000000000000001C /* WindowPointerTests.swift */; };
 		DEC0DE2026091300000000B1 /* StatsOverlayVisibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE2026091300000000B2 /* StatsOverlayVisibilityTests.swift */; };
@@ -820,6 +821,7 @@
 		DEC0DE840000000000000014 /* TerminationGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminationGateTests.swift; sourceTree = "<group>"; };
 		DEC0DE202609222500000002 /* StreamAwareUpdateAlertsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamAwareUpdateAlertsTests.swift; sourceTree = "<group>"; };
 		DEC0DE202610100000000004 /* UpdatePolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdatePolicyTests.swift; sourceTree = "<group>"; };
+		DEC0DE202610100000000006 /* AppDataIsolationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDataIsolationTests.swift; sourceTree = "<group>"; };
 		DEC0DE202610100000000002 /* UpdaterConfigurationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdaterConfigurationTests.swift; sourceTree = "<group>"; };
 		DEC0DE84000000000000001C /* WindowPointerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowPointerTests.swift; sourceTree = "<group>"; };
 		DEC0DE2026091300000000B2 /* StatsOverlayVisibilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StatsOverlayVisibilityTests.swift"; sourceTree = "<group>"; };
@@ -1325,6 +1327,7 @@
 				DEC0DE840000000000000014 /* TerminationGateTests.swift */,
 				DEC0DE202609222500000002 /* StreamAwareUpdateAlertsTests.swift */,
 				DEC0DE202610100000000004 /* UpdatePolicyTests.swift */,
+				DEC0DE202610100000000006 /* AppDataIsolationTests.swift */,
 				DEC0DE202610100000000002 /* UpdaterConfigurationTests.swift */,
 				DEC0DE84000000000000001C /* WindowPointerTests.swift */,
 				DEC0DE2026091300000000B2 /* StatsOverlayVisibilityTests.swift */,
@@ -1875,6 +1878,7 @@
 				DEC0DE840000000000000013 /* TerminationGateTests.swift in Sources */,
 				DEC0DE202609222500000001 /* StreamAwareUpdateAlertsTests.swift in Sources */,
 				DEC0DE202610100000000003 /* UpdatePolicyTests.swift in Sources */,
+				DEC0DE202610100000000005 /* AppDataIsolationTests.swift in Sources */,
 				DEC0DE202610100000000001 /* UpdaterConfigurationTests.swift in Sources */,
 				DEC0DE84000000000000001B /* WindowPointerTests.swift in Sources */,
 				DEC0DE2026091300000000B1 /* StatsOverlayVisibilityTests.swift in Sources */,

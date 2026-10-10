@@ -15,6 +15,8 @@ enum ContainerMigration {
     /// Run the migration if it hasn't run yet. Idempotent and a no-op when the
     /// old container is absent (fresh installs, already-migrated users).
     static func runIfNeeded(defaults: UserDefaults = .standard) {
+        // Only the shipped app copies the old container's data into the real home.
+        guard AppDataFolders.isShippedBuild else { return }
         guard !defaults.bool(forKey: didMigrateKey) else { return }
         let fm = FileManager.default
         let home = fm.homeDirectoryForCurrentUser

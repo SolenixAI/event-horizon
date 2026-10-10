@@ -129,7 +129,8 @@ final class CompanionTokenStore: @unchecked Sendable {
 /// The login-keychain items the keychain-era build wrote, one per PC plus one fingerprint per PC.
 /// Every query forbids UI, so an item that would prompt is skipped instead of shown.
 struct LoginKeychainCompanionTokens: CompanionLegacyKeychain {
-    static let service = "dev.solenix.eventhorizon.companion"
+    static let service = AppDataFolders.keychainService(
+        "dev.solenix.eventhorizon.companion", bundleIdentifier: AppDataFolders.bundleIdentifier)
 
     func readable() -> [String: String] {
         let context = Self.silentContext()

@@ -278,6 +278,8 @@ extension IdentityManager {
     }
 
     func readLegacyKeychainString(account: String) throws -> String? {
+        // Only the shipped app reads the legacy items; a test build starts a fresh identity.
+        guard AppDataFolders.isShippedBuild else { return nil }
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: Self.legacyKeychainService,
@@ -306,6 +308,7 @@ extension IdentityManager {
     /// times - SecItemDelete on a missing item returns `errSecItemNotFound`
     /// which we treat as success.
     func deleteLegacyKeychainItems() {
+        guard AppDataFolders.isShippedBuild else { return }
         for account in [Self.accountCert, Self.accountKey, Self.accountUID] {
             let query: [String: Any] = [
                 kSecClass as String: kSecClassGenericPassword,
