@@ -134,6 +134,15 @@ struct GlimmerCLITests {
         #expect(GlimmerCLI.pairFailureMessage(.gameStream, pc: "x") == AppModel.needsSunshineMessage("x"))
     }
 
+    @Test func pairingTellsThePersonWhatToDoAtThePC() {
+        // No companion: the PC's Sunshine page takes the PIN.
+        #expect(GlimmerCLI.pairingInstruction(address: "192.0.2.10", pin: "4821", companionCode: nil)
+            == "On 192.0.2.10, open Sunshine's web page, choose PIN, and enter 4821.")
+        // A companion PC shows its own code and Allow: no PIN is asked for.
+        #expect(GlimmerCLI.pairingInstruction(address: "192.0.2.10", pin: "4821", companionCode: "123456")
+            == "On 192.0.2.10, the code is 123 456. Click Allow on 192.0.2.10.")
+    }
+
     @Test func installerFindsAnExistingLinkAndOnlyLinksAnInstalledCopy() throws {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
