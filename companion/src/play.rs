@@ -31,7 +31,7 @@ fn installed(steam_root: &Path, appid: &str) -> bool {
 /// Gives up after 15 minutes.
 pub fn run(steam_root: &Path, appid: &str) {
     let since = chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
-    open(appid);
+    open(steam_root, appid);
     let mut relaunched = false;
     for _ in 0..300 {
         std::thread::sleep(Duration::from_secs(3));
@@ -43,22 +43,44 @@ pub fn run(steam_root: &Path, appid: &str) {
         if !relaunched && refused_since(&log, appid, &since) && installed(steam_root, appid) {
             relaunched = true;
             std::thread::sleep(Duration::from_secs(2));
-            open(appid);
+            open(steam_root, appid);
         }
     }
 }
 
-fn open(appid: &str) {
+/// How to ask Steam to open a game on Linux: a Flatpak Steam has no
+/// `steam` on the PATH, so it goes through `flatpak run`.
+#[cfg_attr(windows, allow(dead_code))]
+pub fn launch_command(steam_root: &Path, appid: &str) -> Vec<String> {
     let url = format!("steam://rungameid/{appid}");
+    let flatpak = steam_root
+        .to_string_lossy()
+        .contains(".var/app/com.valvesoftware.Steam");
+    let program: &[&str] = if flatpak {
+        &["flatpak", "run", "com.valvesoftware.Steam"]
+    } else {
+        &["steam"]
+    };
+    program.iter().map(|s| s.to_string()).chain([url]).collect()
+}
+
+fn open(steam_root: &Path, appid: &str) {
     #[cfg(windows)]
-    let result = std::process::Command::new("cmd")
-        .args(["/c", "start", "", &url])
-        .status();
+    let result = {
+        let _ = steam_root;
+        std::process::Command::new("cmd")
+            .args(["/c", "start", "", &format!("steam://rungameid/{appid}")])
+            .status()
+            .map(|_| ())
+    };
     #[cfg(not(windows))]
-    let result = std::process::Command::new("steam")
-        .arg(&url)
-        .spawn()
-        .map(|_| ());
+    let result = {
+        let command = launch_command(steam_root, appid);
+        std::process::Command::new(&command[0])
+            .args(&command[1..])
+            .spawn()
+            .map(|_| ())
+    };
     if let Err(e) = result {
         eprintln!("play: could not ask Steam to open {appid}: {e}");
     }
