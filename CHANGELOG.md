@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026.10.7 - 2026-10-12
+
+- Home has a speaker control beside Ready or Streaming, and the menu bar panel
+  has a volume slider while you stream. Both set the stream's own volume, so
+  you can turn the game down without touching the Mac's sound or other apps.
+- The stream's volume and mute are kept when you quit and open the app again.
+- With Accessibility allowed for Event Horizon, the Mac's volume keys change
+  the stream's volume while the stream window is key, and the mute key toggles
+  its mute. Without it the keys work as normal.
+
 ## 2026.10.6 - 2026-10-10
 
 - Clicking the PC's screen, or the cover of the game already on it, brings

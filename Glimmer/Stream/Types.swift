@@ -102,6 +102,9 @@ public struct StreamConfig: Sendable {
     /// this Mac silences the stream (not the system volume).
     public var playAudioOnHost: Bool = false
 
+    /// The stream's own level on this Mac, 0...1, applied to its audio mixer.
+    public var audioGain: Float = 1
+
     public init(width: Int, height: Int, fps: Int, bitrateKbps: Int) {
         self.width = width
         self.height = height

@@ -77,6 +77,9 @@ components:
   running-label:
     textColor: "{colors.horizon-blue}"
     typography: "{typography.running}"
+  stream-volume:
+    textColor: "{colors.secondary-label}"
+    size: "22px"
   readiness-chip:
     textColor: "{colors.label}"
     typography: "{typography.caption}"
@@ -338,6 +341,21 @@ radius is the screen's radius plus its 5pt inset.
 - A plain glass capsule with 10 by 4pt of padding: a 7pt status dot, the state
   in caption medium and, when ready, a quiet route glyph (Wi-Fi or Ethernet) in
   secondary. The dot pulses while connecting, unless Reduce Motion is on.
+
+### Stream Volume
+
+- **Placement:** on the status row, between the Running label and the readiness
+  chip, at the chip's height (22pt). It yields first: when the Running label
+  would truncate, the row drops it (`ViewThatFits`). The menu bar panel keeps
+  the same control under Stream.
+- **Style:** a 13pt medium speaker symbol in secondary label, with no glass, no
+  ring and no shadow. It is a press target, but it is quiet, so it never competes
+  with the chip's glass or the bezel.
+- **Popover:** a headline "Stream volume" (hidden from VoiceOver), then a mute
+  button and a level slider in 16 steps. Mute is announced as "Mute stream" or
+  "Unmute stream". The slider is "Level".
+- **Accessibility:** "Stream volume", with the percentage or "Muted" as its
+  value, and adjustable up and down by one step.
 
 ### Game Shelf
 
