@@ -427,6 +427,50 @@ radius is the screen's radius plus its 5pt inset.
   least 12.9:1 and their secondary text at least 5.7:1. Dawn labels measure at
   least 14:1 and their secondary text at least 5:1.
 
+### First-Launch Pass
+
+- **What it is:** the five-screen first run, in the main window and not in a
+  sheet: Welcome, Find your PC, Pair your PC, Set up controls and alerts, and
+  the PC's Ready screen. Each screen has one title (title2, bold), one short
+  body and one footer action. The find and pair screens are the pairing view
+  in its embedded form, so the pairing state survives the step change.
+- **Progress:** five 22 by 4pt capsules above the title. The current and done
+  steps are filled at 70% label, the rest at 15%. VoiceOver reads "Step n of 5".
+- **Explain first:** every system prompt sits behind a Mac-side explanation
+  with one button, "Continue". Discovery starts on Continue, so the Local
+  Network prompt follows the reason on screen. The PC's own Allow follows the
+  Mac's explanation, never comes first.
+
+### Permission Card and Rail
+
+- **What it is:** one card per optional item: a 26pt symbol, the name in
+  headline, the live state as a caption label, one sentence of reason, and one
+  action. The states are Allowed, Waiting, Off, Needs approval and Not in this
+  build. "Continue" shows only while the choice is open, "Open Settings" once
+  it is refused, and nothing once it is settled.
+- **Not now:** a borderless line under the card, outside its glass, and never
+  on the explanation. Skipping replaces the card with one quiet sentence.
+- **Rail:** the cards read macOS on every appearance and each return to the
+  app, and nothing is stored. The same rail sits in Settings › General under
+  Permissions, so a grant later reads the same way. Settings also lists Open at
+  login, which the pass does not offer; its only action is Open Login Items,
+  shown when macOS waits for approval.
+- **Surface:** regular glass at 12pt corners, 14pt padding. It is a card, not
+  a raised object, so it has no shadow.
+
+### Companion Keep-Awake Row
+
+- **What it is:** a quiet glass row above the game shelf, shown before the
+  first stream of a Mac that has no companion token, to a PC that runs the
+  companion. It has one sentence of reason, "Allow on <PC>" (prominent) and
+  "Stream without it" (borderless). A presence check reads the PC first. No
+  pairing request is sent before Allow.
+- **Code:** after Allow, the row shows the code the PC is asked to match, and
+  the Allow button is disabled until the PC answers. If the PC refuses, the row
+  says so and offers "Try again".
+- **Once per PC:** "Stream without it" is kept for that PC, so the row is not
+  shown again for it. A companion token from pairing makes the row unnecessary.
+
 ## Do's and Don'ts
 
 ### Do:

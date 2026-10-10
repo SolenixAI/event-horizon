@@ -432,6 +432,10 @@ final class AppModel {
     /// The six-digit code the companion's PC shows for this pairing. The sheet
     /// shows it, so the person can check it matches the PC before Allow.
     var companionCode: String?
+    /// A stream held on Home until the person allows the PC's companion to keep it awake.
+    var companionAskStream: (app: LibraryApp, host: Host)?
+    /// The PC did not answer the held stream's Allow, so Home offers the choice again.
+    var companionAskFailed = false
 
     /// Renews the companion's lease while a stream runs, so the PC stays awake.
     @ObservationIgnored var companionLeaseTask: Task<Void, Never>?

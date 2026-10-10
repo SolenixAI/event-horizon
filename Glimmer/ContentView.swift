@@ -5,20 +5,34 @@ import AppKit
 
 struct MainWindow: View {
     @Environment(AppModel.self) private var model
+    @AppStorage(OnboardingGate.completedKey) private var onboardingCompleted = false
+    private let forcedOnboarding = UserDefaults.standard.bool(forKey: OnboardingGate.forceKey)
     /// Lifted out of EmptyPairingState so the sheet survives the swap to
     /// ConnectSurface the instant pairing fills `model.hosts` - the sheet used
     /// to hang off the empty state itself and vanish mid-handshake success.
     @State private var showPair = false
+    @State private var showWiFiOffer = false
+    /// Latched on the first appearance: pairing fills `model.hosts` mid-pass, and the pass must stay up.
+    @State private var passOpen: Bool?
 
     var body: some View {
         @Bindable var model = model
+        let open = passOpen ?? OnboardingGate.showsFlow(forced: forcedOnboarding, completed: onboardingCompleted,
+                                                        hasPCs: !model.hosts.isEmpty)
         return Group {
-            if model.hosts.isEmpty {
+            if open {
+                OnboardingView(finish: finishOnboarding)
+            } else if model.hosts.isEmpty {
                 EmptyPairingState(showPair: $showPair)
             } else {
                 DeskHome()
             }
         }
+        .task {
+            passOpen = open
+            launchOffers()
+        }
+        .sheet(isPresented: $showWiFiOffer) { AWDLEnablePrompt(manager: AWDLHelperManager.shared) }
         .onAppear { model.setHIDDiscovery(true, for: .launcher) }
         .onDisappear { model.setHIDDiscovery(false, for: .launcher) }
         .sheet(isPresented: $showPair) {
@@ -39,6 +53,23 @@ struct MainWindow: View {
                 .padding(.top, 16)
         }
         .navigationTitle("Event Horizon")
+    }
+
+    /// Ends the first-launch pass for good. A forced run (screenshots) leaves the flag alone.
+    private func finishOnboarding() {
+        passOpen = false
+        if !forcedOnboarding { onboardingCompleted = true }
+    }
+
+    /// A Mac with a PC already predates the pass, so it counts as done. Then the
+    /// Wi-Fi offer repeats at launch until it is on or declined for good.
+    private func launchOffers() {
+        let done = OnboardingGate.completedAfterLaunch(completed: onboardingCompleted, hasPCs: !model.hosts.isEmpty)
+        if !forcedOnboarding { onboardingCompleted = done }
+        showWiFiOffer = !forcedOnboarding && OnboardingGate.showsWiFiOffer(
+            completed: done,
+            promptWanted: AWDLHelperManager.shared.shouldPromptToEnable,
+            buildSigned: LiveOnboardingSource().buildSigned)
     }
 }
 

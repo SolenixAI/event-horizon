@@ -510,6 +510,11 @@ final class AWDLHelperManager: ObservableObject {
 /// The enable nudge and "Don't ask again" are independent: enabling need not
 /// silence future asks, and dismissing need not opt out forever.
 struct AWDLEnablePrompt: View {
+    static let explanation = "AirDrop and Continuity share your Mac's Wi-Fi radio. While you stream they "
+        + "can grab the channel and cause multi-second freezes. Event Horizon can park that "
+        + "radio for the length of each stream and restore it the instant you stop."
+    static let installNote = "Installs a small helper that needs a one-time approval in System Settings."
+
     @ObservedObject var manager: AWDLHelperManager
     @Environment(\.dismiss) private var dismiss
     @State private var dontAskAgain = false
@@ -527,11 +532,9 @@ struct AWDLEnablePrompt: View {
                         .font(.subheadline).foregroundStyle(.secondary)
                 }
             }
-            Text("AirDrop and Continuity share your Mac's Wi-Fi radio. While you stream they "
-                + "can grab the channel and cause multi-second freezes. Event Horizon can park that "
-                + "radio for the length of each stream and restore it the instant you stop.")
+            Text(Self.explanation)
                 .fixedSize(horizontal: false, vertical: true)
-            Text("Installs a small helper that needs a one-time approval in System Settings.")
+            Text(Self.installNote)
                 .font(.footnote).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             Toggle("Don't ask again", isOn: $dontAskAgain)

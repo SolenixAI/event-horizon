@@ -234,12 +234,11 @@ final class WakeNotifier: NSObject, UNUserNotificationCenterDelegate {
         ])
     }
 
-    /// Runs on the Wake and Connect click, so any permission prompt follows it.
+    /// Runs on the Wake and Connect click. It never asks macOS for permission:
+    /// the first-launch pass explains and asks, and a denial falls back to the app.
     func prepare(for model: AppModel, host: Host) {
         attach(model)
-        let center = UNUserNotificationCenter.current()
-        center.removeDeliveredNotifications(withIdentifiers: [Self.identifier(host)])
-        center.requestAuthorization(options: [.alert, .sound]) { _, _ in }
+        UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [Self.identifier(host)])
     }
 
     /// Notifications are allowed with a visible style; declined, not yet answered or

@@ -53,6 +53,10 @@ struct DeskHome: View {
                         GameShelf(host: host, games: games, deskWidth: deskWidth)
                             .padding(.top, 18)
                     }
+                    if model.companionAskStream != nil {
+                        CompanionAskRow()
+                            .padding(.top, 12)
+                    }
                     if model.hidPermissionPadName != nil {
                         ControllerPermissionRow()
                             .padding(.top, 12)
@@ -414,6 +418,44 @@ private struct CoverTile: View {
                     .foregroundStyle(.white)
             }
         }
+    }
+}
+
+// MARK: - Companion keep-awake
+
+/// Shown before the first stream of a Mac whose PC runs the companion and has no
+/// token yet. Home explains, then shows the code the PC is asked to match.
+private struct CompanionAskRow: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let name = model.companionAskStream?.host.displayName ?? "your PC"
+        VStack(alignment: .leading, spacing: 10) {
+            Text(message(name))
+                .font(.callout)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 10) {
+                Button(model.companionAskFailed ? "Try again" : "Allow on \(name)") { model.allowCompanionAndStream() }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(model.companionCode != nil)
+                Button("Stream without it") { model.streamWithoutCompanion() }
+                    .buttonStyle(.borderless)
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassEffect(.regular, in: .rect(cornerRadius: 12))
+    }
+
+    private func message(_ name: String) -> String {
+        if model.companionAskFailed {
+            return "\(name) didn't allow Event Horizon to keep it awake. Try again, or stream without it."
+        }
+        if let code = model.companionCode {
+            return "Check that \(name) shows \(CompanionClient.spaced(code)), then click Allow there."
+        }
+        return "Keep \(name) awake while you play? Event Horizon asks \(name) to allow it, and \(name) shows a code to check."
     }
 }
 
