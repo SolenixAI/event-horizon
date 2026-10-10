@@ -19,6 +19,8 @@ public final class AudioDecoder: @unchecked Sendable {
     /// True while the PC plays this stream's sound: the Mac's main mixer sits at 0
     /// and the engine keeps running. Guarded by `stateLock`; see `setOutputMuted`.
     var outputMuted = false
+    /// This stream's level on its mixer, 0...1. Guarded by `stateLock`; see `setOutputGain`.
+    var outputGain: Float = 1
 
     var decoder: OpusDecoder?
     /// Interleaved PCM the decoder writes before the demux, reused for every 5 ms packet.

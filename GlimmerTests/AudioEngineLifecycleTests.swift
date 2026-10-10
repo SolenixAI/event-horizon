@@ -25,6 +25,18 @@ struct AudioEngineLifecycleTests {
         #expect(decoder.engine.mainMixerNode.outputVolume == 1)
     }
 
+    /// The stream's own level is the mixer's gain, and a mute still silences it.
+    @Test func gainSetsTheStreamMixerAndMuteStillWins() {
+        let decoder = AudioDecoder()
+        decoder.inputFormat = AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 2)
+        decoder.setOutputGain(0.25)
+        #expect(decoder.engine.mainMixerNode.outputVolume == 0.25)
+        decoder.setOutputMuted(true)
+        #expect(decoder.engine.mainMixerNode.outputVolume == 0)
+        decoder.setOutputMuted(false)
+        #expect(decoder.engine.mainMixerNode.outputVolume == 0.25)
+    }
+
     /// The stream start asks for the mute before audio exists; it must survive
     /// until the engine starts and be applied there.
     @Test func muteRequestedBeforeAudioStartsIsAppliedAtStart() {

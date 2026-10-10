@@ -71,7 +71,7 @@ extension StreamSession {
         self.reconnectServer = server
         self.reconnectConfig = config
         self.reconnectAppID = appID
-        audioDecoder.setOutputMuted(config.playAudioOnHost)
+        applyAudioLevels(config)
 
         // Keep the Mac (and its display) awake AND opt OUT of App Nap for the
         // whole session. Begun here so a slow handshake can't let the machine
@@ -224,6 +224,12 @@ extension StreamSession {
     }
 
     // MARK: Start helpers
+
+    /// The stream's sound on this Mac: silenced while the PC plays it, at the stream's own level.
+    private func applyAudioLevels(_ config: StreamConfig) {
+        audioDecoder.setOutputMuted(config.playAudioOnHost)
+        audioDecoder.setOutputGain(config.audioGain)
+    }
 
     /// Keep the Mac and visible display awake during connection; stop() or
     /// start()'s failure defer ends the token.

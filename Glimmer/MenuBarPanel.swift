@@ -174,6 +174,7 @@ struct MenuBarPanel: View {
                 .toggleStyle(.switch)
                 .controlSize(.small)
             }
+            StreamVolumeSlider()
         }
     }
 

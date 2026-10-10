@@ -66,6 +66,7 @@ extension InputForwarder {
             object: window, queue: .main
         ) { [weak self] _ in
             MainActor.assumeIsolated {
+                VolumeKeyTap.shared.setStreamIsKey(true)
                 if self?.isWindowMode == false {
                     self?.enterCapturedMode()
                 }
@@ -118,6 +119,7 @@ extension InputForwarder {
     }
 
     func windowResignedKey() {
+        VolumeKeyTap.shared.setStreamIsKey(false)
         // The physical key-up goes to the newly focused app, so release held
         // input here. Esc's key-up may be lost too, making its timer unsafe.
         raiseAllHeldInputs(reason: "focus loss")
@@ -129,6 +131,7 @@ extension InputForwarder {
     }
 
     func removeFocusObservers() {
+        VolumeKeyTap.shared.teardown()
         let nc = NotificationCenter.default
         if let observer = didBecomeKeyObserver { nc.removeObserver(observer); didBecomeKeyObserver = nil }
         if let observer = didResignKeyObserver { nc.removeObserver(observer); didResignKeyObserver = nil }

@@ -203,7 +203,7 @@ extension AudioDecoder {
         // queued audio (the pre-roll in `maybePrime`), so it starts with headroom.
         // Only start when not already running (a reconnect re-init can leave it up).
         if engine.isRunning {
-            applyOutputMute()
+            applyOutputLevel()
         } else if let failure = startEngineSafely() {
             log.error("AVAudioEngine.start: \(failure, privacy: .private)")
             Diag.error("audio engine start FAILED: \(failure, privacy: .private)", "Stream.Audio")
@@ -222,16 +222,16 @@ extension AudioDecoder {
         }
         if let startError { return startError.localizedDescription }
         guard noRaise else { return "NSException" }
-        applyOutputMute()
+        applyOutputLevel()
         let running = engine.isRunning
         audioMeterLock.lock(); engineRunning = running; audioMeterLock.unlock()
         return nil
     }
 
-    /// Silence (or restore) only this stream at the engine's main mixer; other
-    /// apps and the system volume are untouched. Caller holds `stateLock`.
-    func applyOutputMute() {
-        engine.mainMixerNode.outputVolume = outputMuted ? 0 : 1
+    /// This stream's level at the engine's main mixer: silent while muted, else
+    /// the gain. Other apps and the system volume are untouched. Caller holds `stateLock`.
+    func applyOutputLevel() {
+        engine.mainMixerNode.outputVolume = outputMuted ? 0 : outputGain
     }
 
     /// Mute this stream on the Mac while the PC plays its sound. The engine keeps
@@ -241,7 +241,15 @@ extension AudioDecoder {
         stateLock.lock()
         defer { stateLock.unlock() }
         outputMuted = muted
-        if inputFormat != nil { applyOutputMute() }
+        if inputFormat != nil { applyOutputLevel() }
+    }
+
+    /// The stream's own level, the gain on its mixer. Applied live, like the mute.
+    public func setOutputGain(_ gain: Float) {
+        stateLock.lock()
+        defer { stateLock.unlock() }
+        outputGain = min(1, max(0, gain))
+        if inputFormat != nil { applyOutputLevel() }
     }
 
     private func layoutTag(forChannels channels: Int) -> AudioChannelLayoutTag {
@@ -481,7 +489,7 @@ extension AudioDecoder {
                 engineRestartRetries = 0
             }
         }
-        applyOutputMute()
+        applyOutputLevel()
         // H4: re-sample the engine-running gauge here (the same hop), and RE-ARM
         // the pre-roll so the cushion rebuilds from the restart rather than the
         // player resuming on the under-run floor. A plain Bool + state-machine

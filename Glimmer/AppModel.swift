@@ -123,6 +123,14 @@ final class AppModel {
     var muteMacWhileStreaming: Bool = false {
         didSet { UserDefaults.standard.set(muteMacWhileStreaming, forKey: "muteMacWhileStreaming") }
     }
+    /// The stream's own level and mute, a gain on its audio. Not the Mac's volume.
+    /// A change reaches a live stream at once; a new stream starts at this level.
+    var streamVolume: StreamVolume = .full {
+        didSet {
+            streamVolume.save(to: .standard)
+            nativeSession?.audioDecoder.setOutputGain(Float(streamVolume.gain))
+        }
+    }
 
     /// Connection lifecycle published from the native engine. Drives the
     /// connect-banner, the StreamButton role, and the ReadinessChip's
@@ -511,6 +519,8 @@ final class AppModel {
         // `if x > 0` checks but without a branch per key (so the initializer
         // stays under the complexity bar). The persisted-key set is unchanged.
         muteMacWhileStreaming = UserDefaults.standard.bool(forKey: "muteMacWhileStreaming")
+        streamVolume = StreamVolume.load(from: .standard)
+        VolumeKeyTap.shared.onKey = { [weak self] key in self?.streamVolume.apply(key) }
         defaultLaunchApp = UserDefaults.standard.string(forKey: "defaultLaunchApp") ?? defaultLaunchApp
         // Read the saved Custom size BEFORE restoring the preset: restoring
         // `.custom` runs qualityPreset's willSet, which seeds (and persists)

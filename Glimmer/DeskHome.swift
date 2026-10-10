@@ -249,7 +249,16 @@ private struct DeskStatus: View {
     let host: Host
     @Environment(AppModel.self) private var model
 
+    /// The stream volume control yields first: when the Running label would truncate, the row drops it.
     var body: some View {
+        ViewThatFits(in: .horizontal) {
+            statusRow(withVolume: true)
+            statusRow(withVolume: false)
+        }
+        .hostContextMenu(host)
+    }
+
+    private func statusRow(withVolume: Bool) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 14) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(host.displayName)
@@ -262,9 +271,9 @@ private struct DeskStatus: View {
                 RunningLabel(name: running)
             }
             Spacer(minLength: 12)
+            if withVolume { StreamVolumeButton() }
             ReadinessChip()
         }
-        .hostContextMenu(host)
     }
 }
 
