@@ -15,6 +15,10 @@ colors:
   ready-green: "#28CD41"
   caution-orange: "#FF9500"
   fault-red: "#FF3B30"
+  space-night-top: "#03040A"
+  space-night-bottom: "#0B0E19"
+  space-dawn-top: "#E4ECF7"
+  space-dawn-bottom: "#F6F1E8"
 typography:
   pc-name:
     fontFamily: "SF Pro Display, -apple-system, system-ui, sans-serif"
@@ -109,11 +113,12 @@ the same screen grows to fill the window. Press ⌘W and it shrinks back onto th
 desk, still running. Under the screen sit the PC's name, its state and a glass
 shelf of its games.
 
-The window belongs to macOS. It uses the system window background, a hidden
-title bar, SF Pro and system controls. Event Horizon adds two colours from its
-logo. Gold is for what you press. Blue is for what is live on the PC. The game
-covers are the only large fields of colour, and they come from the games, not
-from Event Horizon.
+The window sits in a deep-space field: near-black at night, and the same
+composition at dawn in a pale sky. The window keeps its hidden title bar, SF Pro
+and system controls. Event Horizon adds two colours from its logo. Gold is for
+what you press. Blue is for what is live on the PC. The horizon light is
+atmosphere under the field and never a signal. The game covers are the only
+large fields of colour, and they come from the games, not from Event Horizon.
 
 The stream engine underneath is Glimmer, an open-source Swift engine. Glimmer
 is an engine credit only. It is not a look, and it is not a name on any
@@ -128,7 +133,7 @@ surface.
 - The screen is always black. The PC's own picture or the idle face sits on it.
 - Game covers at 2:3 are the only colour fields.
 - The grow and shrink between Home and the PC is one continuous move.
-- System window background, system type, system controls.
+- A deep-space field behind Home (dawn in light), system type, system controls.
 
 ## Colors
 
@@ -147,13 +152,19 @@ Two logo colours on a plain system window, with the macOS status colours.
   is live on the PC: the Running label and its 7pt dot, the ring and name of the
   cover that is on screen, the soft halo behind the logo on the idle screen, and
   the blue half of a cover's fallback gradient.
+  **Open decision:** on the dawn field, the Running label measures about 2.3:1,
+  below WCAG 4.5:1. It did the same on the old system window. A deeper live blue
+  for light appearance would fix it, but that changes the signal colour, so the
+  founder decides.
 
 ### Neutral
 
 - **Screen Black**: the PC's screen, in light and dark appearance alike.
-- **Window, day** and **Window, night**: the system window background
-  (`windowBackgroundColor`), as sampled in the captures. Use the system colour,
-  never a hard-coded value.
+- **Space field, night** (`#03040A` at the top to `#0B0E19` at the bottom) and
+  **Space field, dawn** (`#E4ECF7` to `#F6F1E8`): the backdrop behind Home, from
+  the top of the window to its bottom edge. Night is deep space, and dawn is the
+  same composition under a pale sky. They are set once in `SpacePalette`; no
+  other view hard-codes a neutral.
 - **Label** and **Secondary Label**: the system label colours. The PC name and
   cover names use the label. The spec line uses the secondary label. On the
   black screen, text is white, and the detail line is 60% white.
@@ -169,8 +180,17 @@ Two logo colours on a plain system window, with the macOS status colours.
 **The Press Gold, Live Blue Rule.** Gold means "you can press this". Blue means
 "this runs on the PC now". Never swap them, and never use either for health.
 
-**The Covers Are the Colour Rule.** Event Horizon paints no colour slabs. Large
-fields of colour come only from the PC's picture and the games' cover art.
+**The Covers Are the Colour Rule.** Event Horizon paints no coloured slabs and
+no coloured fields behind its content. The field behind Home is dark or pale and
+never coloured. Large fields of colour come only from the PC's picture and the
+games' cover art.
+
+**The Horizon Is Atmosphere Rule.** The horizon light is gold and blue, low on
+the field, at most 16% opacity at night and 20% at dawn. It is atmosphere, never
+a signal: it never marks a control and never marks a live state. Press gold and
+live blue stay at full strength. Against the field they measure at least 3:1,
+while the horizon light stays near 1.2:1. Any new light on the field must stay
+under this bar.
 
 ## Typography
 
@@ -234,7 +254,9 @@ The rows under it keep their natural height.
 
 ## Elevation & Depth
 
-The window is flat. There is one raised object: the bezel around the PC's
+The field behind Home is flat: it casts no shadow and has no raised layer. Its
+only light is the horizon, which is atmosphere. There is one raised object: the
+bezel around the PC's
 screen. It is regular Liquid Glass, 5pt wide, with a 1pt light catch on its top
 edge that fades out by its middle (60% white in light, 28% in dark). In light
 appearance it also casts a soft black shadow. In dark appearance it casts none,
@@ -350,6 +372,23 @@ radius is the screen's radius plus its 5pt inset.
   controller needs Input Monitoring: a controller glyph, one sentence, "Allow…"
   and a borderless "Not Now". It is never an alert.
 
+### Space Backdrop
+
+- **What it is:** the field behind Home, under the whole window, title bar
+  included. A static sky, the stars (night only), the horizon light and the
+  orbit trace: the figure-eight from `brand/orbit.svg`. Three faint, neutral
+  bodies move along the trace, one lap every four minutes.
+- **Drift:** the three bodies run on the render server, as a path animation at
+  the display's refresh rate (up to 120 Hz), with no main-thread frames. The
+  field, the stars, the horizon light and the grain are static layers painted at
+  the window's backing scale. The trace is a one-pixel hairline. It stops under
+  Reduce Motion, when the window is not key, when the app is in the background,
+  and while a PC streams, and it resumes without a jump.
+- **Accessibility:** hidden from VoiceOver. It carries no information.
+- **Contrast:** labels keep WCAG contrast on the field. Night labels measure at
+  least 12.9:1 and their secondary text at least 5.7:1. Dawn labels measure at
+  least 14:1 and their secondary text at least 5:1.
+
 ## Do's and Don'ts
 
 ### Do:
@@ -362,7 +401,8 @@ radius is the screen's radius plus its 5pt inset.
 - **Do** use the system window background and system text styles.
 - **Do** line up every row under the screen with the bezel's edges.
 - **Do** nest radii concentrically, and use continuous corners.
-- **Do** honour Reduce Motion in the grow, the shrink, hovers and pulses.
+- **Do** honour Reduce Motion in the grow, the shrink, hovers, pulses and the
+  field's drift.
 - **Do** let the games' own cover art carry the colour on the shelf.
 
 ### Don't:
@@ -370,11 +410,13 @@ radius is the screen's radius plus its 5pt inset.
 - **Don't** give anything but the bezel a resting shadow or a raised look.
 - **Don't** use blue for something you press, or gold for something that is
   running.
-- **Don't** put colour slabs, gradients or tinted cards behind Home's content.
-  The only gradient is a cover's fallback tile.
+- **Don't** put colour slabs, coloured gradients or tinted cards behind Home's
+  content. The field is the one exception: dark or pale, never coloured. The
+  only other gradient is a cover's fallback tile.
 - **Don't** add a toolbar to the main window. Full screen is all PC.
 - **Don't** open the PC in a second window. The PC opens in this window.
-- **Don't** use a coloured glow, except the logo's own halo on the idle screen.
+- **Don't** use a coloured glow, except the logo's own halo on the idle screen
+  and the horizon light on the field. The horizon light is never a signal.
 - **Don't** redraw, recolour or reinterpret the app icon (the three-body
   figure-eight orbit).
 - **Don't** show "Glimmer" anywhere a person reads, except the engine credit.

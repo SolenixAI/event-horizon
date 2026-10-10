@@ -93,6 +93,30 @@
           "#9E9E9E"
         ]
       },
+      "space-night-top": {
+        "role": "neutral",
+        "displayName": "Space Field, night (top)",
+        "canonical": "Glimmer/SpaceBackdrop.swift SpacePalette.night, skyTop",
+        "tonalRamp": ["#03040A"]
+      },
+      "space-night-bottom": {
+        "role": "neutral",
+        "displayName": "Space Field, night (bottom)",
+        "canonical": "Glimmer/SpaceBackdrop.swift SpacePalette.night, skyBottom",
+        "tonalRamp": ["#0B0E19"]
+      },
+      "space-dawn-top": {
+        "role": "neutral",
+        "displayName": "Space Field, dawn (top)",
+        "canonical": "Glimmer/SpaceBackdrop.swift SpacePalette.dawn, skyTop",
+        "tonalRamp": ["#E4ECF7"]
+      },
+      "space-dawn-bottom": {
+        "role": "neutral",
+        "displayName": "Space Field, dawn (bottom)",
+        "canonical": "Glimmer/SpaceBackdrop.swift SpacePalette.dawn, skyBottom",
+        "tonalRamp": ["#F6F1E8"]
+      },
       "label": {
         "role": "neutral",
         "displayName": "Label",
