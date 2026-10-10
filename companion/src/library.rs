@@ -5,6 +5,13 @@
 
 use crate::ports::{GameSources, SunshineApi, SunshineError};
 use serde_json::{Value, json};
+use std::time::Duration;
+
+/// The wait between syncs once Sunshine has answered.
+pub const SYNC_EVERY: Duration = Duration::from_secs(600);
+/// Before Sunshine first answers, each retry doubles the wait, up to this cap.
+const FIRST_RETRY: Duration = Duration::from_secs(2);
+const MAX_RETRY: Duration = Duration::from_secs(30);
 
 /// A game to offer on the Mac's shelf.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -97,4 +104,32 @@ pub async fn sync<S: SunshineApi, G: GameSources>(
         changes.push(change);
     }
     Ok(changes)
+}
+
+/// Keeps the PC's games in Sunshine's apps for as long as it runs. Until
+/// Sunshine first answers, it retries with backoff, since Sunshine starts
+/// a few seconds after the companion. After that it syncs every
+/// `SYNC_EVERY`, even through later outages. `report` hears each attempt.
+pub async fn keep_in_step<S: SunshineApi, G: GameSources>(
+    sunshine: &S,
+    games: &G,
+    mut report: impl FnMut(&Result<Vec<Change>, SunshineError>),
+) {
+    let mut answered = false;
+    let mut retry = FIRST_RETRY;
+    loop {
+        let outcome = sync(sunshine, games).await;
+        report(&outcome);
+        if !matches!(outcome, Err(SunshineError::Unreachable(_))) {
+            answered = true;
+        }
+        let wait = if answered {
+            SYNC_EVERY
+        } else {
+            let wait = retry;
+            retry = (retry * 2).min(MAX_RETRY);
+            wait
+        };
+        tokio::time::sleep(wait).await;
+    }
 }
