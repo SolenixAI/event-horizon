@@ -15,6 +15,7 @@ mod ports;
 pub mod setup;
 pub mod steam;
 pub mod sunshine;
+pub mod sunshine_tls;
 pub mod sunshine_watchdog;
 pub mod tls;
 pub mod virtual_screen;

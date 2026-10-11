@@ -3,6 +3,7 @@
 //! v2026.914 `src/confighttp.cpp` (see docs/research/companion.md, section 2).
 
 use crate::ports::{SunshineApi, SunshineError};
+use crate::sunshine_tls::pinned_client;
 use serde_json::{Value, json};
 use std::sync::Arc;
 use std::time::Duration;
@@ -45,22 +46,27 @@ pub struct LocalSunshine {
 }
 
 impl LocalSunshine {
-    /// Sunshine on this PC. Its certificate is self-signed, so the client
-    /// accepts it; the address is loopback only, so nothing else can answer.
-    pub fn new(user: impl Into<String>, password: impl Into<String>) -> Self {
-        Self::at("https://127.0.0.1:47990", user, password)
+    /// Sunshine on this PC, trusted only through the certificate Sunshine keeps
+    /// on disk: `pinned_der` is that certificate's DER. The address is loopback.
+    pub fn new(
+        user: impl Into<String>,
+        password: impl Into<String>,
+        pinned_der: &[u8],
+    ) -> Result<Self, String> {
+        Ok(Self::at(
+            "https://127.0.0.1:47990",
+            user,
+            password,
+            pinned_client(pinned_der)?,
+        ))
     }
 
     pub fn at(
         base: impl Into<String>,
         user: impl Into<String>,
         password: impl Into<String>,
+        http: reqwest::Client,
     ) -> Self {
-        let http = reqwest::Client::builder()
-            .danger_accept_invalid_certs(true)
-            .timeout(Duration::from_secs(5))
-            .build()
-            .expect("an HTTP client with default settings builds");
         Self {
             base: base.into(),
             user: user.into(),

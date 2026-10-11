@@ -16,25 +16,25 @@ Issues and specs for this repo live in **Linear**: workspace `solenix`, team
 the public (the bug-report form); a maintainer copies each accepted one into
 Linear and closes it on GitHub with a link.
 
-Use the Linear MCP tools when your agent has them; otherwise the GraphQL API
-at `https://api.linear.app/graphql` with a personal API key (`LINEAR_API_KEY`).
+Use the Linear MCP tools when your agent has them; otherwise the GraphQL API at
+`https://api.linear.app/graphql` with a personal API key (`LINEAR_API_KEY`).
 
 ## Conventions
 
 - **Create an issue**: start from the team template "Default issue". With MCP,
-  `save_issue` with `template` "Default issue". With GraphQL, `issueCreate`
-  with `teamId` (the id of team SOL, from the `teams` query) and `templateId`
-  (the id of "Default issue", from the `templates` query). Add `projectId`
-  (Event Horizon), `title` and the assignee: `me` when the work is yours,
-  `null` for an unclaimed wayfinder ticket. A description replaces the
-  template body, so pass none. Then fill each `{…}` slot: call `save_issue`
-  with the issue `id` and its `patch` parameter (one replace per slot).
-- **Read an issue**: `get_issue` with its identifier (`SOL-123`), plus
+  `save_issue` with `template` "Default issue". With GraphQL, `issueCreate` with
+  `teamId` (the id of team SOL, from the `teams` query) and `templateId` (the id
+  of "Default issue", from the `templates` query). Add `projectId` (Event
+  Horizon), `title` and the assignee: `me` when the work is yours, `null` for an
+  unclaimed wayfinder ticket. A description replaces the template body, so pass
+  none. Then fill each `{…}` slot: call `save_issue` with the issue `id` and its
+  `patch` parameter (one replace per slot).
+- **Read an issue**: `get_issue` with its identifier (`TEAM-123`), plus
   `list_comments`.
 - **List issues**: `list_issues` filtered by project **Event Horizon**, state
   and labels.
-- **Make an issue a sub-issue of a parent**: set `parentId` on the child.
-  Linear shows sub-issues natively.
+- **Make an issue a sub-issue of a parent**: set `parentId` on the child. Linear
+  shows sub-issues natively.
 - **Comment on an issue**: `save_comment` / `commentCreate`.
 - **Apply / remove labels**: update the issue's `labelIds`.
 - **Close**: move it to a completed state (Done) or Canceled, with a comment
