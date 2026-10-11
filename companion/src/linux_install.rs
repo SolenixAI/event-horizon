@@ -7,9 +7,10 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 const SUNSHINE_APP: &str = "dev.lizardbyte.app.Sunshine";
-const SUNSHINE_SERVICE: &str = "app-dev.lizardbyte.app.Sunshine.service";
+pub const SUNSHINE_SERVICE: &str = "app-dev.lizardbyte.app.Sunshine.service";
 const SUNSHINE_USER: &str = "eventhorizon";
 const SERVICE: &str = "event-horizon-companion.service";
+pub const WATCHDOG_SERVICE: &str = "event-horizon-sunshine-watchdog.service";
 const VIRTUAL_TRIES: u32 = 15;
 const VIRTUAL_WAIT: Duration = Duration::from_secs(1);
 const UDEV_RULES: &str = "/etc/udev/rules.d/60-sunshine.rules";
@@ -104,7 +105,7 @@ impl Layout {
             .join(format!("{SUNSHINE_SERVICE}.d/event-horizon.conf"))
     }
 
-    fn units(&self) -> PathBuf {
+    pub fn units(&self) -> PathBuf {
         self.home.join(".config/systemd/user")
     }
 
@@ -160,7 +161,8 @@ pub fn install(
         virtual_screen(cmd, files, layout, size, secret)?;
     }
     sunshine_login(cmd, files, layout, secret)?;
-    companion_service(cmd, files, layout)
+    companion_service(cmd, files, layout)?;
+    watchdog_service(cmd, files, layout)
 }
 
 fn copy_companion(files: &dyn Files, layout: &Layout) -> Result<(), String> {
@@ -341,6 +343,20 @@ fn companion_service(cmd: &dyn Commands, files: &dyn Files, layout: &Layout) -> 
     cmd.run("systemctl", &["--user", "daemon-reload"])?;
     cmd.run("systemctl", &["--user", "enable", SERVICE])?;
     cmd.run("systemctl", &["--user", "restart", SERVICE])
+}
+
+/// The Sunshine watchdog's user unit: it restarts a wedged Sunshine. Restart=always
+/// keeps the watchdog itself running.
+fn watchdog_service(cmd: &dyn Commands, files: &dyn Files, layout: &Layout) -> Result<(), String> {
+    let exe = layout.installed_companion();
+    let unit = format!(
+        "[Unit]\nDescription=Event Horizon Sunshine watchdog: restarts Sunshine when it stops answering and no stream is live\nPartOf=graphical-session.target\nAfter=graphical-session.target\n\n[Service]\nExecStart={} sunshine-watchdog\nRestart=always\nRestartSec=10\n\n[Install]\nWantedBy=graphical-session.target\n",
+        exe.display()
+    );
+    files.write(&layout.units().join(WATCHDOG_SERVICE), &unit)?;
+    cmd.run("systemctl", &["--user", "daemon-reload"])?;
+    cmd.run("systemctl", &["--user", "enable", WATCHDOG_SERVICE])?;
+    cmd.run("systemctl", &["--user", "restart", WATCHDOG_SERVICE])
 }
 
 /// Places the virtual screen right of the desk monitor once KScreen lists it.

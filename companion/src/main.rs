@@ -31,6 +31,14 @@ async fn main() {
         return;
     }
     #[cfg(target_os = "linux")]
+    if args.get(1).map(String::as_str) == Some("sunshine-watchdog") {
+        if let Err(e) = event_horizon_companion::os::linux::sunshine_watchdog(&config_dir()) {
+            eprintln!("sunshine watchdog: {e}");
+            std::process::exit(1);
+        }
+        return;
+    }
+    #[cfg(target_os = "linux")]
     if args.get(1).map(String::as_str) == Some("guard-virtual-screen") {
         if let Err(e) = event_horizon_companion::os::linux::guard_virtual_screen(&config_dir()) {
             eprintln!("display guard: {e}");

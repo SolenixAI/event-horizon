@@ -48,3 +48,19 @@ fn layout(config_dir: &Path) -> Result<Layout, String> {
     let exe = std::env::current_exe().map_err(|e| e.to_string())?;
     Ok(Layout::from_env(config_dir, exe))
 }
+
+/// Keeps Sunshine answering: restarts it when its port stops answering and no stream is live.
+pub fn sunshine_watchdog(config_dir: &Path) -> Result<(), String> {
+    let layout = layout(config_dir)?;
+    let start = std::time::Instant::now();
+    let answering = || port_answers(crate::sunshine_watchdog::HTTP_PORT);
+    crate::sunshine_watchdog::run(&SystemCommands, &SystemFiles, &layout, &answering, &|| {
+        start.elapsed()
+    })
+}
+
+/// Whether something accepts connections on the port, on this PC.
+fn port_answers(port: u16) -> bool {
+    let addr = std::net::SocketAddr::from(([127, 0, 0, 1], port));
+    std::net::TcpStream::connect_timeout(&addr, std::time::Duration::from_secs(3)).is_ok()
+}
