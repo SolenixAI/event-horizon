@@ -85,6 +85,9 @@ impl ServerCertVerifier for Pinned {
 /// An HTTP client that talks to Sunshine only if it presents `pinned_der`, the
 /// DER bytes of the certificate Sunshine wrote to disk.
 pub fn pinned_client(pinned_der: &[u8]) -> Result<reqwest::Client, String> {
+    // reqwest's rustls-no-provider build needs a process default provider before
+    // it builds a client. Installing one that is already set is harmless.
+    let _ = tls::provider().install_default();
     let provider = Arc::new(tls::provider());
     let verifier = Pinned {
         cert: CertificateDer::from(pinned_der.to_vec()),
