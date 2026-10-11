@@ -118,6 +118,10 @@ final class RttSampler: @unchecked Sendable {
     /// The connect path parked in `awaitPreLaunchWindow`, released by the
     /// sample that fills the window, the time cap, cancellation or `harvest()`.
     private var windowWaiter: (minSamples: Int, continuation: CheckedContinuation<Void, Never>)?
+    /// Set when the window was full when the pre-launch wait ended, so the wait released on samples.
+    private var releasedOnFill = false
+    /// Whether the last pre-launch wait released on a full window. Read by the tests.
+    var releasedWindowOnFill: Bool { lock.withLock { releasedOnFill } }
     private let startedAt = DispatchTime.now()
     /// Arms the pre-launch window cap at `start + maxWaitMs`. Tests fire it on their own schedule.
     var scheduleWindowCap: (DispatchTime, Int, @escaping @Sendable () -> Void) -> Void = { start, maxWaitMs, release in
@@ -171,6 +175,8 @@ final class RttSampler: @unchecked Sendable {
             await withCheckedContinuation { continuation in
                 lock.lock()
                 guard samples.count < minSamples, !stopped, !Task.isCancelled else {
+                    // The window was already full when the wait began: released on samples, not the cap.
+                    if samples.count >= minSamples { releasedOnFill = true }
                     lock.unlock()
                     continuation.resume()
                     return
@@ -200,6 +206,7 @@ final class RttSampler: @unchecked Sendable {
     private func takeWaiterLocked(force: Bool) -> CheckedContinuation<Void, Never>? {
         guard let waiter = windowWaiter, force || samples.count >= waiter.minSamples else { return nil }
         windowWaiter = nil
+        if !force { releasedOnFill = true }
         return waiter.continuation
     }
 

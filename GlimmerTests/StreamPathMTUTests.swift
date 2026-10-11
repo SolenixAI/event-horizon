@@ -433,6 +433,8 @@ struct StreamPathMTUTests {
             // No wall-clock bound: machine load cannot fail the test.
             sampler.scheduleWindowCap = { _, _, _ in }
             await sampler.awaitPreLaunchWindow(maxWaitMs: 10_000)
+            // Recorded under the lock at the moment of the fill: exact, whatever the load.
+            #expect(sampler.releasedWindowOnFill)
             sampler.markLaunch()
             #expect(sampler.usesPreLaunchWindow)
             #expect((sampler.harvest()?.count ?? 0) >= RttSampler.minPreLaunchSamples)
