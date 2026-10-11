@@ -6,7 +6,7 @@ import Testing
 @testable import Glimmer
 
 @MainActor
-private final class HelperGate {
+final class HelperGate {
     let entered = DispatchSemaphore(value: 0)
     private var continuation: CheckedContinuation<Void, Never>?
 
@@ -24,7 +24,7 @@ private final class HelperGate {
 }
 
 @MainActor
-private final class HelperHarness {
+final class HelperHarness {
     var status: SMAppService.Status = .enabled
     var events: [String] = []
     var gauge = false
@@ -32,6 +32,11 @@ private final class HelperHarness {
     var unregisterFails = false
     var unregisterGate: HelperGate?
     var reachable = true
+    /// A helper that refuses every call, as an unsigned build's helper does.
+    var refuseDown = false
+    var refusals = 0
+    let refusedThrice = DispatchSemaphore(value: 0)
+    var clockNow = Date(timeIntervalSince1970: 1_000_000)
     var releaseGate: HelperGate?
     var downGate: HelperGate?
     var client: HelperClient?
@@ -75,6 +80,12 @@ private final class HelperHarness {
             },
             setDown: { down, reason in
                 self.events.append(down ? "down" : reason)
+                if down, self.refuseDown {
+                    self.refusals += 1
+                    self.events.append("refused")
+                    if self.refusals % 3 == 0 { self.refusedThrice.signal() }
+                    return false
+                }
                 if down {
                     if let client = self.client { return await client.setAWDLDown(true, reason: reason) }
                     await self.downGate?.wait()
@@ -95,6 +106,7 @@ private final class HelperHarness {
                 return 1
             },
             sleep: { duration in
+                if self.refuseDown, duration == .seconds(1) { return }
                 if duration == .milliseconds(600) {
                     await self.registrationGate?.wait()
                     try Task.checkCancellation()
@@ -108,7 +120,8 @@ private final class HelperHarness {
                     try await Task.sleep(for: .seconds(3600))
                 }
             },
-            telemetry: { suppressing, _ in self.gauge = suppressing }), defaults: defaults)
+            telemetry: { suppressing, _ in self.gauge = suppressing },
+            now: { self.clockNow }), defaults: defaults)
     }
 
     func cleanUp() { ScratchDefaults.drop(suite) }
