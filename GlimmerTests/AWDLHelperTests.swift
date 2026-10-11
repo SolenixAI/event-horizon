@@ -47,10 +47,10 @@ struct AWDLHelperTests {
             #expect(success)
             replied.signal()
         }
-        #expect(await restoreStarted.waitAsync(for: .seconds(2)) == .success)
+        #expect(await restoreStarted.waitAsync(for: testHangGuard) == .success)
         #expect(replied.takeSignal() == .timedOut)
         allowRestore.signal()
-        #expect(await replied.waitAsync(for: .seconds(2)) == .success)
+        #expect(await replied.waitAsync(for: testHangGuard) == .success)
         #expect(operations.withLock { $0 } == ["up"])
     }
 
@@ -122,17 +122,17 @@ struct AWDLHelperTests {
             }
             decisionFinished.signal()
         }
-        #expect(await decisionEntered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await decisionEntered.waitAsync(for: testHangGuard) == .success)
         heartbeatQueue.async {
             heartbeatStarted.signal()
             suppressor.setSuppressing(true, reason: "heartbeat")
             heartbeatFinished.signal()
         }
-        #expect(await heartbeatStarted.waitAsync(for: .seconds(10)) == .success)
+        #expect(await heartbeatStarted.waitAsync(for: testHangGuard) == .success)
         #expect(await heartbeatFinished.waitAsync(for: .milliseconds(100)) == .timedOut)
         allowDecision.signal()
-        #expect(await decisionFinished.waitAsync(for: .seconds(10)) == .success)
-        #expect(await heartbeatFinished.waitAsync(for: .seconds(10)) == .success)
+        #expect(await decisionFinished.waitAsync(for: testHangGuard) == .success)
+        #expect(await heartbeatFinished.waitAsync(for: testHangGuard) == .success)
         #expect(decisions.withLock { $0 } == [expected])
         #expect(suppressor.suppressing)
     }
@@ -238,7 +238,7 @@ struct HelperClientTests {
         #expect(await client.reSuppressCount() == nil)
         #expect(made.withLock { $0 } == 1)
         await client.drop(first)
-        #expect(await invalidated.waitAsync(for: .seconds(10)) == .success)
+        #expect(await invalidated.waitAsync(for: testHangGuard) == .success)
         fail.withLock { $0 = false }
         #expect(await client.reSuppressCount() == 0)
         #expect(made.withLock { $0 } == 2)

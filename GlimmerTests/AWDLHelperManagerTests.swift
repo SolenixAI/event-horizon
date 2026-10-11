@@ -127,7 +127,7 @@ struct AWDLHelperManagerTests {
         manager.suppressForStream()
         if !disable { manager.releaseForStream() }
         manager.disable()
-        #expect(await harness.unregistered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.unregistered.waitAsync(for: testHangGuard) == .success)
         #expect(harness.events == ["invalidate", "unregister"])
     }
 
@@ -138,21 +138,21 @@ struct AWDLHelperManagerTests {
         harness.releaseGate = gate
         let manager = harness.makeManager()
         manager.suppressForStream()
-        #expect(await harness.tick.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.tick.waitAsync(for: testHangGuard) == .success)
         #expect(harness.gauge)
         manager.disable()
         #expect(!harness.gauge)
         #expect(!manager.suppressing)
         #expect(!manager.isEnabled)
         #expect(!manager.isRegistered)
-        #expect(await gate.entered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await gate.entered.waitAsync(for: testHangGuard) == .success)
         manager.disable()
         manager.refresh()
         manager.suppressForStream()
         #expect(harness.events == ["down", "user-disabled"])
         gate.open()
-        #expect(await harness.unregistered.waitAsync(for: .seconds(10)) == .success)
-        #expect(await harness.unregistered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.unregistered.waitAsync(for: testHangGuard) == .success)
+        #expect(await harness.unregistered.waitAsync(for: testHangGuard) == .success)
         #expect(harness.events == ["down", "user-disabled", "restored", "invalidate", "unregister", "invalidate", "unregister"])
     }
 
@@ -162,7 +162,7 @@ struct AWDLHelperManagerTests {
         let manager = harness.makeManager()
         manager.enable()
         manager.disable()
-        #expect(await harness.unregistered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.unregistered.waitAsync(for: testHangGuard) == .success)
         #expect(harness.events == ["invalidate", "unregister"])
         #expect(!manager.isRegistered)
     }
@@ -174,11 +174,11 @@ struct AWDLHelperManagerTests {
         harness.registrationGate = gate
         let manager = harness.makeManager()
         manager.enable()
-        #expect(await gate.entered.waitAsync(for: .seconds(10)) == .success)
-        #expect(await harness.unregistered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await gate.entered.waitAsync(for: testHangGuard) == .success)
+        #expect(await harness.unregistered.waitAsync(for: testHangGuard) == .success)
         manager.disable()
         gate.open()
-        #expect(await harness.unregistered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.unregistered.waitAsync(for: testHangGuard) == .success)
         #expect(!harness.events.contains("register"))
         #expect(!manager.isEnabled)
     }
@@ -190,13 +190,13 @@ struct AWDLHelperManagerTests {
         harness.releaseGate = gate
         let manager = harness.makeManager()
         manager.suppressForStream()
-        #expect(await harness.tick.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.tick.waitAsync(for: testHangGuard) == .success)
         manager.releaseForStream()
-        #expect(await gate.entered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await gate.entered.waitAsync(for: testHangGuard) == .success)
         manager.disable()
         #expect(harness.events == ["down", "stream-end"])
         gate.open()
-        #expect(await harness.unregistered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.unregistered.waitAsync(for: testHangGuard) == .success)
         #expect(harness.events == ["down", "stream-end", "restored", "invalidate", "unregister"])
     }
 
@@ -205,19 +205,19 @@ struct AWDLHelperManagerTests {
         defer { harness.cleanUp() }
         let manager = harness.makeManager()
         manager.suppressForStream()
-        #expect(await harness.tick.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.tick.waitAsync(for: testHangGuard) == .success)
         harness.releaseResults = [false, true]
         let retry = HelperGate()
         harness.retryGate = retry
         manager.disable()
-        #expect(await retry.entered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await retry.entered.waitAsync(for: testHangGuard) == .success)
         manager.disable()
         manager.suppressForStream()
         #expect(harness.events == ["down", "user-disabled", "release-failed"])
         harness.retryGate = nil
         retry.open()
-        #expect(await harness.unregistered.waitAsync(for: .seconds(10)) == .success)
-        #expect(await harness.unregistered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.unregistered.waitAsync(for: testHangGuard) == .success)
+        #expect(await harness.unregistered.waitAsync(for: testHangGuard) == .success)
         #expect(harness.events.prefix(6) == ["down", "user-disabled", "release-failed", "user-disabled", "restored", "invalidate"])
     }
 
@@ -227,7 +227,7 @@ struct AWDLHelperManagerTests {
         defer { harness.cleanUp() }
         let manager = harness.makeManager()
         manager.suppressForStream()
-        #expect(await harness.tick.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.tick.waitAsync(for: testHangGuard) == .success)
         let started = DispatchSemaphore(value: 0)
         let unblock = DispatchSemaphore(value: 0)
         let acknowledged = DispatchSemaphore(value: 0)
@@ -244,34 +244,34 @@ struct AWDLHelperManagerTests {
             completed.withLock { $0 = success }
             acknowledged.signal()
         }
-        #expect(await started.waitAsync(for: .seconds(10)) == .success)
+        #expect(await started.waitAsync(for: testHangGuard) == .success)
         harness.releaseAcknowledged = { completed.withLock { $0 } }
         harness.persistentReleaseFailure = true
         let recovery = HelperGate()
         harness.recoveryGate = recovery
         manager.disable()
-        #expect(await recovery.entered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await recovery.entered.waitAsync(for: testHangGuard) == .success)
         if queueEnable { manager.enable() }
         for _ in 0..<5 {
             #expect(!harness.events.contains("unregister"))
             #expect(!harness.events.contains("register"))
             #expect(!restored.withLock { $0 })
             recovery.open()
-            if await recovery.entered.waitAsync(for: .seconds(1)) != .success { break }
+            if await recovery.entered.waitAsync(for: testHangGuard) != .success { break }
         }
         #expect(!harness.events.contains("unregister"))
         #expect(!manager.isEnabled)
         #expect(harness.events.filter { $0 == "release-failed" }.count >= 8)
         unblock.signal()
-        #expect(await acknowledged.waitAsync(for: .seconds(10)) == .success)
+        #expect(await acknowledged.waitAsync(for: testHangGuard) == .success)
         recovery.open()
-        #expect(await harness.unregistered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.unregistered.waitAsync(for: testHangGuard) == .success)
         #expect(restored.withLock { $0 })
         if queueEnable {
-            #expect(await harness.registered.waitAsync(for: .seconds(10)) == .success)
+            #expect(await harness.registered.waitAsync(for: testHangGuard) == .success)
             #expect(manager.isEnabled)
             manager.disable()
-            #expect(await harness.unregistered.waitAsync(for: .seconds(10)) == .success)
+            #expect(await harness.unregistered.waitAsync(for: testHangGuard) == .success)
         }
     }
 
@@ -281,18 +281,18 @@ struct AWDLHelperManagerTests {
         defer { harness.cleanUp() }
         let manager = harness.makeManager()
         manager.suppressForStream()
-        #expect(await harness.tick.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.tick.waitAsync(for: testHangGuard) == .success)
         harness.persistentReleaseFailure = true
         harness.releaseResults = [true, true]
         let recovery = HelperGate()
         harness.recoveryGate = recovery
         if disable { manager.disable() } else { manager.releaseForStream() }
-        #expect(await recovery.entered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await recovery.entered.waitAsync(for: testHangGuard) == .success)
         #expect(harness.retryDelays == [.seconds(1), .seconds(2), .seconds(4), .seconds(10)])
         #expect(harness.events.filter { $0 == "release-failed" }.count == 4)
         if !disable { manager.suppressForStream() }
         recovery.open()
-        #expect(await recovery.entered.waitAsync(for: .seconds(1)) == .success)
+        #expect(await recovery.entered.waitAsync(for: testHangGuard) == .success)
         #expect(harness.events.filter { $0 == "release-failed" }.count == 5)
         #expect(harness.retryDelays.last == .seconds(10))
         #expect(!harness.events.contains("unregister"))
@@ -302,22 +302,22 @@ struct AWDLHelperManagerTests {
         harness.releaseGate = restoration
         harness.persistentReleaseFailure = false
         recovery.open()
-        #expect(await restoration.entered.waitAsync(for: .seconds(1)) == .success)
+        #expect(await restoration.entered.waitAsync(for: testHangGuard) == .success)
         #expect(!harness.events.contains("unregister"))
         #expect(harness.events.filter { $0 == "down" }.count == 1)
         #expect(!manager.isEnabled)
         harness.releaseGate = nil
         restoration.open()
         if disable {
-            #expect(await harness.unregistered.waitAsync(for: .seconds(10)) == .success)
+            #expect(await harness.unregistered.waitAsync(for: testHangGuard) == .success)
             #expect(!manager.isRegistered)
             #expect(harness.events.suffix(3) == ["restored", "invalidate", "unregister"])
         } else {
-            #expect(await harness.tick.waitAsync(for: .seconds(10)) == .success)
+            #expect(await harness.tick.waitAsync(for: testHangGuard) == .success)
             #expect(manager.isEnabled)
             #expect(harness.events.suffix(2) == ["restored", "down"])
             manager.disable()
-            #expect(await harness.unregistered.waitAsync(for: .seconds(10)) == .success)
+            #expect(await harness.unregistered.waitAsync(for: testHangGuard) == .success)
         }
     }
 
@@ -327,25 +327,25 @@ struct AWDLHelperManagerTests {
         defer { harness.cleanUp() }
         let manager = harness.makeManager()
         manager.suppressForStream()
-        #expect(await harness.tick.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.tick.waitAsync(for: testHangGuard) == .success)
         let gate = HelperGate()
         harness.releaseGate = gate
         manager.releaseForStream()
-        #expect(await gate.entered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await gate.entered.waitAsync(for: testHangGuard) == .success)
         manager.suppressForStream()
         #expect(harness.events == ["down", "stream-end"])
         if endNextStream { manager.releaseForStream() }
         harness.releaseGate = nil
         gate.open()
-        #expect(await harness.released.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.released.waitAsync(for: testHangGuard) == .success)
         if endNextStream {
             #expect(harness.events == ["down", "stream-end", "restored"])
         } else {
-            #expect(await harness.tick.waitAsync(for: .seconds(10)) == .success)
+            #expect(await harness.tick.waitAsync(for: testHangGuard) == .success)
             #expect(harness.events == ["down", "stream-end", "restored", "down"])
             harness.releaseResults = [true]
             manager.releaseForStream()
-            #expect(await harness.released.waitAsync(for: .seconds(10)) == .success)
+            #expect(await harness.released.waitAsync(for: testHangGuard) == .success)
         }
     }
 
@@ -355,7 +355,7 @@ struct AWDLHelperManagerTests {
         harness.unregisterFails = true
         let manager = harness.makeManager()
         manager.disable()
-        #expect(await harness.unregistered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.unregistered.waitAsync(for: testHangGuard) == .success)
         #expect(manager.state == .enabled)
         manager.suppressForStream()
         manager.reconcileAfterUpdate()
@@ -375,12 +375,12 @@ struct AWDLHelperManagerTests {
         if duringCount { harness.countGate = gate } else { harness.downGate = gate }
         let manager = harness.makeManager()
         manager.suppressForStream()
-        #expect(await gate.entered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await gate.entered.waitAsync(for: testHangGuard) == .success)
         manager.disable()
         #expect(!harness.gauge)
         #expect(harness.events == ["down"])
         gate.open()
-        #expect(await harness.unregistered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.unregistered.waitAsync(for: testHangGuard) == .success)
         #expect(!manager.suppressing)
         #expect(!harness.gauge)
         #expect(harness.events == ["down", "user-disabled", "restored", "invalidate", "unregister"])
@@ -401,19 +401,19 @@ struct AWDLHelperManagerTests {
         harness.releaseGate = release
         let manager = harness.makeManager()
         manager.suppressForStream()
-        #expect(await proxy.stalledEntered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await proxy.stalledEntered.waitAsync(for: testHangGuard) == .success)
         manager.disable()
-        let restored = await release.entered.waitAsync(for: .seconds(5)) == .success
+        let restored = await release.entered.waitAsync(for: testHangGuard) == .success
         #expect(restored)
         #expect(!harness.events.contains("unregister"))
         #expect(!manager.isEnabled)
         // Drain the old implementation on failure without hiding its blocked teardown.
         if !restored {
             proxy.finishDown()
-            #expect(await release.entered.waitAsync(for: .seconds(10)) == .success)
+            #expect(await release.entered.waitAsync(for: testHangGuard) == .success)
         }
         release.open()
-        #expect(await harness.unregistered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.unregistered.waitAsync(for: testHangGuard) == .success)
         proxy.finishDown()
         #expect(!manager.suppressing)
         #expect(!harness.gauge)
@@ -430,12 +430,12 @@ struct AWDLHelperManagerTests {
         defer { observer.cancel() }
         manager.refresh()
         manager.suppressForStream()
-        #expect(await harness.tick.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.tick.waitAsync(for: testHangGuard) == .success)
         #expect(publications.withLock { $0 } == 0)
         manager.disable()
         #expect(publications.withLock { $0 } > 0)
         let beforeCompletion = publications.withLock { $0 }
-        #expect(await harness.unregistered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.unregistered.waitAsync(for: testHangGuard) == .success)
         #expect(publications.withLock { $0 } > beforeCompletion)
     }
 
@@ -444,23 +444,23 @@ struct AWDLHelperManagerTests {
         defer { harness.cleanUp() }
         let manager = harness.makeManager()
         manager.suppressForStream()
-        #expect(await harness.tick.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.tick.waitAsync(for: testHangGuard) == .success)
         harness.releaseResults = [false, true, true]
         let retry = HelperGate()
         harness.retryGate = retry
         manager.releaseForStream()
-        #expect(await retry.entered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await retry.entered.waitAsync(for: testHangGuard) == .success)
         #expect(!manager.isEnabled)
         manager.suppressForStream()
         harness.retryGate = nil
         retry.open()
-        #expect(await harness.tick.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.tick.waitAsync(for: testHangGuard) == .success)
         #expect(manager.isEnabled)
         #expect(harness.events == ["down", "stream-end", "release-failed", "stream-end", "restored", "down"])
-        #expect(await harness.released.waitAsync(for: .seconds(10)) == .success)
-        #expect(await harness.released.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.released.waitAsync(for: testHangGuard) == .success)
+        #expect(await harness.released.waitAsync(for: testHangGuard) == .success)
         manager.releaseForStream()
-        #expect(await harness.released.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.released.waitAsync(for: testHangGuard) == .success)
     }
 
     @Test func enableWaitsForPendingStreamRestoration() async throws {
@@ -468,14 +468,14 @@ struct AWDLHelperManagerTests {
         defer { harness.cleanUp() }
         let manager = harness.makeManager()
         manager.suppressForStream()
-        #expect(await harness.tick.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.tick.waitAsync(for: testHangGuard) == .success)
         let gate = HelperGate()
         harness.releaseGate = gate
         manager.releaseForStream()
-        #expect(await gate.entered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await gate.entered.waitAsync(for: testHangGuard) == .success)
         manager.enable()
         gate.open()
-        #expect(await harness.registered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.registered.waitAsync(for: testHangGuard) == .success)
         #expect(harness.events == ["down", "stream-end", "restored", "unregister", "register"])
         #expect(manager.isEnabled)
     }
@@ -487,14 +487,14 @@ struct AWDLHelperManagerTests {
         harness.unregisterGate = gate
         let manager = harness.makeManager()
         manager.disable()
-        #expect(await gate.entered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await gate.entered.waitAsync(for: testHangGuard) == .success)
         manager.enable()
         manager.disable()
         #expect(harness.events == ["invalidate", "unregister"])
         harness.unregisterGate = nil
         gate.open()
-        #expect(await harness.unregistered.waitAsync(for: .seconds(10)) == .success)
-        #expect(await harness.unregistered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.unregistered.waitAsync(for: testHangGuard) == .success)
+        #expect(await harness.unregistered.waitAsync(for: testHangGuard) == .success)
         #expect(harness.events == ["invalidate", "unregister", "invalidate", "unregister"])
         #expect(!manager.isRegistered)
     }
@@ -504,7 +504,7 @@ struct AWDLHelperManagerTests {
         defer { harness.cleanUp() }
         let manager = harness.makeManager()
         manager.suppressForStream()
-        #expect(await harness.tick.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.tick.waitAsync(for: testHangGuard) == .success)
         let gate = HelperGate()
         harness.releaseGate = gate
         let publications = Mutex(0)
@@ -514,11 +514,11 @@ struct AWDLHelperManagerTests {
         #expect(!manager.isEnabled)
         #expect(manager.isRegistered)
         #expect(publications.withLock { $0 } == 1)
-        #expect(await gate.entered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await gate.entered.waitAsync(for: testHangGuard) == .success)
         manager.refresh()
         #expect(publications.withLock { $0 } == 1)
         gate.open()
-        #expect(await harness.released.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.released.waitAsync(for: testHangGuard) == .success)
         #expect(manager.isEnabled)
         #expect(publications.withLock { $0 } == 2)
     }
@@ -529,7 +529,7 @@ struct AWDLHelperManagerTests {
         harness.reachable = false
         let manager = harness.makeManager()
         manager.reconcileAfterUpdate()
-        #expect(await harness.registered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.registered.waitAsync(for: testHangGuard) == .success)
         #expect(harness.events == ["unregister", "register"])
         #expect(manager.isEnabled)
     }
