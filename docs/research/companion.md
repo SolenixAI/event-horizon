@@ -340,10 +340,16 @@ sets it to the resolution Glimmer asked for, and tears it down on disconnect."
 - Revised 2026-10-10: this recommendation is superseded. The KWin source search
   above missed `krfb-virtualmonitor`, which makes a runtime output through a
   userspace tool. The founder's PC runs it. Sunshine captures it with
-  `capture = portal`. Revised 2026-10-11: `capture = kwin` failed on every
-  stream from the Flatpak (`zkde_screencast_unstable_v1 not found in registry`).
-  Build: `companion/src/linux_install.rs`. Sources and open items are in the PR;
-  the clean-PC test is still open.
+  `capture = kwin`. Revised 2026-10-11: `capture = kwin` from the Flatpak first
+  failed (`zkde_screencast_unstable_v1 not found in registry`): KWin offers that
+  interface only to an app whose desktop file lists it in
+  `X-KDE-Wayland-Interfaces`. The installer writes the user's copy of
+  `dev.lizardbyte.app.Sunshine.desktop` with that line, and KWin capture then
+  works on the founder's PC (log: `Screencasting with KWin ScreenCast`, no
+  error). `capture = portal` is rejected: its saved screen choice names the desk
+  monitor, so the stream goes black when a stream turns that monitor off. Build:
+  `companion/src/linux_install.rs`. Sources and open items are in the PR; the
+  clean-PC test is still open.
 
 ---
 

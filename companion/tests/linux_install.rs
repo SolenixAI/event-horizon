@@ -372,22 +372,49 @@ fn the_display_guard_is_written_and_started_beside_the_screen() {
 }
 
 #[test]
-fn sunshine_is_pointed_at_the_virtual_screen_and_captured_through_the_portal() {
-    // A Flatpak Sunshine cannot use KWin capture: KWin hides its screencast
-    // interface from the sandbox, and the stream dies at start.
+fn sunshine_captures_the_virtual_screen_through_kwin_with_its_grant() {
+    // KWin shares its screencast interface only with an app whose desktop file
+    // names it. The portal needs a saved choice of screen, which breaks when a
+    // stream turns the desk monitor off.
     let (cmd, files) = pc();
-    files
-        .write(&kde_layout().sunshine_conf(), "capture = kwin\n")
-        .unwrap();
     let layout = kde_layout();
+    files
+        .write(&layout.sunshine_conf(), "capture = portal\n")
+        .unwrap();
+    files
+        .write(
+            &layout.sunshine_exported_desktop(),
+            "[Desktop Entry]\nName=Sunshine\nExec=flatpak run dev.lizardbyte.app.Sunshine\n",
+        )
+        .unwrap();
     install(&cmd, &files, &layout).unwrap();
 
     let conf = files
         .read(&layout.sunshine_conf())
         .expect("sunshine.conf is written");
     assert!(conf.lines().any(|l| l == format!("output_name = {OUTPUT}")));
-    assert!(conf.lines().any(|l| l == "capture = portal"));
-    assert!(!conf.contains("kwin"));
+    assert!(conf.lines().any(|l| l == "capture = kwin"));
+    assert!(!conf.contains("portal"));
+    let grant = files
+        .read(&layout.sunshine_desktop_grant())
+        .expect("the KWin grant is written");
+    assert!(
+        grant
+            .starts_with("[Desktop Entry]\nX-KDE-Wayland-Interfaces=zkde_screencast_unstable_v1\n")
+    );
+    assert!(grant.contains("Exec=flatpak run dev.lizardbyte.app.Sunshine"));
+}
+
+#[test]
+fn the_kwin_grant_is_written_when_the_flatpak_exports_no_desktop_file() {
+    let (cmd, files) = pc();
+    let layout = kde_layout();
+    install(&cmd, &files, &layout).unwrap();
+    let grant = files
+        .read(&layout.sunshine_desktop_grant())
+        .expect("the KWin grant is written");
+    assert!(grant.contains("X-KDE-Wayland-Interfaces=zkde_screencast_unstable_v1"));
+    assert!(grant.contains("Exec=flatpak run dev.lizardbyte.app.Sunshine"));
 }
 
 #[test]
