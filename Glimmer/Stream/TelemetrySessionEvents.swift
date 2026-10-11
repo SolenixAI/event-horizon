@@ -512,3 +512,11 @@ extension TelemetryCounters {
         }
     }
 }
+
+extension TelemetryCounters {
+    /// The P2 state the explicit-IDR round trip stamps and resolves. Production
+    /// always uses `p2`; a test sets `idrRoundTripOverride` so another test's IDR
+    /// request, running in parallel, can't land in its round trip.
+    @TaskLocal static var idrRoundTripOverride: P2State?
+    var idrRoundTrip: P2State { Self.idrRoundTripOverride ?? p2 }
+}
