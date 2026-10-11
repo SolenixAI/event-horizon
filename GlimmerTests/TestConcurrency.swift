@@ -1,6 +1,10 @@
 import Foundation
 @testable import Glimmer
 
+// Hang guard for an event a test waits on. It is not a timing assertion: under load an event
+// can arrive late, so this only ends a test whose event never comes. Assert the event, not its speed.
+let testHangGuard: Duration = .seconds(60)
+
 extension DispatchSemaphore {
     // A zero-time probe consumes a signal without parking a cooperative worker.
     func takeSignal() -> DispatchTimeoutResult { wait(timeout: .now()) }
