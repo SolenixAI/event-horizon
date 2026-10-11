@@ -153,6 +153,11 @@ where
     let choice = serde_json::from_str::<Value>(&body).ok();
     if let Some(share) = choice.and_then(|c| c["share_usage_stats"].as_bool()) {
         remember_stats_choice(&link.macs, &mac_id, share);
+        if share {
+            tokio::spawn(crate::crash::send_due(link.macs.clone()));
+        } else {
+            crate::crash::drop_unless_shared(&link.macs);
+        }
     }
     link.host.lease(&mac_id).await;
     StatusCode::NO_CONTENT
@@ -191,16 +196,20 @@ pub async fn unpair_mac<S: SunshineApi>(
     macs: &FsPath,
     mac_id: &str,
 ) -> Result<bool, SunshineError> {
-    let mut document = load(macs);
-    let list = document["macs"].as_array_mut().expect("macs is an array");
+    let document = load(macs);
+    let list = document["macs"].as_array().expect("macs is an array");
     let Some(record) = list.iter().find(|m| m["mac_id"] == mac_id).cloned() else {
         return Ok(false);
     };
     if let Some(client) = record["sunshine_client"].as_str() {
         sunshine.unpair(client).await?;
     }
-    list.retain(|m| m["mac_id"] != mac_id);
-    save(macs, &document);
+    edit(macs, |document| {
+        if let Some(list) = document["macs"].as_array_mut() {
+            list.retain(|m| m["mac_id"] != mac_id);
+        }
+        true
+    });
     Ok(true)
 }
 
@@ -250,6 +259,17 @@ fn load(macs: &FsPath) -> Value {
         .unwrap_or_else(|| json!({ "macs": [] }))
 }
 
+/// One writer at a time: a lease, a pairing and an unpair each read, change and
+/// write the whole file, so without the lock one could undo another.
+fn edit(macs: &FsPath, change: impl FnOnce(&mut Value) -> bool) {
+    static LOCK: Mutex<()> = Mutex::new(());
+    let _held = LOCK.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    let mut document = load(macs);
+    if change(&mut document) {
+        save(macs, &document);
+    }
+}
+
 fn save(macs: &FsPath, document: &Value) {
     if let Some(dir) = macs.parent() {
         let _ = std::fs::create_dir_all(dir);
@@ -279,30 +299,50 @@ fn remember(
     token: &str,
     sunshine_client: Option<String>,
 ) {
-    let mut document = load(macs);
-    let list = document["macs"].as_array_mut().expect("macs is an array");
-    list.retain(|m| m["mac_id"] != mac_id);
-    list.push(json!({
-        "mac_id": mac_id,
-        "mac_name": mac_name,
-        "token_sha256": hash(token),
-        "sunshine_client": sunshine_client,
-    }));
-    save(macs, &document);
+    edit(macs, |document| {
+        let list = document["macs"].as_array_mut().expect("macs is an array");
+        list.retain(|m| m["mac_id"] != mac_id);
+        list.push(json!({
+            "mac_id": mac_id,
+            "mac_name": mac_name,
+            "token_sha256": hash(token),
+            "sunshine_client": sunshine_client,
+        }));
+        true
+    });
 }
 
+/// Keep the Mac's choice, and since when it has shared: a crash is reported
+/// only to a choice made before it.
 fn remember_stats_choice(macs: &FsPath, mac_id: &str, share: bool) {
-    let mut document = load(macs);
-    let Some(list) = document["macs"].as_array_mut() else {
-        return;
-    };
-    let Some(record) = list.iter_mut().find(|m| m["mac_id"] == mac_id) else {
-        return;
-    };
-    if record["share_usage_stats"].as_bool() != Some(share) {
+    edit(macs, |document| {
+        let Some(list) = document["macs"].as_array_mut() else {
+            return false;
+        };
+        let Some(record) = list.iter_mut().find(|m| m["mac_id"] == mac_id) else {
+            return false;
+        };
+        if record["share_usage_stats"].as_bool() == Some(share) {
+            return false;
+        }
         record["share_usage_stats"] = json!(share);
-        save(macs, &document);
-    }
+        record["share_since"] = if share {
+            json!(crate::crash::now())
+        } else {
+            Value::Null
+        };
+        true
+    });
+}
+
+/// True when a paired Mac shares usage stats and chose to before `at` (Unix seconds).
+pub fn shared_before(macs: &FsPath, at: u64) -> bool {
+    load(macs)["macs"].as_array().is_some_and(|list| {
+        list.iter().any(|m| {
+            m["share_usage_stats"] == true
+                && m["share_since"].as_u64().is_some_and(|since| since <= at)
+        })
+    })
 }
 
 /// True when any paired Mac has turned on usage stats.

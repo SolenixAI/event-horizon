@@ -404,6 +404,10 @@ async fn the_lease_carries_the_macs_usage_stats_choice() {
     let on = Some(json!({ "share_usage_stats": true }));
     assert_eq!(send(&companion, "POST", "/lease", Some(&token), on).await.0, 204);
     assert!(link::any_mac_shares_stats(&macs));
+    // The time the Mac chose to share is kept, so older panics stay unsent.
+    let now = event_horizon_companion::crash::now();
+    assert!(link::shared_before(&macs, now + 1));
+    assert!(!link::shared_before(&macs, now - 60));
 
     // A lease with no body (an older Mac) leaves the choice as it was.
     assert_eq!(lease(&companion, Some(&token)).await, 204);

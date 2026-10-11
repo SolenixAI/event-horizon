@@ -1,6 +1,6 @@
-//! Crash reports. A panic leaves a note beside `macs.json`; the next start sends
-//! it to PostHog as one exception, but only when a paired Mac has turned on
-//! usage stats. The note holds the code location and version, nothing else.
+//! Crash reports. A panic leaves a note beside `macs.json` with the file name,
+//! line, version and time. It is sent to PostHog only when a Mac's lease says it
+//! shares usage stats and chose to before the panic; otherwise it is dropped.
 
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
@@ -10,15 +10,27 @@ const NOTE: &str = "last-panic.json";
 const POSTHOG_KEY: &str = "phc_yiiguNiBP8LGF8vrcWnDVMs3CkaEBLPk3gwGNrpqLs5G";
 const CAPTURE_URL: &str = "https://us.i.posthog.com/i/v0/e/";
 
-/// Leave a note on panic, then let the default hook print as before.
+/// Now, in Unix seconds.
+pub fn now() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |elapsed| elapsed.as_secs())
+}
+
+/// Leave a note on panic, then let the default hook print as before. Only the
+/// file's name is kept: a dependency's path holds the build machine's folders.
 pub fn install_panic_hook(dir: PathBuf) {
     let default = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |info| {
         if let Some(location) = info.location() {
+            let file = Path::new(location.file())
+                .file_name()
+                .map_or_else(String::new, |name| name.to_string_lossy().into_owned());
             let note = json!({
-                "file": location.file(),
+                "file": file,
                 "line": location.line(),
                 "version": env!("CARGO_PKG_VERSION"),
+                "at": now(),
             });
             let _ = std::fs::create_dir_all(&dir);
             let _ = std::fs::write(dir.join(NOTE), note.to_string());
@@ -60,18 +72,28 @@ pub fn exception_event(note: &str, report_id: &str) -> Option<Value> {
     }))
 }
 
-/// The note waiting from the last panic, removed as it is read, and whether
-/// a paired Mac lets it be sent. A note nobody may send is dropped, not kept.
-pub fn take_pending(dir: &Path, macs: &Path) -> Option<String> {
-    let path = dir.join(NOTE);
-    let note = std::fs::read_to_string(&path).ok()?;
-    let _ = std::fs::remove_file(&path);
-    crate::link::any_mac_shares_stats(macs).then_some(note)
+fn note_path(macs: &Path) -> PathBuf {
+    macs.parent().unwrap_or(Path::new(".")).join(NOTE)
 }
 
-/// At start: send the last panic's note, if a paired Mac shares usage stats.
-pub async fn send_pending(dir: PathBuf, macs: PathBuf) {
-    let Some(note) = take_pending(&dir, &macs) else {
+/// The waiting note, if a paired Mac shared usage stats from before its panic.
+pub fn due_note(macs: &Path) -> Option<String> {
+    let note = std::fs::read_to_string(note_path(macs)).ok()?;
+    let at = serde_json::from_str::<Value>(&note).ok()?["at"].as_u64()?;
+    crate::link::shared_before(macs, at).then_some(note)
+}
+
+/// A Mac said it doesn't share: if no paired Mac does, the note goes unsent.
+pub fn drop_unless_shared(macs: &Path) {
+    if !crate::link::any_mac_shares_stats(macs) {
+        let _ = std::fs::remove_file(note_path(macs));
+    }
+}
+
+/// Send the waiting note if it is due. It is removed only once PostHog has it,
+/// so a send that fails is tried again at the next lease.
+pub async fn send_due(macs: PathBuf) {
+    let Some(note) = due_note(&macs) else {
         return;
     };
     let mut id = [0u8; 16];
@@ -80,11 +102,19 @@ pub async fn send_pending(dir: PathBuf, macs: PathBuf) {
     }
     let report_id: String = id.iter().map(|b| format!("{b:02x}")).collect();
     let Some(event) = exception_event(&note, &report_id) else {
+        let _ = std::fs::remove_file(note_path(&macs));
         return;
     };
-    let _ = reqwest::Client::new()
+    match reqwest::Client::new()
         .post(CAPTURE_URL)
         .json(&event)
         .send()
-        .await;
+        .await
+    {
+        Ok(reply) if reply.status().is_success() => {
+            let _ = std::fs::remove_file(note_path(&macs));
+        }
+        Ok(reply) => eprintln!("crash report: PostHog answered {}", reply.status()),
+        Err(e) => eprintln!("crash report: {e}"),
+    }
 }

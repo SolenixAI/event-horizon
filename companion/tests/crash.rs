@@ -1,10 +1,11 @@
-//! Crash reports: a panic note becomes one exception that holds only the code
-//! location and version, and it leaves the PC only when a paired Mac opted in.
+//! Crash reports: a panic note becomes one exception that holds only the file
+//! name, line and version, and it is due only to a Mac that shared usage stats
+//! from before the panic.
 
 use event_horizon_companion::crash;
 use serde_json::json;
 
-const NOTE: &str = r#"{"file":"src/link.rs","line":42,"version":"0.1.0"}"#;
+const NOTE: &str = r#"{"file":"link.rs","line":42,"version":"0.1.0","at":100}"#;
 
 #[test]
 fn a_note_becomes_one_exception_with_its_location() {
@@ -15,7 +16,7 @@ fn a_note_becomes_one_exception_with_its_location() {
     assert_eq!(properties["app"], "event-horizon-companion");
     assert_eq!(properties["$process_person_profile"], false);
     let exception = &properties["$exception_list"][0];
-    assert_eq!(exception["value"], "panic at src/link.rs:42");
+    assert_eq!(exception["value"], "panic at link.rs:42");
     assert_eq!(exception["stacktrace"]["frames"][0]["lineno"], 42);
     // Tests build with debug assertions, which the project's filter drops.
     assert_eq!(properties["internal"], true);
@@ -28,22 +29,41 @@ fn an_unreadable_note_sends_nothing() {
 }
 
 #[test]
-fn a_note_leaves_only_when_a_mac_shares_stats_and_is_removed_either_way() {
+fn a_note_is_due_only_to_a_choice_made_before_the_panic() {
+    let dir = tempfile::tempdir().unwrap();
+    let macs = dir.path().join("macs.json");
+    std::fs::write(dir.path().join("last-panic.json"), NOTE).unwrap();
+    let record = |share: bool, since: u64| json!({ "macs": [{ "mac_id": "m", "share_usage_stats": share, "share_since": since }] });
+
+    std::fs::write(&macs, record(true, 50).to_string()).unwrap();
+    assert_eq!(crash::due_note(&macs).as_deref(), Some(NOTE));
+
+    // Opted in after the panic: the panic happened without consent.
+    std::fs::write(&macs, record(true, 150).to_string()).unwrap();
+    assert!(crash::due_note(&macs).is_none());
+
+    std::fs::write(&macs, record(false, 50).to_string()).unwrap();
+    assert!(crash::due_note(&macs).is_none());
+}
+
+#[test]
+fn a_note_nobody_may_send_is_dropped() {
     let dir = tempfile::tempdir().unwrap();
     let macs = dir.path().join("macs.json");
     let note = dir.path().join("last-panic.json");
-    let record = |share: bool| json!({ "macs": [{ "mac_id": "m", "share_usage_stats": share }] });
-
-    std::fs::write(&macs, record(false).to_string()).unwrap();
     std::fs::write(&note, NOTE).unwrap();
-    assert!(crash::take_pending(dir.path(), &macs).is_none());
-    assert!(!note.exists());
-
-    std::fs::write(&macs, record(true).to_string()).unwrap();
-    std::fs::write(&note, NOTE).unwrap();
-    assert_eq!(
-        crash::take_pending(dir.path(), &macs).as_deref(),
-        Some(NOTE)
-    );
+    std::fs::write(
+        &macs,
+        json!({ "macs": [{ "mac_id": "m", "share_usage_stats": true }] }).to_string(),
+    )
+    .unwrap();
+    crash::drop_unless_shared(&macs);
+    assert!(note.exists());
+    std::fs::write(
+        &macs,
+        json!({ "macs": [{ "mac_id": "m", "share_usage_stats": false }] }).to_string(),
+    )
+    .unwrap();
+    crash::drop_unless_shared(&macs);
     assert!(!note.exists());
 }
