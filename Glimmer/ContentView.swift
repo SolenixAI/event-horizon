@@ -53,6 +53,20 @@ struct MainWindow: View {
         .sheet(isPresented: $model.pairSheetShown) {
             PairSheet(repairing: model.pairSheetHost).environment(model)
         }
+        // Another Mac asks one of this Mac's PCs to pair: answer for a PC whose
+        // monitor is off, with the same code check.
+        .alert(
+            model.waitingApproval.map { "\($0.macName) wants to stream from \($0.pcName)" } ?? "",
+            isPresented: Binding(get: { model.waitingApproval != nil },
+                                 set: { if !$0 { model.waitingApproval = nil } }),
+            presenting: model.waitingApproval
+        ) { _ in
+            Button("Allow") { model.answerWaitingMac(allow: true) }
+            Button("Deny", role: .cancel) { model.answerWaitingMac(allow: false) }
+        } message: { waiting in
+            Text("Allow only if \(waiting.macName) shows \(waiting.code).")
+        }
+        .task { model.startApprovalWatch() }
         // No .frame: forcing either axis to .infinity gives the window an
         // unbounded box to fill, and the only thing available to fill it with is
         // nothing. The content states its own size; the window follows it.

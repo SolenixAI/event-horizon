@@ -259,6 +259,124 @@ async fn an_ask_still_answers_when_sunshine_cannot_clear() {
     assert!(asked["ticket"].is_string());
 }
 
+/// `macs.json` that already trusts `mac-a` under `token`.
+fn trusting_mac_a(dir: &Path, token: &str) {
+    use sha2::{Digest, Sha256};
+    let hash: String = Sha256::digest(token.as_bytes())
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect();
+    std::fs::write(
+        dir.join("macs.json"),
+        json!({ "macs": [{ "mac_id": "mac-a", "mac_name": "Raptor", "token_sha256": hash }] })
+            .to_string(),
+    )
+    .unwrap();
+}
+
+#[tokio::test]
+async fn a_paired_mac_sees_a_waiting_mac_and_its_code_and_can_allow_it() {
+    // A PC with its monitor off: nobody answers there, a Mac it trusts does.
+    let dir = tempfile::tempdir().unwrap();
+    trusting_mac_a(dir.path(), "token-a");
+    let nobody = FakePrompt::after(None, Duration::ZERO);
+    let companion = start_with(nobody, FakeSunshine::default(), dir.path()).await;
+
+    let (_, asked) = ask(&companion, "mac-b", Some("4821")).await;
+    let (status, waiting) = send(&companion, "GET", "/pair/waiting", Some("token-a"), None).await;
+    assert_eq!(status, 200);
+    assert_eq!(waiting["waiting"][0]["mac_id"], "mac-b");
+    assert_eq!(waiting["waiting"][0]["code"], asked["code"]);
+
+    let (status, _) = send(
+        &companion,
+        "POST",
+        "/pair/waiting/mac-b",
+        Some("token-a"),
+        Some(json!({ "allow": true })),
+    )
+    .await;
+    assert_eq!(status, 204);
+    let (status, body) = answer(&companion, asked["ticket"].as_str().unwrap()).await;
+    assert_eq!(status, 200);
+    assert_eq!(body["outcome"], "paired");
+}
+
+#[tokio::test]
+async fn a_paired_mac_can_deny_a_waiting_mac() {
+    let dir = tempfile::tempdir().unwrap();
+    trusting_mac_a(dir.path(), "token-a");
+    let nobody = FakePrompt::after(None, Duration::ZERO);
+    let companion = start_with(nobody, FakeSunshine::default(), dir.path()).await;
+
+    let (_, asked) = ask(&companion, "mac-b", Some("4821")).await;
+    let path = "/pair/waiting/mac-b";
+    let deny = Some(json!({ "allow": false }));
+    assert_eq!(
+        send(&companion, "POST", path, Some("token-a"), deny)
+            .await
+            .0,
+        204
+    );
+    let (status, body) = answer(&companion, asked["ticket"].as_str().unwrap()).await;
+    assert_eq!(status, 403);
+    assert_eq!(body["outcome"], "denied");
+}
+
+#[tokio::test]
+async fn only_a_paired_mac_sees_or_answers_waiting_macs() {
+    let dir = tempfile::tempdir().unwrap();
+    trusting_mac_a(dir.path(), "token-a");
+    let nobody = FakePrompt::after(None, Duration::ZERO);
+    let companion = start_with(nobody, FakeSunshine::default(), dir.path()).await;
+    let _ = ask(&companion, "mac-b", Some("4821")).await;
+
+    assert_eq!(
+        send(&companion, "GET", "/pair/waiting", None, None).await.0,
+        401
+    );
+    assert_eq!(
+        send(&companion, "GET", "/pair/waiting", Some("wrong"), None)
+            .await
+            .0,
+        401
+    );
+    let allow = Some(json!({ "allow": true }));
+    assert_eq!(
+        send(
+            &companion,
+            "POST",
+            "/pair/waiting/mac-b",
+            Some("wrong"),
+            allow
+        )
+        .await
+        .0,
+        401
+    );
+}
+
+#[tokio::test]
+async fn answering_a_mac_that_is_not_waiting_is_not_found() {
+    let dir = tempfile::tempdir().unwrap();
+    trusting_mac_a(dir.path(), "token-a");
+    let companion = start(Decision::Allow, dir.path()).await;
+
+    let allow = Some(json!({ "allow": true }));
+    assert_eq!(
+        send(
+            &companion,
+            "POST",
+            "/pair/waiting/mac-z",
+            Some("token-a"),
+            allow
+        )
+        .await
+        .0,
+        404
+    );
+}
+
 #[tokio::test]
 async fn an_unknown_ticket_is_not_found() {
     let dir = tempfile::tempdir().unwrap();

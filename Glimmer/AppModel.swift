@@ -582,6 +582,10 @@ final class AppModel {
     /// The launch the user last asked for, so Retry repeats exactly that.
     @ObservationIgnored var lastLaunchAttempt: (app: LibraryApp, host: Host)?
 
+    /// Another Mac waiting for this Mac to approve it on one of its PCs.
+    var waitingApproval: WaitingApproval?
+    @ObservationIgnored var approvalWatchTask: Task<Void, Never>?
+
     /// Wake on LAN in flight for this PC, and the PC whose last wake failed.
     var wakingHostID: String?
     var wakeFailedHostID: String?

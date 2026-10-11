@@ -7,12 +7,14 @@
 //!   gets a token it keeps.
 //! - `POST /lease` (with the token) keeps the PC awake for `LEASE_TTL`.
 //! - `DELETE /pair` (with the token) unpairs the Mac, here and in Sunshine.
+//! - `GET /pair/waiting` and `POST /pair/waiting/{mac_id}` (with a paired Mac's
+//!   token) show and answer other Macs' requests, for a PC whose monitor is off.
 //!
 //! Tokens are stored as SHA-256 hashes in one JSON file, so a restart keeps
 //! every Mac paired (a Mac must never pair twice: see DESIGN.md).
 
 use crate::host::{Host, PairOutcome, PairRequest, new_code};
-use crate::ports::{Awake, Prompt, SunshineApi, SunshineError};
+use crate::ports::{Awake, Decision, Prompt, SunshineApi, SunshineError};
 use crate::tls::TlsListener;
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
@@ -58,6 +60,8 @@ pub async fn serve<S, P, A>(
         .route("/hello", get(hello))
         .route("/pair", post(ask::<S, P, A>).delete(unpair::<S, P, A>))
         .route("/pair/{ticket}", get(answer::<S, P, A>))
+        .route("/pair/waiting", get(waiting::<S, P, A>))
+        .route("/pair/waiting/{mac_id}", post(decide::<S, P, A>))
         .route("/lease", post(lease::<S, P, A>))
         .with_state(link);
     let _ = axum::serve(TlsListener::new(listener, tls), app).await;
@@ -106,6 +110,59 @@ where
         StatusCode::OK,
         Json(json!({ "code": shown, "ticket": ticket })),
     )
+}
+
+/// The requests waiting for an answer, with their codes, for a Mac this PC
+/// already trusts: it can answer for a PC whose monitor is off.
+async fn waiting<S, P, A>(
+    State(link): State<Arc<Link<S, P, A>>>,
+    headers: HeaderMap,
+) -> (StatusCode, Json<Value>)
+where
+    S: SunshineApi + 'static,
+    P: Prompt + 'static,
+    A: Awake + 'static,
+{
+    if paired_mac(&link.macs, &headers).is_none() {
+        return (StatusCode::UNAUTHORIZED, Json(json!({})));
+    }
+    (
+        StatusCode::OK,
+        Json(json!({ "waiting": link.host.waiting() })),
+    )
+}
+
+/// A Mac this PC trusts answers a waiting request: `{"allow": true}` or false.
+async fn decide<S, P, A>(
+    State(link): State<Arc<Link<S, P, A>>>,
+    Path(mac_id): Path<String>,
+    headers: HeaderMap,
+    body: String,
+) -> StatusCode
+where
+    S: SunshineApi + 'static,
+    P: Prompt + 'static,
+    A: Awake + 'static,
+{
+    if paired_mac(&link.macs, &headers).is_none() {
+        return StatusCode::UNAUTHORIZED;
+    }
+    let Some(allow) = serde_json::from_str::<Value>(&body)
+        .ok()
+        .and_then(|v| v["allow"].as_bool())
+    else {
+        return StatusCode::BAD_REQUEST;
+    };
+    let decision = if allow {
+        Decision::Allow
+    } else {
+        Decision::Deny
+    };
+    if link.host.answer_waiting(&mac_id, decision) {
+        StatusCode::NO_CONTENT
+    } else {
+        StatusCode::NOT_FOUND
+    }
 }
 
 /// Step two: the Mac waits for the person at the PC to answer.
