@@ -196,7 +196,7 @@ extension EnetControlChannel {
     /// and costs only an optional load when telemetry is off.
     private func armIdrRoundTrip() {
         guard FrameTimingTracker.shared != nil else { return }
-        TelemetryCounters.shared.p2.stampIdrRequest(TelemetryCounters.monotonicNowNanos())
+        TelemetryCounters.shared.idrRoundTrip.stampIdrRequest(TelemetryCounters.monotonicNowNanos())
         TelemetryCounters.shared.idrRoundTripRequestTotal.increment()
     }
 

@@ -109,7 +109,7 @@ extension VideoRtpReceiver {
     /// and emit `idr_received`. Gate-on only, like the round-trip arm it pairs with.
     func noteKeyFrame(_ unit: DecodeUnit, tracker: FrameTimingTracker) {
         let now = TelemetryCounters.monotonicNowNanos()
-        let roundTripMs = TelemetryCounters.shared.p2.resolveIdrArrival(now)
+        let roundTripMs = TelemetryCounters.shared.idrRoundTrip.resolveIdrArrival(now)
         if let roundTripMs {
             TelemetryCounters.shared.idrRoundTripMatchedTotal.increment()
             tracker.recordIdrRoundTrip(frameIndex: unit.frameNumber, roundTripMs: roundTripMs)
