@@ -21,6 +21,7 @@ struct GeneralPane: View {
     @Environment(AppModel.self) private var model
     @AppStorage("launchAtLogin") private var launchAtLogin: Bool = false
     @AppStorage("launchMinimized") private var launchMinimized: Bool = false
+    @AppStorage(UsageStats.enabledKey) private var shareUsageStats: Bool = false
 
     /// True when macOS has the login item but it's pending the user's approval
     /// in System Settings ▸ Login Items - surfaced inline so the user isn't left
@@ -130,6 +131,19 @@ struct GeneralPane: View {
                 Text("Streaming")
             } footer: {
                 Text("To stream a different app once, click it in the launcher.")
+            }
+            Section("Privacy") {
+                Toggle(isOn: $shareUsageStats) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Share usage stats")
+                        Text("When you open Event Horizon and stream, how long and how smoothly streams run, "
+                            + "their size, your country, and the app and macOS versions, under a random ID "
+                            + "that's forgotten when you turn this off. Never your PC's name or address, "
+                            + "or what you play.")
+                            .font(.footnote).foregroundStyle(.secondary)
+                    }
+                }
+                .onChange(of: shareUsageStats) { _, on in UsageStats.setEnabled(on) }
             }
         }
         .formStyle(.grouped)

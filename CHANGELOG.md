@@ -2,6 +2,11 @@
 
 ## 2026.10.8 - 2026-10-13
 
+- Settings › General has a Privacy switch, Share usage stats. It's off until you
+  turn it on. It sends when you open Event Horizon and stream, how long and how
+  smoothly streams run, their size, your country, and the app and macOS
+  versions, under a random ID that's forgotten when you turn it off. Never your
+  PC's name or address, or what you play.
 - While you stream your PC's desktop, the PC companion makes the Mac-sized
   screen the PC's only screen, so the mouse and every window stay in your Mac
   window. Your desk monitors come back when the stream ends, and after a crash
