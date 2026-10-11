@@ -164,6 +164,7 @@ final class AWDLHelperManager: ObservableObject {
         var telemetry: (Bool, UInt64) -> Void = {
             TelemetryCounters.shared.setAWDLHelper(.init(suppressing: $0, reSuppressTotal: $1))
         }
+        var now: () -> Date = { Date() }
     }
 
     private let operations: Operations
@@ -176,6 +177,12 @@ final class AWDLHelperManager: ObservableObject {
     private var restorationTask: Task<Void, Never>?
     private var requestID = 0
     private var streamRequested = false
+    /// Set when the helper refused three calls in a row. Until then no stream starts it
+    /// and no registration repair runs: each call starts the daemon, and each start
+    /// toggles awdl0 under the stream.
+    private var refusedUntil: Date?
+    static let refusalCooldown: TimeInterval = 600
+    private var refusalActive: Bool { refusedUntil.map { operations.now() < $0 } ?? false }
     private let log = Logger(subsystem: "dev.solenix.eventhorizon", category: "AWDLHelper")
     private static let promptSuppressedKey = "awdlHelperPromptSuppressed"
     /// Saved intent lets registration self-heal after an update without undoing an explicit off choice.
@@ -379,6 +386,8 @@ final class AWDLHelperManager: ObservableObject {
     func reconcileAfterUpdate() {
         refresh()
         guard enabledIntent, !changingRegistration, !restoring else { return }
+        // A helper that refused us is not fixed by re-registering it.
+        guard !refusalActive else { return }
         // Migrate a live registration only when no explicit off intent was saved.
         setIntent(true)
         let identifier = requestID
@@ -421,6 +430,10 @@ final class AWDLHelperManager: ObservableObject {
             Diag.notice("AWDL helper NOT engaged - state \(state.diagDescription); awdl0 left to macOS", "Stream")
             return
         }
+        guard !refusalActive else {
+            Diag.notice("AWDL helper refused us recently - not engaged; awdl0 left to macOS", "Stream")
+            return
+        }
         streamRequested = true
         startHeartbeatIfRequested()
     }
@@ -441,7 +454,9 @@ final class AWDLHelperManager: ObservableObject {
                 // requirement) will refuse every second: stop asking this stream.
                 misses = down ? 0 : misses + 1
                 if misses >= 3 {
-                    Diag.notice("AWDL helper did not answer 3 times - awdl0 left to macOS for this stream", "Stream")
+                    Diag.notice("AWDL helper did not answer 3 times - awdl0 left to macOS; not engaged again for \(Int(Self.refusalCooldown)) s", "Stream")
+                    refusedUntil = operations.now().addingTimeInterval(Self.refusalCooldown)
+                    heartbeatTask = nil
                     break
                 }
                 // Pull the contention gauge every five ticks, with a breadcrumb on change.
