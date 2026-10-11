@@ -87,7 +87,7 @@ impl ServerCertVerifier for Pinned {
 pub fn pinned_client(pinned_der: &[u8]) -> Result<reqwest::Client, String> {
     // reqwest's rustls-no-provider build needs a process default provider before
     // it builds a client. Installing one that is already set is harmless.
-    let _ = tls::provider().install_default();
+    tls::install_default_provider();
     let provider = Arc::new(tls::provider());
     let verifier = Pinned {
         cert: CertificateDer::from(pinned_der.to_vec()),

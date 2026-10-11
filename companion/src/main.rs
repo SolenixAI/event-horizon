@@ -9,6 +9,7 @@ async fn main() {
     use event_horizon_companion::{
         Host, discovery, games, library, link, play, setup, sunshine::LocalSunshine, tls,
     };
+    tls::install_default_provider();
 
     // `play <appid>`: what Sunshine runs to open a game.
     let args: Vec<String> = std::env::args().collect();

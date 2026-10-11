@@ -78,6 +78,13 @@ pub fn provider() -> CryptoProvider {
     rustls::crypto::ring::default_provider()
 }
 
+/// Installs this OS's provider as reqwest's process default. reqwest's
+/// rustls-no-provider build panics on its first client without one, and the
+/// companion builds clients in several places. Installing again is harmless.
+pub fn install_default_provider() {
+    let _ = provider().install_default();
+}
+
 /// A new certificate (DER) and its PKCS#8 key (DER).
 fn generate() -> io::Result<(Vec<u8>, Vec<u8>)> {
     let key = KeyPair::generate().map_err(io::Error::other)?;
