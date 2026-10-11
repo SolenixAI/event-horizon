@@ -35,6 +35,13 @@ struct MainWindow: View {
             passOpen = open
             launchOffers()
         }
+        // A test build says so on the title-bar line, over onboarding and Home alike.
+        .overlay(alignment: .top) {
+            BuildMarkCapsule()
+                .padding(.top, 6)
+                .ignoresSafeArea(.container, edges: .top)
+                .allowsHitTesting(false)
+        }
         .sheet(isPresented: $showWiFiOffer) { AWDLEnablePrompt(manager: AWDLHelperManager.shared) }
         .onAppear { model.setHIDDiscovery(true, for: .launcher) }
         .onDisappear { model.setHIDDiscovery(false, for: .launcher) }

@@ -227,6 +227,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Crash recovery: if a prior session died mid-stream with the pointer
         // acceleration linearized, restore the user's saved value now (no-op in
         // the clean case). Runs before any window/stream can re-engage capture.
+        // A test build wears its mark on the Dock icon too (BuildMark).
+        NSApp.dockTile.badgeLabel = BuildMark.current
+
         MouseAccelerationControl.restoreOrphanedOverride()
         AppModel.restoreOrphanedMute()
 

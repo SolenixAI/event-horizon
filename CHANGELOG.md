@@ -11,6 +11,8 @@
   always knows each Mac once and accepts it.
 - A PC that reinstalled Sunshine shows once. If an older entry for it is still
   saved, Event Horizon removes it the next time the PC answers.
+- A test build says so: "Test build" shows in its window and on its Dock icon,
+  so it can't be mistaken for Event Horizon itself.
 - Updates reach you on their own. Event Horizon checks once a day and asks
   before it installs one. Check for Updates… is in the app menu. It stays greyed
   out during a stream, and an update never opens over a live stream.

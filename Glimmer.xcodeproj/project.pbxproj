@@ -46,6 +46,7 @@
 		A1000009A /* PairSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000009B /* PairSheet.swift */; };
 		A100030A /* ContainerMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100030B /* ContainerMigration.swift */; };
 		F0A0D17A0000000000000015 /* DataFolderMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A0D17A0000000000000016 /* DataFolderMigration.swift */; };
+		AA932D8C238983D608599D85 /* BuildMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAEEC00C5D687B633750F0EC /* BuildMark.swift */; };
 		A100010A /* TroubleshootingPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100010B /* TroubleshootingPane.swift */; };
 		A100011A /* DualSenseHID.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100011B /* DualSenseHID.swift */; };
 		DEC0DE2026091900000000F7 /* DualSenseDeviceState.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE2026091900000000F8 /* DualSenseDeviceState.swift */; };
@@ -355,6 +356,7 @@
 		D2000095 /* QualityPresetMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2000094 /* QualityPresetMigrationTests.swift */; };
 		DEC0DE105000000000000001 /* NotchStreamSizeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE105000000000000002 /* NotchStreamSizeTests.swift */; };
 		DEC0DE105000000000000003 /* ReinstalledPCSaveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE105000000000000004 /* ReinstalledPCSaveTests.swift */; };
+		B483F54E3718AC92CA611601 /* BuildMarkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCCBA74C05978BE55C78B92D /* BuildMarkTests.swift */; };
 		D7297E1FEC935211C5C141A8 /* PastIdentityRetirementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4913A4F3BCE5F0B071EE4604 /* PastIdentityRetirementTests.swift */; };
 		DEC0DE840000000000000011 /* StreamDisplayModeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE840000000000000012 /* StreamDisplayModeTests.swift */; };
 		DEC0DE840000000000000013 /* TerminationGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE840000000000000014 /* TerminationGateTests.swift */; };
@@ -513,6 +515,7 @@
 		A1000009B /* PairSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairSheet.swift; sourceTree = "<group>"; };
 		A100030B /* ContainerMigration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContainerMigration.swift; sourceTree = "<group>"; };
 		F0A0D17A0000000000000016 /* DataFolderMigration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataFolderMigration.swift; sourceTree = "<group>"; };
+		BAEEC00C5D687B633750F0EC /* BuildMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildMark.swift; sourceTree = "<group>"; };
 		A100010B /* TroubleshootingPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TroubleshootingPane.swift; sourceTree = "<group>"; };
 		A100011B /* DualSenseHID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DualSenseHID.swift; path = Stream/DualSenseHID.swift; sourceTree = "<group>"; };
 		DEC0DE2026091900000000F8 /* DualSenseDeviceState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "DualSenseDeviceState.swift"; path = "Stream/DualSenseDeviceState.swift"; sourceTree = "<group>"; };
@@ -832,6 +835,7 @@
 		D2000094 /* QualityPresetMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QualityPresetMigrationTests.swift; sourceTree = "<group>"; };
 		DEC0DE105000000000000002 /* NotchStreamSizeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchStreamSizeTests.swift; sourceTree = "<group>"; };
 		DEC0DE105000000000000004 /* ReinstalledPCSaveTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReinstalledPCSaveTests.swift; sourceTree = "<group>"; };
+		FCCBA74C05978BE55C78B92D /* BuildMarkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildMarkTests.swift; sourceTree = "<group>"; };
 		4913A4F3BCE5F0B071EE4604 /* PastIdentityRetirementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastIdentityRetirementTests.swift; sourceTree = "<group>"; };
 		DEC0DE840000000000000012 /* StreamDisplayModeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamDisplayModeTests.swift; sourceTree = "<group>"; };
 		DEC0DE840000000000000014 /* TerminationGateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminationGateTests.swift; sourceTree = "<group>"; };
@@ -996,6 +1000,7 @@
 				6BD9815CADA24FF291907B84 /* PermissionCard.swift */,
 				A100030B /* ContainerMigration.swift */,
 				F0A0D17A0000000000000016 /* DataFolderMigration.swift */,
+				BAEEC00C5D687B633750F0EC /* BuildMark.swift */,
 				A100010B /* TroubleshootingPane.swift */,
 				A100020B /* DiagnosticsPane.swift */,
 				A100012B /* LogStore.swift */,
@@ -1346,6 +1351,7 @@
 				D2000094 /* QualityPresetMigrationTests.swift */,
 				DEC0DE105000000000000002 /* NotchStreamSizeTests.swift */,
 				DEC0DE105000000000000004 /* ReinstalledPCSaveTests.swift */,
+				FCCBA74C05978BE55C78B92D /* BuildMarkTests.swift */,
 				4913A4F3BCE5F0B071EE4604 /* PastIdentityRetirementTests.swift */,
 				DEC0DE840000000000000012 /* StreamDisplayModeTests.swift */,
 				DEC0DE840000000000000014 /* TerminationGateTests.swift */,
@@ -1565,6 +1571,7 @@
 				8F8ACCE10F4E4A9DA6C42ED5 /* PermissionCard.swift in Sources */,
 				A100030A /* ContainerMigration.swift in Sources */,
 				F0A0D17A0000000000000015 /* DataFolderMigration.swift in Sources */,
+				AA932D8C238983D608599D85 /* BuildMark.swift in Sources */,
 				A100010A /* TroubleshootingPane.swift in Sources */,
 				A100020A /* DiagnosticsPane.swift in Sources */,
 				A100012A /* LogStore.swift in Sources */,
@@ -1905,6 +1912,7 @@
 				D2000095 /* QualityPresetMigrationTests.swift in Sources */,
 				DEC0DE105000000000000001 /* NotchStreamSizeTests.swift in Sources */,
 				DEC0DE105000000000000003 /* ReinstalledPCSaveTests.swift in Sources */,
+				B483F54E3718AC92CA611601 /* BuildMarkTests.swift in Sources */,
 				D7297E1FEC935211C5C141A8 /* PastIdentityRetirementTests.swift in Sources */,
 				DEC0DE840000000000000011 /* StreamDisplayModeTests.swift in Sources */,
 				DEC0DE840000000000000013 /* TerminationGateTests.swift in Sources */,
