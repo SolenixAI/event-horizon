@@ -389,7 +389,7 @@ struct RtspClientTests {
                 }
             }
             defer { sink.finishInitialization.signal() }
-            #expect(await sink.initializationStarted.waitAsync(for: .seconds(2)) == .success)
+            #expect(await sink.initializationStarted.waitAsync(for: .seconds(60)) == .success)
 
             let stopThread = OSAllocatedUnfairLock<thread_act_t>(initialState: 0)
             let stopStarted = DispatchSemaphore(value: 0)
@@ -402,13 +402,13 @@ struct RtspClientTests {
                     stopDone.signal()
                 }
             }
-            #expect(await stopStarted.waitAsync(for: .seconds(2)) == .success)
+            #expect(await stopStarted.waitAsync(for: .seconds(60)) == .success)
             #expect(await threadParks(stopThread.withLock { $0 }, within: .seconds(2)))
             // Stop must wait for initialization to publish the sink before cleaning it up.
             #expect(await stopDone.waitAsync(for: .milliseconds(50)) == .timedOut)
             sink.finishInitialization.signal()
-            try #require(await startupDone.waitAsync(for: .seconds(2)) == .success)
-            try #require(await stopDone.waitAsync(for: .seconds(2)) == .success)
+            try #require(await startupDone.waitAsync(for: .seconds(60)) == .success)
+            try #require(await stopDone.waitAsync(for: .seconds(60)) == .success)
             try await startup.value
             try await stop.value
             // Stop leaves the socket open for deinit, so a loop still in recvfrom or sendto

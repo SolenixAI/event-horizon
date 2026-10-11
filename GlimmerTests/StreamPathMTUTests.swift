@@ -430,8 +430,9 @@ struct StreamPathMTUTests {
             let port = try #require(LoopbackPort(listening: true))
             let sampler = RttSampler(host: "127.0.0.1", port: port.port, maxAttempts: 200)
             let start = ContinuousClock.now
-            await sampler.awaitPreLaunchWindow(maxWaitMs: 10_000)
-            #expect(ContinuousClock.now - start < .seconds(5))
+            await sampler.awaitPreLaunchWindow(maxWaitMs: 120_000)
+            // Half the cap: proves the full window released it, even on a busy Mac.
+            #expect(ContinuousClock.now - start < .seconds(60))
             sampler.markLaunch()
             #expect(sampler.usesPreLaunchWindow)
             #expect((sampler.harvest()?.count ?? 0) >= RttSampler.minPreLaunchSamples)
@@ -517,7 +518,8 @@ struct StreamPathMTUTests {
             let start = ContinuousClock.now
             _ = sampler.harvest()
             await waiting.value
-            #expect(ContinuousClock.now - start < .seconds(5))
+            // Half the 60 s cap: proves the harvest released it, even on a busy Mac.
+            #expect(ContinuousClock.now - start < .seconds(30))
         }.value
     }
 

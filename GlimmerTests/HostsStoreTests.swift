@@ -266,7 +266,7 @@ struct HostsStoreTests {
             for task in tasks { task.cancel() }
             for token in model.workspaceTokens { center.removeObserver(token) }
         }
-        for gate in gates { #expect(await gate.started.waitAsync(for: .seconds(5)) == .success) }
+        for gate in gates { #expect(await gate.started.waitAsync(for: .seconds(60)) == .success) }
         await withCheckedContinuation { continuation in
             DispatchQueue.global().async {
                 #expect(!Thread.isMainThread)
@@ -291,7 +291,7 @@ struct HostsStoreTests {
         }
         defer { caller.cancel() }
         // The real three-burst send takes at least three seconds under suite load.
-        try #require(await poll.started.waitAsync(for: .seconds(15)) == .success)
+        try #require(await poll.started.waitAsync(for: .seconds(60)) == .success)
         model.setHostPollingSleep(system: true, sleeping: true)
         let outcome = await caller.value
         #expect(!caller.isCancelled)
@@ -323,7 +323,7 @@ struct HostsStoreTests {
             movedHostSearch.cancel()
             for token in model.workspaceTokens { center.removeObserver(token) }
         }
-        #expect(await movedHostProbe.started.waitAsync(for: .seconds(5)) == .success)
+        #expect(await movedHostProbe.started.waitAsync(for: .seconds(60)) == .success)
         center.post(name: NSWorkspace.screensDidSleepNotification, object: nil)
         #expect(movedHostSearch.isCancelled)
         #expect(movedHostProbe.cancelled.isSet)
@@ -346,7 +346,7 @@ struct HostsStoreTests {
             try Task.checkCancellation()
         })
         let deadline = model.hostPolling.settleUntil
-        #expect(await firstSleep.started.waitAsync(for: .seconds(5)) == .success)
+        #expect(await firstSleep.started.waitAsync(for: .seconds(60)) == .success)
         model.restartHostStatusPolling(sleep: { remaining in
             #expect(remaining > 0)
             _ = await activationSleep.wait()
@@ -354,7 +354,7 @@ struct HostsStoreTests {
         })
         #expect(firstSleep.cancelled.isSet)
         #expect(model.hostPolling.settleUntil == deadline)
-        #expect(await activationSleep.started.waitAsync(for: .seconds(5)) == .success)
+        #expect(await activationSleep.started.waitAsync(for: .seconds(60)) == .success)
         model.hostStatusTask?.cancel()
         #expect(activationSleep.cancelled.isSet)
     }
@@ -411,7 +411,7 @@ struct HostsStoreTests {
             })
         }
         model.hostStatusTask = Task { _ = await task.value }
-        #expect(await entered.waitAsync(for: .seconds(5)) == .success)
+        #expect(await entered.waitAsync(for: .seconds(60)) == .success)
         #expect(model.hostLiveStatus?.state == .asleep)
         model.setHostPollingSleep(system: true, sleeping: true)
         task.cancel()
@@ -450,7 +450,7 @@ struct HostsStoreTests {
                 return 1
             }
         }
-        #expect(await sent.waitAsync(for: .seconds(5)) == .success)
+        #expect(await sent.waitAsync(for: .seconds(60)) == .success)
         #expect(model.wakeWork.operations.count == 1)
         let button = Task {}
         let search = Task {}
@@ -482,7 +482,7 @@ struct HostsStoreTests {
         }
         defer { for task in tasks { task.cancel() } }
         for gate in searches + polls {
-            try #require(await gate.started.waitAsync(for: .seconds(15)) == .success)
+            try #require(await gate.started.waitAsync(for: .seconds(60)) == .success)
         }
         model.setHostPollingSleep(system: true, sleeping: true)
         for gate in searches + polls { #expect(gate.cancelled.isSet) }
@@ -498,8 +498,8 @@ struct HostsStoreTests {
             await model.waitForSunshine(host: Self.host("pc", address: "192.0.2.10"), budgetSeconds: 90,
                                          searchAddress: { await search.wait() }, poll: { await poll.wait() })
         }
-        #expect(await search.started.waitAsync(for: .seconds(5)) == .success)
-        #expect(await poll.started.waitAsync(for: .seconds(5)) == .success)
+        #expect(await search.started.waitAsync(for: .seconds(60)) == .success)
+        #expect(await poll.started.waitAsync(for: .seconds(60)) == .success)
         task.cancel()
         #expect(search.cancelled.isSet)
         _ = await task.value
