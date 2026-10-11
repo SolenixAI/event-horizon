@@ -1,6 +1,6 @@
 [package]
 name = "event-horizon-companion"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 license = "GPL-3.0-only"
 description = "Turns a gaming PC into an Event Horizon host"
