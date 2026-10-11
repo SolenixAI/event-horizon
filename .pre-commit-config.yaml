@@ -93,18 +93,25 @@ repos:
         # than silently `git add`-ing on the user's behalf: the working tree's
         # Swift diff is hashed before and after, so a rewrite of an already-
         # dirty file is caught too. Repo root comes from `git rev-parse`.
+        # Only the staged Swift files are fixed and linted ("$@"): a whole-tree
+        # pass on every commit pinned ~6 cores per run. `files` mirrors the
+        # config's `included`, and --force-exclude keeps its `excluded` paths
+        # out, since SwiftLint ignores both for explicit paths. The whole tree
+        # is still linted by `make verify` and CI (`--strict`).
         entry:
           bash -c 'set -e; ROOT=$(git rev-parse --show-toplevel);
           CFG="$ROOT/.swiftlint.yml"; BEFORE=$(git -C "$ROOT" diff -- "*.swift"
-          "*.swiftinterface" | shasum -a 256); swiftlint --fix --quiet --config
-          "$CFG"; AFTER=$(git -C "$ROOT" diff -- "*.swift" "*.swiftinterface" |
-          shasum -a 256); if [ "$BEFORE" != "$AFTER" ]; then echo "swiftlint
-          --fix rewrote files. Review the diff and re-add them:" >&2; git -C
-          "$ROOT" diff --stat -- "*.swift" >&2 || true; exit 1; fi; swiftlint
-          lint --quiet --config "$CFG"'
+          "*.swiftinterface" | shasum -a 256); swiftlint --fix --quiet
+          --force-exclude --config "$CFG" "$@"; AFTER=$(git -C "$ROOT" diff --
+          "*.swift" "*.swiftinterface" | shasum -a 256); if [ "$BEFORE" !=
+          "$AFTER" ]; then echo "swiftlint --fix rewrote files. Review the diff
+          and re-add them:" >&2; git -C "$ROOT" diff --stat -- "*.swift" >&2 ||
+          true; exit 1; fi; swiftlint lint --quiet --force-exclude --config
+          "$CFG" "$@"' --
         language: system
         types: [swift]
-        pass_filenames: false
+        files: ^(Glimmer|GlimmerTests|helper|LoginHelper)/
+        pass_filenames: true
         require_serial: true
         stages: [pre-commit]
 
