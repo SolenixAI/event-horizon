@@ -282,8 +282,11 @@ fn the_display_guard_is_written_and_started_beside_the_screen() {
 }
 
 #[test]
-fn sunshine_is_pointed_at_the_virtual_screen_and_captured_with_kwin() {
+fn sunshine_is_pointed_at_the_virtual_screen_and_captured_through_the_portal() {
+    // A Flatpak Sunshine cannot use KWin capture: KWin hides its screencast
+    // interface from the sandbox, and the stream dies at start.
     let (cmd, files) = pc();
+    files.write(&kde_layout().sunshine_conf(), "capture = kwin\n").unwrap();
     let layout = kde_layout();
     install(&cmd, &files, &layout).unwrap();
 
@@ -291,7 +294,8 @@ fn sunshine_is_pointed_at_the_virtual_screen_and_captured_with_kwin() {
         .read(&layout.sunshine_conf())
         .expect("sunshine.conf is written");
     assert!(conf.lines().any(|l| l == format!("output_name = {OUTPUT}")));
-    assert!(conf.lines().any(|l| l == "capture = kwin"));
+    assert!(conf.lines().any(|l| l == "capture = portal"));
+    assert!(!conf.contains("kwin"));
 }
 
 #[test]

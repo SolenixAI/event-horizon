@@ -251,14 +251,16 @@ fn start_unit(cmd: &dyn Commands, unit: &str, changed: bool) -> Result<(), Strin
     Ok(())
 }
 
-/// Sunshine reads the output name and captures through KWin, since the output is
-/// not a DRM connector, and runs the one-screen switch around each stream. Other
-/// settings in the file stay as they are.
+/// Sunshine reads the output name and captures through the desktop portal, and runs
+/// the one-screen switch around each stream. KWin capture cannot work from the
+/// Flatpak: KWin hides its screencast interface from the sandbox. During a stream
+/// the virtual screen is the only screen, so the portal has one screen to share.
+/// Other settings in the file stay as they are.
 fn write_sunshine_conf(files: &dyn Files, layout: &Layout) -> Result<(), String> {
     let path = layout.sunshine_conf();
     let before = files.read(&path).unwrap_or_default();
     let mut after = virtual_screen::with_setting(&before, "output_name", OUTPUT);
-    after = virtual_screen::with_setting(&after, "capture", "kwin");
+    after = virtual_screen::with_setting(&after, "capture", "portal");
     let existing = virtual_screen::setting(&after, "global_prep_cmd").map(str::to_string);
     if let Some(prep) = virtual_screen::prep_cmd(existing.as_deref(), &layout.installed_companion())
     {
