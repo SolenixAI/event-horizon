@@ -45,6 +45,16 @@ pub trait SunshineApi: Send + Sync {
         pin: &str,
     ) -> impl Future<Output = Result<Option<String>, SunshineError>> + Send;
 
+    /// Cancels every pairing Sunshine still holds open from this Mac, under its
+    /// id or its display name. Sunshine keeps one open pairing per Mac for 5
+    /// minutes and refuses that Mac's next handshake while it waits. Returns how
+    /// many it cancelled.
+    fn cancel_pairings(
+        &self,
+        mac_id: &str,
+        mac_name: &str,
+    ) -> impl Future<Output = Result<usize, SunshineError>> + Send;
+
     /// Removes one paired client. A client Sunshine no longer knows is not an error.
     fn unpair(&self, client: &str) -> impl Future<Output = Result<(), SunshineError>> + Send;
 }

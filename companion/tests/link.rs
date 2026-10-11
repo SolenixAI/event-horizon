@@ -228,6 +228,38 @@ async fn the_pc_shows_a_six_digit_code_and_the_mac_is_given_the_same_one() {
 }
 
 #[tokio::test]
+async fn an_ask_clears_the_macs_stale_sunshine_pairing_before_it_answers() {
+    // Sunshine keeps one waiting pairing per Mac for 5 minutes. A dropped one
+    // refuses the Mac's next handshake, so it goes before the Mac starts again.
+    let dir = tempfile::tempdir().unwrap();
+    let sunshine = FakeSunshine::default();
+    let nobody = FakePrompt::after(None, Duration::ZERO);
+    let companion = start_with(nobody, sunshine.clone(), dir.path()).await;
+
+    let (status, _) = ask(&companion, "mac-1", Some("4821")).await;
+
+    assert_eq!(status, 200);
+    assert_eq!(
+        *sunshine.cleared.lock().unwrap(),
+        vec![("mac-1".to_string(), "Raptor".to_string())]
+    );
+}
+
+#[tokio::test]
+async fn an_ask_still_answers_when_sunshine_cannot_clear() {
+    let dir = tempfile::tempdir().unwrap();
+    let sunshine = FakeSunshine::default();
+    sunshine.go_down();
+    let nobody = FakePrompt::after(None, Duration::ZERO);
+    let companion = start_with(nobody, sunshine, dir.path()).await;
+
+    let (status, asked) = ask(&companion, "mac-1", Some("4821")).await;
+
+    assert_eq!(status, 200);
+    assert!(asked["ticket"].is_string());
+}
+
+#[tokio::test]
 async fn an_unknown_ticket_is_not_found() {
     let dir = tempfile::tempdir().unwrap();
     let companion = start(Decision::Allow, dir.path()).await;
