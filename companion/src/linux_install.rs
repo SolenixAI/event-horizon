@@ -94,6 +94,20 @@ impl Layout {
             .join(".var/app/dev.lizardbyte.app.Sunshine/config/sunshine/sunshine.conf")
     }
 
+    /// The desktop file the Sunshine Flatpak exports for a user install.
+    pub fn sunshine_exported_desktop(&self) -> PathBuf {
+        self.home.join(format!(
+            ".local/share/flatpak/exports/share/applications/{SUNSHINE_APP}.desktop"
+        ))
+    }
+
+    /// The user's copy of Sunshine's desktop file. It wins over the exported one,
+    /// and KWin reads its interface grant from it.
+    pub fn sunshine_desktop_grant(&self) -> PathBuf {
+        self.home
+            .join(format!(".local/share/applications/{SUNSHINE_APP}.desktop"))
+    }
+
     /// The outputs a live stream turned off, one per line, so they come back after
     /// the stream, after a crash, and after a restart.
     pub fn stream_screen_saved(&self) -> PathBuf {
@@ -255,16 +269,16 @@ fn start_unit(cmd: &dyn Commands, unit: &str, changed: bool) -> Result<(), Strin
     Ok(())
 }
 
-/// Sunshine reads the output name and captures through the desktop portal, and runs
-/// the one-screen switch around each stream. KWin capture cannot work from the
-/// Flatpak: KWin hides its screencast interface from the sandbox. During a stream
-/// the virtual screen is the only screen, so the portal has one screen to share.
+/// Sunshine captures the virtual screen by its output name through KWin, and runs
+/// the one-screen switch around each stream. KWin capture needs no saved choice of
+/// screen, so it keeps working while a stream turns the desk monitor off; the
+/// portal's saved choice names a monitor and goes black when that monitor is off.
 /// Other settings in the file stay as they are.
 fn write_sunshine_conf(files: &dyn Files, layout: &Layout) -> Result<(), String> {
     let path = layout.sunshine_conf();
     let before = files.read(&path).unwrap_or_default();
     let mut after = virtual_screen::with_setting(&before, "output_name", OUTPUT);
-    after = virtual_screen::with_setting(&after, "capture", "portal");
+    after = virtual_screen::with_setting(&after, "capture", "kwin");
     let existing = virtual_screen::setting(&after, "global_prep_cmd").map(str::to_string);
     if let Some(prep) = virtual_screen::prep_cmd(existing.as_deref(), &layout.installed_companion())
     {
@@ -272,6 +286,38 @@ fn write_sunshine_conf(files: &dyn Files, layout: &Layout) -> Result<(), String>
     }
     if after != before {
         files.write(&path, &after)?;
+    }
+    write_kwin_grant(files, layout)
+}
+
+/// KWin offers its screencast interface only to an app whose desktop file names
+/// it in `X-KDE-Wayland-Interfaces`; without it Sunshine logs
+/// `zkde_screencast_unstable_v1 not found in registry`. The user's copy of the
+/// Flatpak's desktop file carries the grant, so the menu entry stays the same.
+fn write_kwin_grant(files: &dyn Files, layout: &Layout) -> Result<(), String> {
+    const GRANT: &str = "X-KDE-Wayland-Interfaces=zkde_screencast_unstable_v1";
+    let exported = files
+        .read(&layout.sunshine_exported_desktop())
+        .unwrap_or_else(|| {
+            format!(
+                "[Desktop Entry]\nType=Application\nName=Sunshine\nExec=flatpak run {SUNSHINE_APP}\nNoDisplay=true\n"
+            )
+        });
+    let mut grant = String::new();
+    for line in exported
+        .lines()
+        .filter(|l| !l.starts_with("X-KDE-Wayland-Interfaces="))
+    {
+        grant.push_str(line);
+        grant.push('\n');
+        if line.trim() == "[Desktop Entry]" {
+            grant.push_str(GRANT);
+            grant.push('\n');
+        }
+    }
+    let path = layout.sunshine_desktop_grant();
+    if files.read(&path).as_deref() != Some(grant.as_str()) {
+        files.write(&path, &grant)?;
     }
     Ok(())
 }
