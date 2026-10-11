@@ -265,12 +265,12 @@ before/after screenshot at the smallest and largest window the change allows.
 
 ## Lint
 
-`swiftlint` runs as a pre-commit hook over `Glimmer/`, `GlimmerTests/`,
-`helper/` and `LoginHelper/`; `scripts/` is build-time tooling and is not held
-to the product lint bar. The commit hook blocks only on errors, but
-`make verify` lints with `--strict`, where any warning fails, and the release
-build runs it. Treat a warning as a failure. Thresholds worth knowing from
-`.swiftlint.yml`:
+`swiftlint` runs as a pre-commit hook over the staged Swift files in `Glimmer/`,
+`GlimmerTests/`, `helper/` and `LoginHelper/`; `scripts/` is build-time tooling
+and is not held to the product lint bar. The commit hook blocks only on errors,
+but `make verify` lints with `--strict`, where any warning fails, and the
+release build runs it. Treat a warning as a failure. Thresholds worth knowing
+from `.swiftlint.yml`:
 
 - `force_unwrapping`, `force_cast`, `force_try`: warnings, so strict fails them.
 - File length and type body warn at 600, function body at 80, and strict holds
