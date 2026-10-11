@@ -126,14 +126,21 @@ struct CompanionClient: Sendable {
         return "\(code.prefix(3)) \(code.suffix(3))"
     }
 
-    /// Keep the PC awake for the next 90 s.
+    /// Keep the PC awake for the next 90 s, and tell it whether this Mac shares
+    /// usage stats, which decides whether the PC may send its crash reports.
     func lease(token: String) async -> LeaseOutcome {
         guard let url = url("/lease") else { return .unreachable }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = Self.leaseBody(sharesStats: UserDefaults.standard.bool(forKey: UsageStats.enabledKey))
         let response = try? await send(request, timeout: 5).1
         return Self.leaseOutcome(statusCode: (response as? HTTPURLResponse)?.statusCode)
+    }
+
+    static func leaseBody(sharesStats: Bool) -> Data? {
+        try? JSONSerialization.data(withJSONObject: ["share_usage_stats": sharesStats])
     }
 
     /// Only a refused token ends the lease; anything else is tried again

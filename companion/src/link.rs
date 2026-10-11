@@ -135,7 +135,13 @@ where
     (status, Json(json!({ "outcome": name })))
 }
 
-async fn lease<S, P, A>(State(link): State<Arc<Link<S, P, A>>>, headers: HeaderMap) -> StatusCode
+/// The body may carry the Mac's usage-stats choice, `{"share_usage_stats": true}`,
+/// which decides whether this PC may send its crash reports.
+async fn lease<S, P, A>(
+    State(link): State<Arc<Link<S, P, A>>>,
+    headers: HeaderMap,
+    body: String,
+) -> StatusCode
 where
     S: SunshineApi + 'static,
     P: Prompt + 'static,
@@ -144,6 +150,10 @@ where
     let Some(mac_id) = paired_mac(&link.macs, &headers) else {
         return StatusCode::UNAUTHORIZED;
     };
+    let choice = serde_json::from_str::<Value>(&body).ok();
+    if let Some(share) = choice.and_then(|c| c["share_usage_stats"].as_bool()) {
+        remember_stats_choice(&link.macs, &mac_id, share);
+    }
     link.host.lease(&mac_id).await;
     StatusCode::NO_CONTENT
 }
@@ -279,6 +289,27 @@ fn remember(
         "sunshine_client": sunshine_client,
     }));
     save(macs, &document);
+}
+
+fn remember_stats_choice(macs: &FsPath, mac_id: &str, share: bool) {
+    let mut document = load(macs);
+    let Some(list) = document["macs"].as_array_mut() else {
+        return;
+    };
+    let Some(record) = list.iter_mut().find(|m| m["mac_id"] == mac_id) else {
+        return;
+    };
+    if record["share_usage_stats"].as_bool() != Some(share) {
+        record["share_usage_stats"] = json!(share);
+        save(macs, &document);
+    }
+}
+
+/// True when any paired Mac has turned on usage stats.
+pub fn any_mac_shares_stats(macs: &FsPath) -> bool {
+    load(macs)["macs"]
+        .as_array()
+        .is_some_and(|list| list.iter().any(|m| m["share_usage_stats"] == true))
 }
 
 /// The Mac whose token this request carries, if it is one we paired.

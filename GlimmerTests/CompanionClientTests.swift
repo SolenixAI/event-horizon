@@ -104,6 +104,14 @@ struct CompanionLeaseTests {
         #expect(CompanionClient.leaseOutcome(statusCode: 403) == .refused)
     }
 
+    @Test func theLeaseTellsThePCTheStatsChoice() throws {
+        for share in [true, false] {
+            let body = try #require(CompanionClient.leaseBody(sharesStats: share))
+            let json = try #require(try JSONSerialization.jsonObject(with: body) as? [String: Bool])
+            #expect(json == ["share_usage_stats": share])
+        }
+    }
+
     @Test func aDroppedRequestIsRetriedNotTheEnd() {
         #expect(CompanionClient.leaseOutcome(statusCode: nil) == .unreachable)
         #expect(CompanionClient.leaseOutcome(statusCode: 500) == .unreachable)

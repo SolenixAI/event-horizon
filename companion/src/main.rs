@@ -214,6 +214,9 @@ async fn main() {
         "Event Horizon companion on {pc_name}, port {}",
         discovery::PORT
     );
+    // A panic leaves a note; the next start sends it only if a Mac opted in.
+    event_horizon_companion::crash::install_panic_hook(dir.clone());
+    tokio::spawn(event_horizon_companion::crash::send_pending(dir.clone(), macs.clone()));
     link::serve(listener, identity.acceptor, host, macs).await;
 }
 
