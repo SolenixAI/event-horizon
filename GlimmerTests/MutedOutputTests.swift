@@ -11,8 +11,9 @@ import Testing
 
 struct MutedOutputTests {
 
-    private func scratchDefaults() throws -> UserDefaults {
-        let suite = "dev.solenix.eventhorizon.tests.\(UUID().uuidString)"
+    /// One fixed domain per test (its name), emptied first, so runs leave no new plists.
+    private func scratchDefaults(test: String = #function) throws -> UserDefaults {
+        let suite = "dev.solenix.eventhorizon.tests.muted-output.\(test.prefix { $0 != "(" })"
         let defaults = try #require(UserDefaults(suiteName: suite))
         ScratchDefaults.drop(suite)
         return defaults

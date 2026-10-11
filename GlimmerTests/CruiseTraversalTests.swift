@@ -31,7 +31,8 @@ struct CruiseTraversalTests {
     }
 
     @Test func tuningUsesDefaultsAndClampsValues() throws {
-        let suiteName = "CruiseTraversalTests-\(UUID().uuidString)"
+        let suiteName = "dev.solenix.eventhorizon.tests.cruise-tuning"
+        ScratchDefaults.drop(suiteName)
         let defaults = try #require(UserDefaults(suiteName: suiteName))
         defer { ScratchDefaults.drop(suiteName) }
 
@@ -54,7 +55,8 @@ struct CruiseTraversalTests {
     }
 
     @Test @MainActor func tuningStaysFixedAcrossReconnect() throws {
-        let suiteName = "CruiseTraversalReconnect-\(UUID().uuidString)"
+        let suiteName = "dev.solenix.eventhorizon.tests.cruise-reconnect"
+        ScratchDefaults.drop(suiteName)
         let defaults = try #require(UserDefaults(suiteName: suiteName))
         defer { ScratchDefaults.drop(suiteName) }
 

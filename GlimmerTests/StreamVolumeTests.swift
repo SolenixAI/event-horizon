@@ -10,8 +10,10 @@ import Testing
 
 struct StreamVolumeTests {
 
-    private func scratchSuite() throws -> String {
-        let suite = "dev.solenix.eventhorizon.tests.stream-volume.\(UUID().uuidString)"
+    /// One fixed domain per test (its name), emptied first, so runs leave no new plists.
+    private func scratchSuite(test: String = #function) throws -> String {
+        let suite = "dev.solenix.eventhorizon.tests.stream-volume.\(test.prefix { $0 != "(" })"
+        ScratchDefaults.drop(suite)
         _ = try #require(UserDefaults(suiteName: suite))
         return suite
     }
