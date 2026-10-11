@@ -50,6 +50,18 @@ pub struct Layout {
 
 impl Layout {
     pub fn from_env(config_dir: &Path, companion: PathBuf) -> Layout {
+        let mut session_type = std::env::var("XDG_SESSION_TYPE").ok();
+        let mut desktop = std::env::var("XDG_CURRENT_DESKTOP").ok();
+        if session_type.is_none() || desktop.is_none() {
+            let shown = std::process::Command::new("systemctl")
+                .args(["--user", "show-environment"])
+                .output()
+                .map(|o| String::from_utf8_lossy(&o.stdout).into_owned())
+                .unwrap_or_default();
+            let (manager_type, manager_desktop) = virtual_screen::session_from_manager(&shown);
+            session_type = session_type.or(manager_type);
+            desktop = desktop.or(manager_desktop);
+        }
         Layout {
             config_dir: config_dir.to_path_buf(),
             home: PathBuf::from(std::env::var_os("HOME").unwrap_or_default()),
@@ -57,8 +69,8 @@ impl Layout {
             path_dirs: std::env::var_os("PATH")
                 .map(|p| std::env::split_paths(&p).collect())
                 .unwrap_or_default(),
-            session_type: std::env::var("XDG_SESSION_TYPE").ok(),
-            desktop: std::env::var("XDG_CURRENT_DESKTOP").ok(),
+            session_type,
+            desktop,
         }
     }
 
@@ -86,7 +98,8 @@ impl Layout {
     }
 
     fn sunshine_drop_in(&self) -> PathBuf {
-        self.units().join(format!("{SUNSHINE_SERVICE}.d/event-horizon.conf"))
+        self.units()
+            .join(format!("{SUNSHINE_SERVICE}.d/event-horizon.conf"))
     }
 
     fn units(&self) -> PathBuf {
@@ -247,7 +260,8 @@ fn write_sunshine_conf(files: &dyn Files, layout: &Layout) -> Result<(), String>
     let mut after = virtual_screen::with_setting(&before, "output_name", OUTPUT);
     after = virtual_screen::with_setting(&after, "capture", "kwin");
     let existing = virtual_screen::setting(&after, "global_prep_cmd").map(str::to_string);
-    if let Some(prep) = virtual_screen::prep_cmd(existing.as_deref(), &layout.installed_companion()) {
+    if let Some(prep) = virtual_screen::prep_cmd(existing.as_deref(), &layout.installed_companion())
+    {
         after = virtual_screen::with_setting(&after, "global_prep_cmd", &prep);
     }
     if after != before {

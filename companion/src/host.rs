@@ -29,7 +29,9 @@ pub struct PairRequest {
 pub enum PairOutcome {
     /// `sunshine_client` is Sunshine's id for the client this pairing added,
     /// when this request added one (none when the Mac was already paired).
-    Paired { sunshine_client: Option<String> },
+    Paired {
+        sunshine_client: Option<String>,
+    },
     Denied,
     /// Nobody answered at the PC within `PAIR_TIMEOUT`.
     Expired,

@@ -57,7 +57,11 @@ async fn the_pairing_keeps_the_sunshine_client_it_made() {
 #[tokio::test(start_paused = true)]
 async fn the_prompt_shows_the_code_the_mac_was_given() {
     let prompt = FakePrompt::answers(Decision::Allow);
-    let host = Host::new(FakeSunshine::default(), prompt.clone(), FakeAwake::default());
+    let host = Host::new(
+        FakeSunshine::default(),
+        prompt.clone(),
+        FakeAwake::default(),
+    );
 
     host.pair(request("mac-1", "4821"), "123456".into()).await;
 

@@ -71,7 +71,9 @@ impl ServerCertVerifier for Pinned {
         if tls::fingerprint(end_entity) == self.fingerprint {
             Ok(ServerCertVerified::assertion())
         } else {
-            Err(rustls::Error::General("certificate is not the pinned one".into()))
+            Err(rustls::Error::General(
+                "certificate is not the pinned one".into(),
+            ))
         }
     }
 
@@ -104,12 +106,17 @@ impl ServerCertVerifier for Pinned {
     }
 
     fn supported_verify_schemes(&self) -> Vec<SignatureScheme> {
-        self.provider.signature_verification_algorithms.supported_schemes()
+        self.provider
+            .signature_verification_algorithms
+            .supported_schemes()
     }
 }
 
 /// A TLS connection to `addr` that accepts only the certificate with `fingerprint`.
-async fn connect(addr: &str, fingerprint: &str) -> std::io::Result<TlsStream<tokio::net::TcpStream>> {
+async fn connect(
+    addr: &str,
+    fingerprint: &str,
+) -> std::io::Result<TlsStream<tokio::net::TcpStream>> {
     let provider = Arc::new(tls::provider());
     let config = rustls::ClientConfig::builder_with_provider(provider.clone())
         .with_protocol_versions(&[&rustls::version::TLS13, &rustls::version::TLS12])
@@ -330,7 +337,10 @@ async fn pairing_again_leaves_sunshine_one_record_for_the_mac() {
     // Unpairing later removes the record that is left, and nothing else.
     let token = body["token"].as_str().unwrap().to_string();
     assert_eq!(unpair(&companion, Some(&token)).await, 204);
-    assert_eq!(*companion.sunshine.unpaired.lock().unwrap(), ["uuid-mac-1", "uuid-mac-1-2"]);
+    assert_eq!(
+        *companion.sunshine.unpaired.lock().unwrap(),
+        ["uuid-mac-1", "uuid-mac-1-2"]
+    );
 }
 
 #[tokio::test]
@@ -402,7 +412,10 @@ async fn the_lease_carries_the_macs_usage_stats_choice() {
     assert!(!link::any_mac_shares_stats(&macs));
 
     let on = Some(json!({ "share_usage_stats": true }));
-    assert_eq!(send(&companion, "POST", "/lease", Some(&token), on).await.0, 204);
+    assert_eq!(
+        send(&companion, "POST", "/lease", Some(&token), on).await.0,
+        204
+    );
     assert!(link::any_mac_shares_stats(&macs));
     // The time the Mac chose to share is kept, so older panics stay unsent.
     let now = event_horizon_companion::crash::now();
@@ -414,6 +427,11 @@ async fn the_lease_carries_the_macs_usage_stats_choice() {
     assert!(link::any_mac_shares_stats(&macs));
 
     let off = Some(json!({ "share_usage_stats": false }));
-    assert_eq!(send(&companion, "POST", "/lease", Some(&token), off).await.0, 204);
+    assert_eq!(
+        send(&companion, "POST", "/lease", Some(&token), off)
+            .await
+            .0,
+        204
+    );
     assert!(!link::any_mac_shares_stats(&macs));
 }

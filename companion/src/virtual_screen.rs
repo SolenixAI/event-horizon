@@ -45,6 +45,20 @@ pub fn screen_size(mac_reported: Option<Size>) -> Size {
 }
 
 /// True on KDE Plasma running on Wayland, the only session the screen supports.
+/// The desktop session (type, desktop) from `systemctl --user show-environment`.
+/// A run from ssh has neither variable, but the user manager carries the
+/// desktop's, so an install over ssh still sees KDE on Wayland.
+pub fn session_from_manager(shown: &str) -> (Option<String>, Option<String>) {
+    let value = |key: &str| {
+        shown
+            .lines()
+            .find_map(|line| line.strip_prefix(key)?.strip_prefix('='))
+            .filter(|v| !v.is_empty())
+            .map(str::to_string)
+    };
+    (value("XDG_SESSION_TYPE"), value("XDG_CURRENT_DESKTOP"))
+}
+
 pub fn is_kde_wayland(session_type: Option<&str>, desktop: Option<&str>) -> bool {
     session_type == Some("wayland")
         && desktop.is_some_and(|d| d.split(':').any(|part| part.eq_ignore_ascii_case("kde")))
@@ -73,7 +87,10 @@ pub fn placement_args(kscreen: &Value) -> Option<Vec<String>> {
 /// so a stream never leaves a PC without a screen.
 pub fn others_on(kscreen: &Value) -> Option<Vec<String>> {
     let outputs = kscreen["outputs"].as_array()?;
-    if !outputs.iter().any(|o| o["name"] == OUTPUT && o["enabled"] == true) {
+    if !outputs
+        .iter()
+        .any(|o| o["name"] == OUTPUT && o["enabled"] == true)
+    {
         return None;
     }
     Some(
@@ -115,7 +132,11 @@ pub fn prep_cmd(existing: Option<&str>, companion: &Path) -> Option<String> {
         Some(text) => serde_json::from_str::<Vec<Value>>(text).ok()?,
         None => Vec::new(),
     };
-    entries.retain(|e| !e["do"].as_str().is_some_and(|d| d.contains("stream-screen on")));
+    entries.retain(|e| {
+        !e["do"]
+            .as_str()
+            .is_some_and(|d| d.contains("stream-screen on"))
+    });
     let companion = companion.display();
     entries.push(serde_json::json!({
         "do": format!("flatpak-spawn --host {companion} stream-screen on"),
