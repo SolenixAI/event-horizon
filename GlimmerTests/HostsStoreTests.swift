@@ -531,3 +531,45 @@ private final class SynchronousSleepNotificationCenter: NotificationCenter, @unc
         return super.addObserver(forName: name, object: obj, queue: queue, using: block)
     }
 }
+
+/// The one-shot import from moonlight-qt runs only in the shipped app. A test
+/// copy leaves both suites as they were. Both suites are throwaway domains,
+/// never the real `com.moonlight-stream.Moonlight` one.
+struct MoonlightMigrationGateTests {
+
+    private static let source = "dev.solenix.eventhorizon.tests.moonlight-source"
+    private static let target = "dev.solenix.eventhorizon.tests.moonlight-target"
+
+    private static func seed() throws -> (UserDefaults, UserDefaults) {
+        ScratchDefaults.drop(source)
+        ScratchDefaults.drop(target)
+        let src = try #require(UserDefaults(suiteName: source))
+        let dst = try #require(UserDefaults(suiteName: target))
+        src.set(1, forKey: "hosts.size")
+        src.set("tower", forKey: "hosts.1.name")
+        return (src, dst)
+    }
+
+    @MainActor @Test func aNonShippedBuildImportsNothing() throws {
+        let (src, dst) = try Self.seed()
+        defer { ScratchDefaults.drop(Self.source); ScratchDefaults.drop(Self.target) }
+
+        AppModel().migrateFromMoonlightQtIfNeeded(from: Self.source, into: dst, allowed: false)
+
+        #expect(dst.object(forKey: "hosts.size") == nil)
+        #expect(dst.object(forKey: "hosts.1.name") == nil)
+        #expect(dst.object(forKey: "glimmer.hostsMigratedFromMoonlightQt") == nil)
+        #expect(src.integer(forKey: "hosts.size") == 1)
+    }
+
+    @MainActor @Test func aShippedBuildImportsTheHosts() throws {
+        let (_, dst) = try Self.seed()
+        defer { ScratchDefaults.drop(Self.source); ScratchDefaults.drop(Self.target) }
+
+        AppModel().migrateFromMoonlightQtIfNeeded(from: Self.source, into: dst, allowed: true)
+
+        #expect(dst.integer(forKey: "hosts.size") == 1)
+        #expect(dst.string(forKey: "hosts.1.name") == "tower")
+        #expect(dst.bool(forKey: "glimmer.hostsMigratedFromMoonlightQt"))
+    }
+}
