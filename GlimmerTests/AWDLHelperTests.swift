@@ -268,3 +268,34 @@ private final class HelperTestListener: NSObject, NSXPCListenerDelegate, Sendabl
         return true
     }
 }
+
+@MainActor
+@Suite struct AWDLHelperRefusalTests {
+    @Test func aHelperThatRefusesThreeTimesIsLeftAloneForTheCooldown() async throws {
+        let harness = try HelperHarness()
+        defer { harness.cleanUp() }
+        harness.refuseDown = true
+        let manager = harness.makeManager()
+
+        manager.suppressForStream()
+        #expect(await harness.refusedThrice.waitAsync(for: .seconds(10)) == .success)
+        // A second stream attempt inside the cooldown must not start the helper again.
+        manager.suppressForStream()
+        try await Task.sleep(for: .milliseconds(300))
+        #expect(harness.refusals == 3)
+    }
+
+    @Test func theHelperIsTriedAgainOnlyAfterTheCooldown() async throws {
+        let harness = try HelperHarness()
+        defer { harness.cleanUp() }
+        harness.refuseDown = true
+        let manager = harness.makeManager()
+
+        manager.suppressForStream()
+        #expect(await harness.refusedThrice.waitAsync(for: .seconds(10)) == .success)
+        harness.clockNow.addTimeInterval(AWDLHelperManager.refusalCooldown + 1)
+        manager.suppressForStream()
+        #expect(await harness.refusedThrice.waitAsync(for: .seconds(10)) == .success)
+        #expect(harness.refusals == 6)
+    }
+}

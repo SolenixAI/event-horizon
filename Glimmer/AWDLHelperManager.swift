@@ -454,7 +454,7 @@ final class AWDLHelperManager: ObservableObject {
                 // requirement) will refuse every second: stop asking this stream.
                 misses = down ? 0 : misses + 1
                 if misses >= 3 {
-                    Diag.notice("AWDL helper did not answer 3 times - awdl0 left to macOS; not engaged again for \(Int(Self.refusalCooldown)) s", "Stream")
+                    Diag.notice("AWDL helper refused 3 times - awdl0 left to macOS; no retry for \(Int(Self.refusalCooldown)) s", "Stream")
                     refusedUntil = operations.now().addingTimeInterval(Self.refusalCooldown)
                     heartbeatTask = nil
                     break
