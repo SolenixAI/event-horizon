@@ -32,8 +32,9 @@ work the way they work on your Mac.
   (2026-10-08).
 
 No accounts, and no usage data leaves your Mac unless you opt in. Event Horizon
-talks to your own PC, your local network, and GitHub to check for updates.
-Diagnostics are off by default and stay on your Mac.
+talks to your own PC, your local network, and GitHub to check for updates once a
+day. GitHub counts those checks, which is how we know how many copies are in
+use. Diagnostics are off by default and stay on your Mac.
 
 ## Install
 
