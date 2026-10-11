@@ -6,5 +6,6 @@ mod prompt;
 pub use awake::SessionInhibit;
 pub use install::{
     guard_virtual_screen, install, place_virtual_screen, screen_skip, stream_screen,
+    sunshine_watchdog,
 };
 pub use prompt::Notification;
