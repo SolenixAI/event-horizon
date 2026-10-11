@@ -26,6 +26,12 @@ enum UsageStats {
         _ = try? await URLSession.shared.data(for: request)
     }
 
+    #if DEBUG
+    nonisolated static let isDebugBuild = true
+    #else
+    nonisolated static let isDebugBuild = false
+    #endif
+
     private static var connectStartedAt: Date?
     private static var liveAt: Date?
 
@@ -108,8 +114,9 @@ enum UsageStats {
         let os = ProcessInfo.processInfo.operatingSystemVersion
         all["os_version"] = "\(os.majorVersion).\(os.minorVersion)"
         all["$process_person_profile"] = false
-        // Test builds and test runs are tagged so the project's filter drops them.
-        if !AppDataFolders.isShippedBuild { all["internal"] = true }
+        // Debug builds, test copies and test runs are tagged so the project's filter drops
+        // them: a Debug build carries the shipped bundle ID, so the ID alone can't tell.
+        if isDebugBuild || !AppDataFolders.isShippedBuild { all["internal"] = true }
         let body: [String: Any] = [
             "api_key": projectKey, "event": event, "distinct_id": installID, "properties": all]
         guard let data = try? JSONSerialization.data(withJSONObject: body) else { return nil }
