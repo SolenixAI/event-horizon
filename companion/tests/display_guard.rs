@@ -155,13 +155,22 @@ fn the_guard_never_disables_an_output() {
     );
 }
 
+/// A stopped screen unit is never brought back by systemd, so the guard starts
+/// it: on 2026-10-10 a monitor power-cycle stopped it and left the PC with no
+/// screen to stream. Starting a unit that is already starting changes nothing.
 #[test]
-fn a_virtual_screen_that_is_not_listed_is_left_to_its_own_unit() {
+fn a_virtual_screen_that_is_not_listed_has_its_unit_started() {
     let cmd = fake(&[None]);
 
     guard(&cmd, [CHANGE.to_string()]);
 
-    assert!(cmd.runs.lock().unwrap().is_empty());
+    assert_eq!(
+        *cmd.runs.lock().unwrap(),
+        vec![
+            "systemctl --user start event-horizon-virtual-screen.service".to_string(),
+            "systemctl --user start event-horizon-virtual-screen.service".to_string(),
+        ]
+    );
 }
 
 #[test]
