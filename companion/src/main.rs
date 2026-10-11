@@ -40,6 +40,8 @@ async fn main() {
     }
 
     let dir = config_dir();
+    // A panic leaves a note; it is sent only on a later lease from a Mac that shares stats.
+    event_horizon_companion::crash::install_panic_hook(dir.clone());
 
     // `stream-screen on|off`: Sunshine runs these as a stream starts and ends, and
     // `off` before it starts, so the PC has one screen only while a stream is live.

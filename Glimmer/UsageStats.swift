@@ -10,7 +10,7 @@ import Foundation
 
 @MainActor
 enum UsageStats {
-    static let enabledKey = "shareUsageStats"
+    nonisolated static let enabledKey = "shareUsageStats"
     static let installIDKey = "usageStatsInstallID"
     /// Everything the switch sends, said once, where the switch shows it.
     static let consentLine = "When you open Event Horizon and stream, how long and how smoothly streams run, "

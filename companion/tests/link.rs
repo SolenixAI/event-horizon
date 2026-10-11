@@ -391,3 +391,29 @@ async fn the_companion_keeps_one_certificate_on_disk() {
     let der = std::fs::read(dir.path().join("companion-cert.der")).unwrap();
     assert_eq!(tls::fingerprint(&der), companion.fingerprint);
 }
+
+#[tokio::test]
+async fn the_lease_carries_the_macs_usage_stats_choice() {
+    let dir = tempfile::tempdir().unwrap();
+    let companion = start(Decision::Allow, dir.path()).await;
+    let (_, body) = pair(&companion).await;
+    let token = body["token"].as_str().unwrap().to_string();
+    let macs = dir.path().join("macs.json");
+    assert!(!link::any_mac_shares_stats(&macs));
+
+    let on = Some(json!({ "share_usage_stats": true }));
+    assert_eq!(send(&companion, "POST", "/lease", Some(&token), on).await.0, 204);
+    assert!(link::any_mac_shares_stats(&macs));
+    // The time the Mac chose to share is kept, so older panics stay unsent.
+    let now = event_horizon_companion::crash::now();
+    assert!(link::shared_before(&macs, now + 1));
+    assert!(!link::shared_before(&macs, now - 60));
+
+    // A lease with no body (an older Mac) leaves the choice as it was.
+    assert_eq!(lease(&companion, Some(&token)).await, 204);
+    assert!(link::any_mac_shares_stats(&macs));
+
+    let off = Some(json!({ "share_usage_stats": false }));
+    assert_eq!(send(&companion, "POST", "/lease", Some(&token), off).await.0, 204);
+    assert!(!link::any_mac_shares_stats(&macs));
+}
