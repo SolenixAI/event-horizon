@@ -297,6 +297,10 @@ extension AppModel {
                 UserDefaults.standard.set(Date(), forKey: "glimmer.lastConnected.\(host.id)")
             }
         }
+        UsageStats.streamFinished(
+            receipt: wasStreaming ? self.lastSessionReceipt : nil,
+            failure: self.nativeStreamError == nil ? nil : self.nativeStreamErrorKind,
+            cancelled: cancelled)
         // Wait out /cancel before probing. An established session also holds the chip
         // through transient misses, even when its pre-stream sample is stale.
         self.restartHostStatusPolling(afterStream: true)
@@ -319,6 +323,7 @@ extension AppModel {
         let connecting = "Connecting to \(host.displayName)…"
         switch event {
         case .stageStarting:
+            UsageStats.connectStarted()
             // Don't repaint "Connecting…" over the "Cancelling…" a cancel click
             // earned, or over a reconnect's own "Reconnecting to <PC>…".
             if !Self.connectCancelRequested, !isReconnecting { streamPhase = .connecting(stage: connecting) }
@@ -335,6 +340,7 @@ extension AppModel {
             // "2h 12m" measures time actually streaming, not handshake.
             // Latched once inside the store - repeat edges are no-ops.
             SessionReceiptStore.markSessionLive()
+            UsageStats.sessionLive()
         case .firstFrame:
             if case .connecting = streamPhase { hostPolling.establishedHostID = host.id }
             promoteToStreamingOnFirstFrame()
@@ -400,6 +406,7 @@ extension AppModel {
         // Same live-edge stamp as .connectionEstablished - whichever edge
         // arrives first starts the receipt clock (store-latched).
         SessionReceiptStore.markSessionLive()
+        UsageStats.sessionLive()
     }
 
     // MARK: - Connect cancel + connect-hold adjudication

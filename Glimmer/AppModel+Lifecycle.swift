@@ -56,6 +56,7 @@ extension AppModel {
         // SMAppService registration. Re-assert it so the post-update stream uses
         // the new daemon without the user re-toggling anything.
         AWDLHelperManager.shared.reconcileAfterUpdate()
+        UsageStats.appOpened()
         // Age out old Logs/Event Horizon files off the main thread, diagnostics on or off.
         TelemetryExporter.sweepLogsAtLaunch()
         log.info("Event Horizon stream engine: Swift-native")

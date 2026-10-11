@@ -2,6 +2,9 @@
 
 ## 2026.10.8 - 2026-10-13
 
+- Settings › General has a Privacy switch, Share anonymous usage stats. It's off
+  until you turn it on. It sends how often streams start, how long they last and
+  how smoothly they run, never your PC's name or address or what you play.
 - While you stream your PC's desktop, the PC companion makes the Mac-sized
   screen the PC's only screen, so the mouse and every window stay in your Mac
   window. Your desk monitors come back when the stream ends, and after a crash
