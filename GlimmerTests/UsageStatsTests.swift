@@ -53,7 +53,7 @@ struct UsageStatsTests {
         #expect(body["event"] as? String == "app_opened")
         #expect(properties["app"] as? String == "event-horizon")
         #expect(properties["$process_person_profile"] as? Bool == false)
-        // Tests run a Debug build, which the project's internal filter drops.
+        // A test run is never the shipped build, so its events are tagged internal.
         #expect(properties["internal"] as? Bool == true)
         #expect(body["distinct_id"] as? String == defaults.string(forKey: UsageStats.installIDKey))
     }
