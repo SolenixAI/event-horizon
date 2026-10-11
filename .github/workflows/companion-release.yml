@@ -1,6 +1,6 @@
 # Publish the PC companion: tag `companion-vX.Y.Z` and the Windows and Linux
-# builds land on a GitHub release under fixed names. solenix.dev/eh finds the
-# newest `companion-v*` release and serves the file for the visitor's PC.
+# builds land on a GitHub release under fixed names. Each release is a pre-release,
+# never the latest, so `releases/latest` keeps pointing at the Mac app's release.
 name: Companion release
 on:
   push:
