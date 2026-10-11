@@ -7,6 +7,9 @@
   smoothly streams run, their size, your country, and the app and macOS
   versions, under a random ID that's forgotten when you turn it off. Never your
   PC's name or address, or what you play.
+- With Share usage stats on, a crash is reported the next time Event Horizon
+  opens: the kind of crash and where in the app it happened, never file paths or
+  anything from your Mac. Crashes from before you turned it on are never sent.
 - While you stream your PC's desktop, the PC companion makes the Mac-sized
   screen the PC's only screen, so the mouse and every window stay in your Mac
   window. Your desk monitors come back when the stream ends, and after a crash

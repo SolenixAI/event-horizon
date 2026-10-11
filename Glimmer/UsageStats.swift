@@ -12,6 +12,10 @@ import Foundation
 enum UsageStats {
     static let enabledKey = "shareUsageStats"
     static let installIDKey = "usageStatsInstallID"
+    /// Everything the switch sends, said once, where the switch shows it.
+    static let consentLine = "When you open Event Horizon and stream, how long and how smoothly streams run, "
+        + "their size, crash reports, your country, and the app and macOS versions, under a random ID "
+        + "that's forgotten when you turn this off. Never your PC's name or address, or what you play."
     // The project's public ingestion key: it can only write events.
     nonisolated static let projectKey = "phc_yiiguNiBP8LGF8vrcWnDVMs3CkaEBLPk3gwGNrpqLs5G"
     nonisolated static let endpoint = URL(string: "https://us.i.posthog.com/i/v0/e/")
@@ -77,9 +81,11 @@ enum UsageStats {
     /// Turning stats off forgets the install's ID, so turning them on again starts fresh.
     static func setEnabled(_ enabled: Bool) {
         if enabled {
+            CrashReports.startCounting()
             capture("app_opened")
         } else {
             defaults.removeObject(forKey: installIDKey)
+            CrashReports.stopCounting()
         }
     }
 

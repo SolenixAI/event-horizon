@@ -57,6 +57,7 @@ extension AppModel {
         // the new daemon without the user re-toggling anything.
         AWDLHelperManager.shared.reconcileAfterUpdate()
         UsageStats.appOpened()
+        CrashReports.sendNew()
         // Age out old Logs/Event Horizon files off the main thread, diagnostics on or off.
         TelemetryExporter.sweepLogsAtLaunch()
         log.info("Event Horizon stream engine: Swift-native")
