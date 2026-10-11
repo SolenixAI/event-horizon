@@ -14,7 +14,11 @@ async fn main() {
         std::process::exit(2);
     };
     let env = |key: &str| std::env::var(key).unwrap_or_else(|_| panic!("{key} is set"));
-    let sunshine = LocalSunshine::new(env("SUNSHINE_USER"), env("SUNSHINE_PASSWORD"));
+    let sunshine = LocalSunshine::new(
+        env("SUNSHINE_USER"),
+        env("SUNSHINE_PASSWORD"),
+        event_horizon_companion::sunshine_tls::default_cert_path(),
+    );
     match sunshine.submit_pin(&id, &name, &pin).await {
         Ok(client) => println!("paired {name} as {client:?}"),
         Err(e) => {

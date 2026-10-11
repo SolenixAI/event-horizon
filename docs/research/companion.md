@@ -181,9 +181,17 @@ and `Sunshine-Windows-ARM64-installer.msi`. The Flathub app ID is
   and a CSRF token. The token comes from `GET /api/csrf-token`. Source:
   `src/confighttp.cpp` (`check_content_type`, `validate_csrf_token`, and the
   route table near line 2371).
-- The companion's TLS trust for Sunshine's self-signed certificate is not
-  decided `<?>`. The choice is to pin the certificate in the appdata folder, or
-  to trust a custom root. Test this.
+- `<✓>` 2026-10-11T17:10-02:30 — The companion's TLS trust for Sunshine's
+  self-signed certificate is decided: it pins `credentials/cacert.pem`, the
+  certificate Sunshine serves its API with (key `cakey.pem`), and trusts only
+  that exact certificate. The certificate has no subject alternative name, so no
+  name check can pass it. Source: Sunshine `src/config.cpp` (`CA_DIR`,
+  `CERTIFICATE_FILE`), `src/confighttp.cpp`
+  (`https_server_t server {config::nvhttp.cert, config::nvhttp.pkey}`), and
+  `src/crypto.cpp` (`gen_creds`, common name only). Code:
+  `companion/src/sunshine_tls.rs`. Device check passed on citadel on 2026-10-11
+  at about 18:09 local: the pinned certificate lists Sunshine's apps (7), and
+  another self-signed certificate is refused.
 
 ---
 
@@ -736,13 +744,19 @@ Each line is the simplest path for one question. Open items are `<?>`.
   (line 144 branch not read).
 - `<?>` 2026-10-09T19:12-02:30 — Can a Flatpak-sandboxed companion read host
   `/proc/<pid>/exe` for a KWin window pid? Source: none yet (test).
-- `<?>` 2026-10-09T19:12-02:30 — What is the Flatpak's Sunshine config folder?
-  Source:
-  `https://github.com/LizardByte/Sunshine/blob/v2026.914.233613/src/platform/linux/misc.cpp`
-  (XDG logic; Flatpak path not read).
-- `<?>` 2026-10-09T19:12-02:30 — Which TLS certificate should the companion
-  trust for `https://localhost:47990`? Source: `src/confighttp.cpp` and the cert
-  settings in `src/config.cpp`, not yet read in full.
+- `<✓>` 2026-10-11T17:10-02:30 — What is the Flatpak's Sunshine config folder?
+  Source-determined: Sunshine's `appdata()` uses `$XDG_CONFIG_HOME/sunshine`
+  when that is set, else `~/.config/sunshine` (`src/platform/linux/misc.cpp` at
+  v2026.914.233613). A Flatpak sets `XDG_CONFIG_HOME` to
+  `~/.var/app/dev.lizardbyte.app.Sunshine/config`, so the certificate is
+  `~/.var/app/dev.lizardbyte.app.Sunshine/config/sunshine/credentials/cacert.pem`.
+  Device check passed on citadel on 2026-10-11 at about 18:09 local: the file is
+  there (726 bytes of DER through the companion), so the path is verified.
+- `<✓>` 2026-10-11T17:10-02:30 — Which TLS certificate should the companion
+  trust for `https://localhost:47990`? Answer: the pinned
+  `credentials/cacert.pem` under Sunshine's appdata, and nothing else (section
+  1). Source: the lines of `src/config.cpp` and `src/confighttp.cpp` at
+  v2026.914.233613 named in section 1.
 - `<?>` 2026-10-09T19:12-02:30 — Does the Flatpak Sunshine give KMS capture?
   Source: `docs/building.md` (setcap note) and the Flatpak manifest (no KMS
   grant found).

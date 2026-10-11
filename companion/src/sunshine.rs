@@ -3,7 +3,9 @@
 //! v2026.914 `src/confighttp.cpp` (see docs/research/companion.md, section 2).
 
 use crate::ports::{SunshineApi, SunshineError};
+use crate::sunshine_tls::{load_pinned_der, pinned_client};
 use serde_json::{Value, json};
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Mutex;
@@ -39,40 +41,44 @@ pub struct LocalSunshine {
     base: String,
     user: String,
     password: String,
-    http: reqwest::Client,
+    /// Sunshine's certificate, read on every call: it may not be written yet.
+    pin_path: PathBuf,
     /// Serialises pairings, so the client a pairing adds is the only new one.
     pairing: Arc<Mutex<()>>,
 }
 
 impl LocalSunshine {
-    /// Sunshine on this PC. Its certificate is self-signed, so the client
-    /// accepts it; the address is loopback only, so nothing else can answer.
-    pub fn new(user: impl Into<String>, password: impl Into<String>) -> Self {
-        Self::at("https://127.0.0.1:47990", user, password)
+    /// Sunshine on this PC, trusted only through the certificate at `pin_path`.
+    /// The address is loopback only.
+    pub fn new(user: impl Into<String>, password: impl Into<String>, pin_path: PathBuf) -> Self {
+        Self::at("https://127.0.0.1:47990", user, password, pin_path)
     }
 
     pub fn at(
         base: impl Into<String>,
         user: impl Into<String>,
         password: impl Into<String>,
+        pin_path: PathBuf,
     ) -> Self {
-        let http = reqwest::Client::builder()
-            .danger_accept_invalid_certs(true)
-            .timeout(Duration::from_secs(5))
-            .build()
-            .expect("an HTTP client with default settings builds");
         Self {
             base: base.into(),
             user: user.into(),
             password: password.into(),
-            http,
+            pin_path,
             pairing: Arc::new(Mutex::new(())),
         }
     }
 
+    /// The client for one call. It trusts only the certificate on disk right
+    /// now, so until Sunshine has written that certificate every call is refused.
+    fn client(&self) -> Result<reqwest::Client, SunshineError> {
+        let pinned = load_pinned_der(&self.pin_path).map_err(SunshineError::Unreachable)?;
+        pinned_client(&pinned).map_err(SunshineError::Unreachable)
+    }
+
     async fn get(&self, path: &str) -> Result<Value, SunshineError> {
         let response = self
-            .http
+            .client()?
             .get(format!("{}{path}", self.base))
             .basic_auth(&self.user, Some(&self.password))
             .send()
@@ -107,7 +113,7 @@ impl SunshineApi for LocalSunshine {
     async fn save_app(&self, index: i64, mut app: Value) -> Result<(), SunshineError> {
         app["index"] = json!(index);
         let response = self
-            .http
+            .client()?
             .post(format!("{}/api/apps", self.base))
             .basic_auth(&self.user, Some(&self.password))
             .json(&app)
@@ -149,7 +155,7 @@ impl SunshineApi for LocalSunshine {
         let before = self.clients().await?;
         // No Origin header: Sunshine skips the browser CSRF check for API clients.
         let response = self
-            .http
+            .client()?
             .post(format!("{}/api/pin", self.base))
             .basic_auth(&self.user, Some(&self.password))
             .json(&json!({ "pairing_id": pairing_id, "pin": pin, "name": mac_name }))
@@ -172,7 +178,7 @@ impl SunshineApi for LocalSunshine {
     async fn unpair(&self, client: &str) -> Result<(), SunshineError> {
         // Sunshine answers `status: false` when the client is already gone.
         let response = self
-            .http
+            .client()?
             .post(format!("{}/api/clients/unpair", self.base))
             .basic_auth(&self.user, Some(&self.password))
             .json(&json!({ "uuid": client }))

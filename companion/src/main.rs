@@ -9,6 +9,7 @@ async fn main() {
     use event_horizon_companion::{
         Host, discovery, games, library, link, play, setup, sunshine::LocalSunshine, tls,
     };
+    tls::install_default_provider();
 
     // `play <appid>`: what Sunshine runs to open a game.
     let args: Vec<String> = std::env::args().collect();
@@ -117,7 +118,11 @@ async fn main() {
             .or_else(|| std::env::var(key).ok())
             .unwrap_or_default()
     };
-    let sunshine = LocalSunshine::new(get("SUNSHINE_USER"), get("SUNSHINE_PASSWORD"));
+    let sunshine = LocalSunshine::new(
+        get("SUNSHINE_USER"),
+        get("SUNSHINE_PASSWORD"),
+        event_horizon_companion::sunshine_tls::default_cert_path(),
+    );
     let macs = dir.join("macs.json");
 
     // `--list-macs` and `--unpair <mac id>`: the Macs this PC trusts, from the
