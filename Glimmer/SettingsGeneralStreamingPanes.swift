@@ -306,6 +306,12 @@ struct QualityPane: View {
                         Button("Open Login Items") { awdl.openSystemSettings() }
                     }
                 }
+                if awdl.refusedThisApp {
+                    Label("The network helper didn't accept this copy of Event Horizon, so Wi-Fi streams "
+                          + "may stutter. Use the copy in Applications, signed by the same developer as the helper.",
+                          systemImage: "exclamationmark.triangle.fill")
+                        .font(.footnote).foregroundStyle(.orange)
+                }
                 if case .unavailable(let why) = awdl.state {
                     VStack(alignment: .leading, spacing: 4) {
                         Label("Network helper unavailable: \(why)", systemImage: "xmark.octagon")

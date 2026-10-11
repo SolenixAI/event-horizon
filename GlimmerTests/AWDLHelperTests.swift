@@ -285,6 +285,22 @@ private final class HelperTestListener: NSObject, NSXPCListenerDelegate, Sendabl
         #expect(harness.refusals == 3)
     }
 
+    @Test func aRefusalIsShownUntilTheCooldownEnds() async throws {
+        let harness = try HelperHarness()
+        defer { harness.cleanUp() }
+        harness.refuseDown = true
+        let manager = harness.makeManager()
+        #expect(!manager.refusedThisApp)
+
+        manager.suppressForStream()
+        #expect(await harness.refusedThrice.waitAsync(for: .seconds(10)) == .success)
+        try await Task.sleep(for: .milliseconds(100))
+        #expect(manager.refusedThisApp)
+
+        harness.clockNow.addTimeInterval(AWDLHelperManager.refusalCooldown + 1)
+        #expect(!manager.refusedThisApp)
+    }
+
     @Test func theHelperIsTriedAgainOnlyAfterTheCooldown() async throws {
         let harness = try HelperHarness()
         defer { harness.cleanUp() }
