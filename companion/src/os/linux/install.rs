@@ -29,8 +29,13 @@ pub fn place_virtual_screen() -> Result<(), String> {
 }
 
 /// Keeps the virtual screen on. The guard's unit runs this.
-pub fn guard_virtual_screen() -> Result<(), String> {
-    crate::display_guard::run(&SystemCommands)
+pub fn guard_virtual_screen(config_dir: &Path) -> Result<(), String> {
+    let layout = layout(config_dir)?;
+    let live = || {
+        crate::linux_install::Files::read(&SystemFiles, &layout.stream_screen_saved())
+            .is_some_and(|saved| !saved.trim().is_empty())
+    };
+    crate::display_guard::run(&SystemCommands, &live)
 }
 
 /// The one-screen mode around a stream. Sunshine runs this as a stream starts and ends.
