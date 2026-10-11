@@ -3,6 +3,7 @@
 //! log, so a test can check what ran, what was written, and in what order.
 
 use event_horizon_companion::linux_install::{self, Commands, Files, Layout, screen_skip};
+use event_horizon_companion::sunshine_watchdog;
 use event_horizon_companion::virtual_screen::{DEFAULT_SIZE, Size};
 use serde_json::json;
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -236,6 +237,83 @@ fn kscreen_with_virtual_off(desk_width: i64) -> String {
           "scale": 1.75, "pos": { "x": desk_width, "y": 0 }, "priority": 2 }
     ]})
     .to_string()
+}
+
+#[test]
+fn the_install_runs_the_sunshine_watchdog_as_a_user_service() {
+    let (cmd, files) = pc();
+    let layout = kde_layout();
+
+    install(&cmd, &files, &layout).unwrap();
+
+    let unit = files
+        .read(
+            &layout
+                .units()
+                .join("event-horizon-sunshine-watchdog.service"),
+        )
+        .expect("the watchdog unit is written");
+    assert!(unit.contains("sunshine-watchdog"));
+    assert!(ran(
+        &cmd.log,
+        "run systemctl --user enable event-horizon-sunshine-watchdog.service"
+    ));
+}
+
+#[test]
+fn a_wedged_sunshine_is_restarted_once_it_has_been_down_a_minute() {
+    let (cmd, files) = pc();
+    let layout = kde_layout();
+    let mut watch = sunshine_watchdog::Watch::default();
+    let restart = "run systemctl --user restart app-dev.lizardbyte.app.Sunshine.service";
+
+    sunshine_watchdog::check(
+        &cmd,
+        &files,
+        &layout,
+        &mut watch,
+        Duration::from_secs(0),
+        false,
+    )
+    .unwrap();
+    assert!(!ran(&cmd.log, restart));
+
+    sunshine_watchdog::check(
+        &cmd,
+        &files,
+        &layout,
+        &mut watch,
+        Duration::from_secs(60),
+        false,
+    )
+    .unwrap();
+    assert!(ran(&cmd.log, restart));
+}
+
+#[test]
+fn a_live_stream_is_never_restarted_by_the_watchdog() {
+    let (cmd, files) = pc();
+    let layout = kde_layout();
+    files.put(saved_outputs(&layout), "DP-1\n");
+    let mut watch = sunshine_watchdog::Watch::default();
+
+    for secs in [0, 60, 120, 600] {
+        sunshine_watchdog::check(
+            &cmd,
+            &files,
+            &layout,
+            &mut watch,
+            Duration::from_secs(secs),
+            false,
+        )
+        .unwrap();
+    }
+
+    assert!(
+        !log_of(&cmd.log)
+            .iter()
+            .any(|l| l.contains("restart app-dev"))
+    );
 }
 
 #[test]
