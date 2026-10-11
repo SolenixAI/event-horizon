@@ -25,21 +25,25 @@ extension AppModel {
     /// The moonlight-qt install does not have to be present - we're just
     /// reading a plist that may or may not exist. Safe to call on every
     /// launch; the flag short-circuits after the first successful pass.
-    func migrateFromMoonlightQtIfNeeded() {
+    /// Only the shipped app imports. A test copy has its own identity and
+    /// must never take a PC that belongs to the real install's Moonlight.
+    func migrateFromMoonlightQtIfNeeded(from source: String = "com.moonlight-stream.Moonlight",
+                                        into defaults: UserDefaults = .standard,
+                                        allowed: Bool = AppDataFolders.isShippedBuild) {
+        guard allowed else { return }
         let flagKey = "glimmer.hostsMigratedFromMoonlightQt"
-        guard !UserDefaults.standard.bool(forKey: flagKey) else { return }
+        guard !defaults.bool(forKey: flagKey) else { return }
 
-        guard let mq = UserDefaults(suiteName: "com.moonlight-stream.Moonlight") else {
-            UserDefaults.standard.set(true, forKey: flagKey)
+        guard let mq = UserDefaults(suiteName: source) else {
+            defaults.set(true, forKey: flagKey)
             return
         }
         let count = mq.integer(forKey: "hosts.size")
         guard count > 0 else {
-            UserDefaults.standard.set(true, forKey: flagKey)
+            defaults.set(true, forKey: flagKey)
             return
         }
 
-        let defaults = UserDefaults.standard
         defaults.set(count, forKey: "hosts.size")
         for i in 1...count {
             func copy(_ key: String) {
