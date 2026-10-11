@@ -11,8 +11,9 @@
   opens: the kind of crash and where in the app it happened, never file paths or
   anything from your Mac. Crashes from before you turned it on are never sent.
 - With Share usage stats on, the PC companion reports its crashes too: where in
-  its code it stopped and its version, sent the next time it starts. Your Mac
-  tells the PC your choice each time it keeps the PC awake.
+  its code it stopped and its version. Your Mac tells the PC your choice each
+  time it keeps the PC awake, and a crash is sent only if you shared before it
+  happened.
 - While you stream your PC's desktop, the PC companion makes the Mac-sized
   screen the PC's only screen, so the mouse and every window stay in your Mac
   window. Your desk monitors come back when the stream ends, and after a crash
