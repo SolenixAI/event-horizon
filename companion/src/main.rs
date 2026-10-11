@@ -40,6 +40,26 @@ async fn main() {
     }
 
     let dir = config_dir();
+
+    // `stream-screen on|off`: Sunshine runs these as a stream starts and ends, and
+    // `off` before it starts, so the PC has one screen only while a stream is live.
+    #[cfg(target_os = "linux")]
+    if args.get(1).map(String::as_str) == Some("stream-screen") {
+        let on = match args.get(2).map(String::as_str) {
+            Some("on") => true,
+            Some("off") => false,
+            _ => {
+                eprintln!("usage: event-horizon-companion stream-screen on|off");
+                std::process::exit(2);
+            }
+        };
+        if let Err(e) = event_horizon_companion::os::linux::stream_screen(&dir, on) {
+            eprintln!("stream screen: {e}");
+            std::process::exit(1);
+        }
+        return;
+    }
+
     let companion_env = std::fs::read_to_string(dir.join("companion.env")).unwrap_or_default();
 
     // `install`, or a run with no argument on a PC not set up yet: turn this

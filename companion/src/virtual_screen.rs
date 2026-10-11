@@ -51,7 +51,8 @@ pub fn is_kde_wayland(session_type: Option<&str>, desktop: Option<&str>) -> bool
 }
 
 /// The arguments that place the screen right of the first enabled physical
-/// output, at its scale. None until KScreen lists the screen.
+/// output, at its scale. None until KScreen lists the screen. The desk monitor
+/// stays primary at rest; a stream makes the screen the only one (`only_screen_args`).
 pub fn placement_args(kscreen: &Value) -> Option<Vec<String>> {
     let outputs = kscreen["outputs"].as_array()?;
     if !outputs.iter().any(|o| o["name"] == OUTPUT) {
@@ -64,8 +65,83 @@ pub fn placement_args(kscreen: &Value) -> Option<Vec<String>> {
     Some(vec![
         format!("output.{OUTPUT}.scale.{SCALE}"),
         format!("output.{OUTPUT}.position.{x},0"),
-        format!("output.{OUTPUT}.priority.1"),
     ])
+}
+
+/// The outputs other than the virtual screen that are on now, in KScreen's order:
+/// the ones a stream turns off. None while the virtual screen is missing or off,
+/// so a stream never leaves a PC without a screen.
+pub fn others_on(kscreen: &Value) -> Option<Vec<String>> {
+    let outputs = kscreen["outputs"].as_array()?;
+    if !outputs.iter().any(|o| o["name"] == OUTPUT && o["enabled"] == true) {
+        return None;
+    }
+    Some(
+        outputs
+            .iter()
+            .filter(|o| o["name"] != OUTPUT && o["enabled"] == true)
+            .filter_map(|o| o["name"].as_str().map(str::to_string))
+            .collect(),
+    )
+}
+
+/// While a stream is live the virtual screen is the only screen, so the mouse and
+/// every window stay in the Mac's window: it goes on and primary, the others off.
+pub fn only_screen_args(others: &[String]) -> Vec<String> {
+    let mut args = vec![
+        format!("output.{OUTPUT}.enable"),
+        format!("output.{OUTPUT}.priority.1"),
+    ];
+    args.extend(others.iter().map(|o| format!("output.{o}.disable")));
+    args
+}
+
+/// The arguments that bring the outputs a stream turned off back, the first one
+/// primary. None when nothing was saved.
+pub fn restore_args(saved: &[String]) -> Option<Vec<String>> {
+    let first = saved.first()?;
+    let mut args: Vec<String> = saved.iter().map(|o| format!("output.{o}.enable")).collect();
+    args.push(format!("output.{first}.priority.1"));
+    Some(args)
+}
+
+/// Sunshine's `global_prep_cmd` with the one-screen switch in it: the companion
+/// turns it on as a stream starts and off as it ends (Sunshine is a flatpak, so it
+/// asks the host). The person's own commands stay; an earlier one-screen entry,
+/// ours or a hand-made `stream-screen` script, is replaced. `existing` is the
+/// current value, if any. None when it isn't a JSON list, so it is left alone.
+pub fn prep_cmd(existing: Option<&str>, companion: &Path) -> Option<String> {
+    let mut entries: Vec<Value> = match existing.map(str::trim).filter(|v| !v.is_empty()) {
+        Some(text) => serde_json::from_str::<Vec<Value>>(text).ok()?,
+        None => Vec::new(),
+    };
+    entries.retain(|e| !e["do"].as_str().is_some_and(|d| d.contains("stream-screen on")));
+    let companion = companion.display();
+    entries.push(serde_json::json!({
+        "do": format!("flatpak-spawn --host {companion} stream-screen on"),
+        "undo": format!("flatpak-spawn --host {companion} stream-screen off"),
+        "elevated": false,
+    }));
+    serde_json::to_string(&entries).ok()
+}
+
+/// The value of `key` in Sunshine's config text, if the key is set.
+pub fn setting<'a>(text: &'a str, key: &str) -> Option<&'a str> {
+    text.lines()
+        .find(|line| is_key(line, key))
+        .and_then(|line| line.split_once('='))
+        .map(|(_, value)| value.trim())
+}
+
+/// A drop-in for Sunshine's unit: the screens come back before Sunshine starts, so
+/// a stream that ended in a crash never leaves the desk monitors dark.
+pub fn sunshine_drop_in(companion: &Path) -> String {
+    format!(
+        "[Service]\n\
+         # A stream that ends in a crash never runs its undo command: bring the screens back first.\n\
+         ExecStartPre=-{} stream-screen off\n",
+        systemd_arg(companion)
+    )
 }
 
 /// The width in KScreen's logical pixels: the physical width over the scale.

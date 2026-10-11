@@ -79,6 +79,16 @@ impl Layout {
             .join(".var/app/dev.lizardbyte.app.Sunshine/config/sunshine/sunshine.conf")
     }
 
+    /// The outputs a live stream turned off, one per line, so they come back after
+    /// the stream, after a crash, and after a restart.
+    pub fn stream_screen_saved(&self) -> PathBuf {
+        self.config_dir.join("stream-screen-outputs")
+    }
+
+    fn sunshine_drop_in(&self) -> PathBuf {
+        self.units().join(format!("{SUNSHINE_SERVICE}.d/event-horizon.conf"))
+    }
+
     fn units(&self) -> PathBuf {
         self.home.join(".config/systemd/user")
     }
@@ -191,9 +201,11 @@ fn virtual_screen(
 
     let screen_changed = user_unit(files, &layout.screen_unit(), &screen_text, true)?;
     let guard_changed = user_unit(files, &layout.guard_unit(), &guard_text, false)?;
+    let drop_in = virtual_screen::sunshine_drop_in(&placer);
+    let drop_in_changed = user_unit(files, &layout.sunshine_drop_in(), &drop_in, false)?;
     write_sunshine_conf(files, layout)?;
 
-    if screen_changed || guard_changed {
+    if screen_changed || guard_changed || drop_in_changed {
         cmd.run("systemctl", &["--user", "daemon-reload"])?;
     }
     start_unit(cmd, SCREEN_SERVICE, screen_changed)?;
@@ -227,15 +239,17 @@ fn start_unit(cmd: &dyn Commands, unit: &str, changed: bool) -> Result<(), Strin
 }
 
 /// Sunshine reads the output name and captures through KWin, since the output is
-/// not a DRM connector. Other settings in the file stay as they are.
+/// not a DRM connector, and runs the one-screen switch around each stream. Other
+/// settings in the file stay as they are.
 fn write_sunshine_conf(files: &dyn Files, layout: &Layout) -> Result<(), String> {
     let path = layout.sunshine_conf();
     let before = files.read(&path).unwrap_or_default();
-    let after = virtual_screen::with_setting(
-        &virtual_screen::with_setting(&before, "output_name", OUTPUT),
-        "capture",
-        "kwin",
-    );
+    let mut after = virtual_screen::with_setting(&before, "output_name", OUTPUT);
+    after = virtual_screen::with_setting(&after, "capture", "kwin");
+    let existing = virtual_screen::setting(&after, "global_prep_cmd").map(str::to_string);
+    if let Some(prep) = virtual_screen::prep_cmd(existing.as_deref(), &layout.installed_companion()) {
+        after = virtual_screen::with_setting(&after, "global_prep_cmd", &prep);
+    }
     if after != before {
         files.write(&path, &after)?;
     }
@@ -322,6 +336,45 @@ pub fn place_virtual_screen(cmd: &dyn Commands) -> Result<(), String> {
         cmd.pause(PLACE_EVERY);
     }
     Err("the virtual screen did not appear within 10 seconds".into())
+}
+
+/// The one-screen mode. `on`, as a stream starts: the virtual screen becomes the
+/// only screen, and the outputs it turned off are saved. Nothing changes while the
+/// virtual screen is missing. `off`, as a stream ends or Sunshine starts: the saved
+/// outputs come back, the first one primary, and the list is cleared.
+pub fn stream_screen(
+    cmd: &dyn Commands,
+    files: &dyn Files,
+    layout: &Layout,
+    on: bool,
+) -> Result<(), String> {
+    let saved_path = layout.stream_screen_saved();
+    if on {
+        let text = cmd.capture("kscreen-doctor", &["--json"])?;
+        let json: Value = serde_json::from_str(&text).map_err(|e| e.to_string())?;
+        let Some(others) = virtual_screen::others_on(&json) else {
+            return Ok(());
+        };
+        let list: String = others.iter().map(|o| format!("{o}\n")).collect();
+        files.write(&saved_path, &list)?;
+        let args = virtual_screen::only_screen_args(&others);
+        let refs: Vec<&str> = args.iter().map(String::as_str).collect();
+        return cmd.run("kscreen-doctor", &refs);
+    }
+    let saved: Vec<String> = files
+        .read(&saved_path)
+        .unwrap_or_default()
+        .lines()
+        .map(str::trim)
+        .filter(|l| !l.is_empty())
+        .map(str::to_string)
+        .collect();
+    let Some(args) = virtual_screen::restore_args(&saved) else {
+        return Ok(());
+    };
+    let refs: Vec<&str> = args.iter().map(String::as_str).collect();
+    cmd.run("kscreen-doctor", &refs)?;
+    files.write(&saved_path, "")
 }
 
 fn kscreen_placement(cmd: &dyn Commands) -> Option<Vec<String>> {

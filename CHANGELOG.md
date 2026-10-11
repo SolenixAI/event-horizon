@@ -2,6 +2,10 @@
 
 ## 2026.10.8 - 2026-10-13
 
+- While you stream your PC's desktop, the PC companion makes the Mac-sized
+  screen the PC's only screen, so the mouse and every window stay in your Mac
+  window. Your desk monitors come back when the stream ends, and after a crash
+  or a restart too.
 - Pairing your Mac again no longer locks it out. The PC companion removes the
   Mac's earlier record from Sunshine when the new pairing lands, so Sunshine
   always knows each Mac once and accepts it.
