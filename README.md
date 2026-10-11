@@ -31,8 +31,9 @@ work the way they work on your Mac.
   at 2560×1600 and 60 fps over home Wi-Fi for 5 hours with 0 dropped frames
   (2026-10-08).
 
-No accounts and no analytics. Event Horizon talks to your own PC and your local
-network. Diagnostics are off by default and stay on your Mac.
+No accounts, and no usage data leaves your Mac unless you opt in. Event Horizon
+talks to your own PC, your local network, and GitHub to check for updates.
+Diagnostics are off by default and stay on your Mac.
 
 ## Install
 
