@@ -1,0 +1,44 @@
+# Mark each published release on every PostHog chart, so a change in slope can
+# be read against the day it shipped. Companion releases come from Actions, which
+# fires no release event, so their finished workflow run triggers this too.
+name: Release annotation
+on:
+  release:
+    types: [published]
+  workflow_run:
+    workflows: ["Companion release"]
+    types: [completed]
+permissions: {}
+jobs:
+  annotate:
+    if:
+      github.event_name == 'release' || github.event.workflow_run.conclusion ==
+      'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Create the annotation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # Personal API key with annotation:write on project 656000.
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          TAG:
+            ${{ github.event.release.tag_name ||
+            github.event.workflow_run.head_branch }}
+        run: |
+          if [ -z "$POSTHOG_PERSONAL_API_KEY" ]; then
+            echo "::error::Add the POSTHOG_PERSONAL_API_KEY repository secret"
+            exit 1
+          fi
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" \
+            | jq '{
+                content: "Event Horizon \(.tag_name) released \(.html_url)",
+                date_marker: .published_at,
+                scope: "project",
+                emoji: "🚀"
+              }' > annotation.json
+          curl --fail-with-body -sS -X POST \
+            https://us.posthog.com/api/projects/656000/annotations/ \
+            -H "Authorization: Bearer $POSTHOG_PERSONAL_API_KEY" \
+            -H 'Content-Type: application/json' --data @annotation.json
