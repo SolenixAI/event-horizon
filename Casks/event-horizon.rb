@@ -1,6 +1,6 @@
 cask "event-horizon" do
   version "2026.10.8"
-  sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+  sha256 "42ce733addcfec380badd619f9b74c1ce4d23d24f5e8c9d616a7e7af314f0f93"
 
   url "https://github.com/SolenixAI/event-horizon/releases/download/#{version}/Event-Horizon-#{version}.dmg"
   name "Event Horizon"
