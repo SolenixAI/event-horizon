@@ -33,7 +33,7 @@ jobs:
           fi
           gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" \
             | jq '{
-                content: "Event Horizon \(.tag_name) released \(.html_url)",
+                content: "\(.name // .tag_name) released \(.html_url)",
                 date_marker: .published_at,
                 scope: "project",
                 emoji: "🚀"
