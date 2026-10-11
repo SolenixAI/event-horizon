@@ -85,7 +85,7 @@ jobs:
           When the PC says it is ready, open Event Horizon on your Mac.
           EOF
           gh release create "$TAG" --repo "$REPO" \
-            --title "PC companion $TAG" --prerelease --latest=false \
+            --title "PC companion $TAG" \
             --notes-file notes.md \
             EventHorizonCompanion-Windows.exe event-horizon-companion-linux-x86_64 SHA256SUMS \
             companion.intoto.jsonl
