@@ -33,6 +33,12 @@ pub fn guard_virtual_screen() -> Result<(), String> {
     crate::display_guard::run(&SystemCommands)
 }
 
+/// The one-screen mode around a stream. Sunshine runs this as a stream starts and ends.
+pub fn stream_screen(config_dir: &Path, on: bool) -> Result<(), String> {
+    let layout = layout(config_dir)?;
+    linux_install::stream_screen(&SystemCommands, &SystemFiles, &layout, on)
+}
+
 fn layout(config_dir: &Path) -> Result<Layout, String> {
     let exe = std::env::current_exe().map_err(|e| e.to_string())?;
     Ok(Layout::from_env(config_dir, exe))
