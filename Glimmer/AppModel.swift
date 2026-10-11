@@ -582,6 +582,9 @@ final class AppModel {
     /// The launch the user last asked for, so Retry repeats exactly that.
     @ObservationIgnored var lastLaunchAttempt: (app: LibraryApp, host: Host)?
 
+    /// The stream a re-pair interrupted: offered as Stream Now once that PC pairs.
+    @ObservationIgnored var streamAfterPairing: (app: LibraryApp, host: Host)?
+
     /// Wake on LAN in flight for this PC, and the PC whose last wake failed.
     var wakingHostID: String?
     var wakeFailedHostID: String?
