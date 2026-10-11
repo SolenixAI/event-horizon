@@ -180,9 +180,14 @@ final class AWDLHelperManager: ObservableObject {
     /// Set when the helper refused three calls in a row. Until then no stream starts it
     /// and no registration repair runs: each call starts the daemon, and each start
     /// toggles awdl0 under the stream.
-    private var refusedUntil: Date?
+    @Published private var refusedUntil: Date?
     static let refusalCooldown: TimeInterval = 600
     private var refusalActive: Bool { refusedUntil.map { operations.now() < $0 } ?? false }
+    /// The helper refused this copy of the app (its signature is not the helper's
+    /// team), so Wi-Fi streams run with AirDrop's radio on. Settings says so.
+    var refusedThisApp: Bool { refusalActive }
+    static let refusalMessage = "The network helper didn't accept this copy of Event Horizon, so Wi-Fi streams "
+        + "may stutter. Use the copy in Applications, signed by the same developer as the helper."
     private let log = Logger(subsystem: "dev.solenix.eventhorizon", category: "AWDLHelper")
     private static let promptSuppressedKey = "awdlHelperPromptSuppressed"
     /// Saved intent lets registration self-heal after an update without undoing an explicit off choice.

@@ -306,6 +306,10 @@ struct QualityPane: View {
                         Button("Open Login Items") { awdl.openSystemSettings() }
                     }
                 }
+                if awdl.refusedThisApp {
+                    Label(AWDLHelperManager.refusalMessage, systemImage: "exclamationmark.triangle.fill")
+                        .font(.footnote).foregroundStyle(.orange)
+                }
                 if case .unavailable(let why) = awdl.state {
                     VStack(alignment: .leading, spacing: 4) {
                         Label("Network helper unavailable: \(why)", systemImage: "xmark.octagon")
