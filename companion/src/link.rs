@@ -91,7 +91,10 @@ where
             answer,
         },
     );
-    (StatusCode::OK, Json(json!({ "code": shown, "ticket": ticket })))
+    (
+        StatusCode::OK,
+        Json(json!({ "code": shown, "ticket": ticket })),
+    )
 }
 
 /// Step two: the Mac waits for the person at the PC to answer.
@@ -121,7 +124,13 @@ where
                 eprintln!("pairing: could not remove the earlier Sunshine record: {error:?}");
             }
             let token = new_token();
-            remember(&link.macs, &ask.mac_id, &ask.mac_name, &token, sunshine_client);
+            remember(
+                &link.macs,
+                &ask.mac_id,
+                &ask.mac_name,
+                &token,
+                sunshine_client,
+            );
             return (
                 StatusCode::OK,
                 Json(json!({ "outcome": "paired", "token": token })),
@@ -165,10 +174,7 @@ where
 
 /// The Mac removes its own pairing: its record here, and its client in Sunshine.
 /// If Sunshine cannot be reached, nothing is removed, so the Mac can try again.
-async fn unpair<S, P, A>(
-    State(link): State<Arc<Link<S, P, A>>>,
-    headers: HeaderMap,
-) -> StatusCode
+async fn unpair<S, P, A>(State(link): State<Arc<Link<S, P, A>>>, headers: HeaderMap) -> StatusCode
 where
     S: SunshineApi + 'static,
     P: Prompt + 'static,

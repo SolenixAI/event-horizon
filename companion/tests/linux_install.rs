@@ -416,7 +416,10 @@ fn sunshine_settings_that_are_not_ours_survive() {
         .lines()
         .find(|l| l.starts_with("global_prep_cmd = "))
         .expect("global_prep_cmd is kept");
-    assert!(prep.starts_with("global_prep_cmd = [{\"do\":\"hook\"},"), "{prep}");
+    assert!(
+        prep.starts_with("global_prep_cmd = [{\"do\":\"hook\"},"),
+        "{prep}"
+    );
     assert!(prep.contains("stream-screen on"), "{prep}");
     assert!(conf.lines().any(|l| l == "encoder = nvenc"));
     assert_eq!(
@@ -523,9 +526,7 @@ fn the_placement_puts_the_screen_right_of_the_desk_monitor() {
 
     assert!(ran(
         &cmd.log,
-        &format!(
-            "run kscreen-doctor output.{OUTPUT}.scale.1.75 output.{OUTPUT}.position.1920,0"
-        )
+        &format!("run kscreen-doctor output.{OUTPUT}.scale.1.75 output.{OUTPUT}.position.1920,0")
     ));
 }
 
@@ -554,9 +555,7 @@ fn the_placement_uses_the_logical_width_of_a_scaled_desk_monitor() {
 
     assert!(ran(
         &cmd.log,
-        &format!(
-            "run kscreen-doctor output.{OUTPUT}.scale.1.75 output.{OUTPUT}.position.2048,0"
-        )
+        &format!("run kscreen-doctor output.{OUTPUT}.scale.1.75 output.{OUTPUT}.position.2048,0")
     ));
 }
 
@@ -590,15 +589,23 @@ fn saved_outputs(layout: &Layout) -> PathBuf {
 fn a_stream_leaves_the_virtual_screen_as_the_only_screen() {
     let (cmd, files) = pc();
     let layout = kde_layout();
-    cmd.kscreen.lock().unwrap().push_back(kscreen_answer(1920, 1.0, true));
+    cmd.kscreen
+        .lock()
+        .unwrap()
+        .push_back(kscreen_answer(1920, 1.0, true));
 
     linux_install::stream_screen(&cmd, &files, &layout, true).unwrap();
 
     assert!(ran(
         &cmd.log,
-        &format!("run kscreen-doctor output.{OUTPUT}.enable output.{OUTPUT}.priority.1 output.DP-1.disable")
+        &format!(
+            "run kscreen-doctor output.{OUTPUT}.enable output.{OUTPUT}.priority.1 output.DP-1.disable"
+        )
     ));
-    assert_eq!(files.read(&saved_outputs(&layout)).as_deref(), Some("DP-1\n"));
+    assert_eq!(
+        files.read(&saved_outputs(&layout)).as_deref(),
+        Some("DP-1\n")
+    );
 }
 
 #[test]
@@ -621,7 +628,10 @@ fn the_end_of_a_stream_brings_back_the_saved_screens_with_the_first_one_primary(
 fn a_stream_never_turns_a_monitor_off_while_the_virtual_screen_is_missing() {
     let (cmd, files) = pc();
     let layout = kde_layout();
-    cmd.kscreen.lock().unwrap().push_back(kscreen_answer(1920, 1.0, false));
+    cmd.kscreen
+        .lock()
+        .unwrap()
+        .push_back(kscreen_answer(1920, 1.0, false));
 
     linux_install::stream_screen(&cmd, &files, &layout, true).unwrap();
 
@@ -636,7 +646,11 @@ fn ending_with_nothing_saved_changes_no_screen() {
 
     linux_install::stream_screen(&cmd, &files, &layout, false).unwrap();
 
-    assert!(!log_of(&cmd.log).iter().any(|l| l.starts_with("run kscreen-doctor")));
+    assert!(
+        !log_of(&cmd.log)
+            .iter()
+            .any(|l| l.starts_with("run kscreen-doctor"))
+    );
 }
 
 #[test]
@@ -645,7 +659,9 @@ fn sunshine_runs_the_one_screen_switch_as_each_stream_starts_and_ends() {
     let layout = kde_layout();
     install(&cmd, &files, &layout).unwrap();
 
-    let conf = files.read(&layout.sunshine_conf()).expect("sunshine.conf is written");
+    let conf = files
+        .read(&layout.sunshine_conf())
+        .expect("sunshine.conf is written");
     let companion = layout.installed_companion().display().to_string();
     let value = conf
         .lines()
@@ -653,8 +669,14 @@ fn sunshine_runs_the_one_screen_switch_as_each_stream_starts_and_ends() {
         .expect("global_prep_cmd is set");
     let entries: Vec<serde_json::Value> = serde_json::from_str(value).unwrap();
     assert_eq!(entries.len(), 1);
-    assert_eq!(entries[0]["do"], format!("flatpak-spawn --host {companion} stream-screen on"));
-    assert_eq!(entries[0]["undo"], format!("flatpak-spawn --host {companion} stream-screen off"));
+    assert_eq!(
+        entries[0]["do"],
+        format!("flatpak-spawn --host {companion} stream-screen on")
+    );
+    assert_eq!(
+        entries[0]["undo"],
+        format!("flatpak-spawn --host {companion} stream-screen off")
+    );
     assert_eq!(entries[0]["elevated"], false);
 }
 
@@ -681,7 +703,9 @@ fn sunshine_brings_the_screens_back_before_it_starts_so_a_crash_never_leaves_the
     install(&cmd, &files, &layout).unwrap();
 
     let drop_in = files
-        .read(&layout.home.join(format!(".config/systemd/user/{SUNSHINE_UNIT}.d/event-horizon.conf")))
+        .read(&layout.home.join(format!(
+            ".config/systemd/user/{SUNSHINE_UNIT}.d/event-horizon.conf"
+        )))
         .expect("the Sunshine drop-in is written");
     assert!(drop_in.contains(&format!(
         "ExecStartPre=-{} stream-screen off",

@@ -3,7 +3,8 @@
 
 use event_horizon_companion::linux_install;
 use event_horizon_companion::virtual_screen::{
-    DEFAULT_SIZE, Size, is_kde_wayland, placement_args, screen_size, unit_text, with_setting,
+    DEFAULT_SIZE, Size, is_kde_wayland, placement_args, screen_size, session_from_manager,
+    unit_text, with_setting,
 };
 use serde_json::json;
 use std::path::Path;
@@ -48,6 +49,16 @@ fn a_setting_is_not_mistaken_for_a_longer_key() {
         with_setting(text, "output_name", "Virtual-x"),
         "output_name_extra = 9\noutput_name = Virtual-x\n"
     );
+}
+
+#[test]
+fn a_run_from_ssh_reads_the_desktop_session_from_the_user_manager() {
+    let shown = "HOME=/var/home/zephyr\nXDG_SESSION_TYPE=wayland\nXDG_CURRENT_DESKTOP=KDE\nWAYLAND_DISPLAY=wayland-0\n";
+    assert_eq!(
+        session_from_manager(shown),
+        (Some("wayland".to_string()), Some("KDE".to_string()))
+    );
+    assert_eq!(session_from_manager("HOME=/root\n"), (None, None));
 }
 
 #[test]

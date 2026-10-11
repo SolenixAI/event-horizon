@@ -209,9 +209,22 @@ async fn main() {
     let _announced = discovery::announce(&pc_name, &identity.fingerprint)
         .map_err(|e| eprintln!("discovery: {e}"))
         .ok();
-    let listener = tokio::net::TcpListener::bind(("0.0.0.0", discovery::PORT))
-        .await
-        .expect("the companion's port is free");
+    let listener = match tokio::net::TcpListener::bind(("0.0.0.0", discovery::PORT)).await {
+        Ok(listener) => listener,
+        Err(e) if e.kind() == std::io::ErrorKind::AddrInUse => {
+            println!(
+                "The Event Horizon companion is already running on this PC. Open Event Horizon on your Mac."
+            );
+            return;
+        }
+        Err(e) => {
+            eprintln!(
+                "The companion can't listen on port {}: {e}",
+                discovery::PORT
+            );
+            std::process::exit(1);
+        }
+    };
     println!(
         "Event Horizon companion on {pc_name}, port {}",
         discovery::PORT
