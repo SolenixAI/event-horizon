@@ -383,9 +383,18 @@ pub fn stream_screen(
         .filter(|l| !l.is_empty())
         .map(str::to_string)
         .collect();
-    let Some(args) = virtual_screen::restore_args(&saved) else {
+    // The virtual screen goes off when the stream ends, so the desk shows its monitors
+    // only. It stays on when no other screen is on, so the PC never has none.
+    let text = cmd.capture("kscreen-doctor", &["--json"])?;
+    let json: Value = serde_json::from_str(&text).map_err(|e| e.to_string())?;
+    let mut args = virtual_screen::restore_args(&saved).unwrap_or_default();
+    let screens_left = !saved.is_empty() || !virtual_screen::others_on(&json).is_empty();
+    if virtual_screen::virtual_on(&json) && screens_left {
+        args.push(format!("output.{OUTPUT}.disable"));
+    }
+    if args.is_empty() {
         return Ok(());
-    };
+    }
     let refs: Vec<&str> = args.iter().map(String::as_str).collect();
     cmd.run("kscreen-doctor", &refs)?;
     files.write(&saved_path, "")

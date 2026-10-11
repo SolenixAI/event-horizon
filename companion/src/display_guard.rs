@@ -1,7 +1,8 @@
-//! The display guard: keeps the virtual screen on. KWin can switch the virtual
+//! The display guard: keeps the virtual screen ready. KWin can switch the virtual
 //! output off when a monitor wakes or is plugged in, and a monitor power-cycle
-//! can stop the screen's unit. The guard turns the output back on, starts the
-//! unit when the output is gone, and never disables an output.
+//! can stop the screen's unit. The guard starts the unit when the output is gone,
+//! and turns the output back on only while a stream is live. Between streams the
+//! output stays off, so the desk shows only its monitors. It never disables one.
 
 use crate::linux_install::Commands;
 use crate::virtual_screen::{OUTPUT, SCREEN_SERVICE};
@@ -15,25 +16,33 @@ const SETTLE: Duration = Duration::from_secs(2);
 
 /// Checks once at start, then after every DRM change or add event, until the
 /// events end. A failed check is reported and the guard keeps going.
-pub fn guard(cmd: &dyn Commands, events: impl IntoIterator<Item = String>) {
-    enforce(cmd);
+pub fn guard(
+    cmd: &dyn Commands,
+    live: &dyn Fn() -> bool,
+    events: impl IntoIterator<Item = String>,
+) {
+    enforce(cmd, live);
     for line in events {
         if matches!(action(&line), Some("change" | "add")) {
-            enforce(cmd);
+            enforce(cmd, live);
         }
     }
 }
 
 /// Runs the guard on `udevadm`'s DRM events. Returns an error when `udevadm`
 /// stops, so the unit restarts it.
-pub fn run(cmd: &dyn Commands) -> Result<(), String> {
+pub fn run(cmd: &dyn Commands, live: &dyn Fn() -> bool) -> Result<(), String> {
     let mut child = Command::new("udevadm")
         .args(["monitor", "--udev", "--subsystem-match=drm"])
         .stdout(Stdio::piped())
         .spawn()
         .map_err(|e| format!("udevadm: {e}"))?;
     let stdout = child.stdout.take().ok_or("udevadm gave no output")?;
-    guard(cmd, BufReader::new(stdout).lines().map_while(Result::ok));
+    guard(
+        cmd,
+        live,
+        BufReader::new(stdout).lines().map_while(Result::ok),
+    );
     let status = child.wait().map_err(|e| e.to_string())?;
     Err(format!("udevadm stopped ({status})"))
 }
@@ -43,24 +52,25 @@ fn action(line: &str) -> Option<&str> {
     line.split_whitespace().nth(1)
 }
 
-fn enforce(cmd: &dyn Commands) {
+fn enforce(cmd: &dyn Commands, live: &dyn Fn() -> bool) {
     cmd.pause(SETTLE);
-    if let Err(e) = enforce_once(cmd) {
+    if let Err(e) = enforce_once(cmd, live) {
         eprintln!("display guard: {e}");
     }
 }
 
-/// Turns the virtual output on when KScreen lists it as off, and starts the
-/// screen's unit when KScreen does not list it: systemd never restarts a unit
-/// that was stopped, and a monitor power-cycle can stop it.
-fn enforce_once(cmd: &dyn Commands) -> Result<(), String> {
+/// Turns the virtual output on when KScreen lists it as off and a stream is live, and
+/// starts the screen's unit when KScreen does not list it: systemd never restarts a
+/// unit that was stopped, and a monitor power-cycle can stop it.
+fn enforce_once(cmd: &dyn Commands, live: &dyn Fn() -> bool) -> Result<(), String> {
     let text = cmd.capture("kscreen-doctor", &["--json"])?;
     let json: Value = serde_json::from_str(&text).map_err(|e| e.to_string())?;
     match virtual_enabled(&json) {
-        Some(false) => {
+        Some(false) if live() => {
             let arg = format!("output.{OUTPUT}.enable");
             cmd.run("kscreen-doctor", &[arg.as_str()])?;
         }
+        Some(false) => {}
         None => cmd.run("systemctl", &["--user", "start", SCREEN_SERVICE])?,
         Some(true) => {}
     }

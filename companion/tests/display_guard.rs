@@ -75,7 +75,7 @@ fn enable_command() -> String {
 fn a_virtual_screen_that_is_on_is_left_alone() {
     let cmd = fake(&[Some(true)]);
 
-    guard(&cmd, Vec::<String>::new());
+    guard(&cmd, &|| true, Vec::<String>::new());
 
     assert!(cmd.runs.lock().unwrap().is_empty());
     assert_eq!(*cmd.checks.lock().unwrap(), 1, "checked once at start");
@@ -85,7 +85,7 @@ fn a_virtual_screen_that_is_on_is_left_alone() {
 fn a_virtual_screen_that_is_off_is_turned_on_at_start() {
     let cmd = fake(&[Some(false)]);
 
-    guard(&cmd, Vec::<String>::new());
+    guard(&cmd, &|| true, Vec::<String>::new());
 
     assert_eq!(*cmd.runs.lock().unwrap(), vec![enable_command()]);
 }
@@ -94,7 +94,7 @@ fn a_virtual_screen_that_is_off_is_turned_on_at_start() {
 fn a_drm_change_turns_the_screen_back_on() {
     let cmd = fake(&[Some(true), Some(false)]);
 
-    guard(&cmd, [CHANGE.to_string()]);
+    guard(&cmd, &|| true, [CHANGE.to_string()]);
 
     assert_eq!(*cmd.runs.lock().unwrap(), vec![enable_command()]);
 }
@@ -103,7 +103,7 @@ fn a_drm_change_turns_the_screen_back_on() {
 fn an_add_event_is_checked_too() {
     let cmd = fake(&[Some(true), Some(false)]);
 
-    guard(&cmd, [ADD.to_string()]);
+    guard(&cmd, &|| true, [ADD.to_string()]);
 
     assert_eq!(*cmd.runs.lock().unwrap(), vec![enable_command()]);
 }
@@ -112,7 +112,7 @@ fn an_add_event_is_checked_too() {
 fn a_remove_event_is_not_checked() {
     let cmd = fake(&[Some(true)]);
 
-    guard(&cmd, [REMOVE.to_string()]);
+    guard(&cmd, &|| true, [REMOVE.to_string()]);
 
     assert_eq!(*cmd.checks.lock().unwrap(), 1, "only the start check ran");
 }
@@ -121,7 +121,7 @@ fn a_remove_event_is_not_checked() {
 fn a_wake_that_leaves_the_screen_on_runs_nothing() {
     let cmd = fake(&[Some(true)]);
 
-    guard(&cmd, [CHANGE.to_string(), CHANGE.to_string()]);
+    guard(&cmd, &|| true, [CHANGE.to_string(), CHANGE.to_string()]);
 
     assert!(cmd.runs.lock().unwrap().is_empty());
     assert_eq!(*cmd.checks.lock().unwrap(), 3);
@@ -131,7 +131,7 @@ fn a_wake_that_leaves_the_screen_on_runs_nothing() {
 fn turning_the_screen_on_twice_is_not_repeated() {
     let cmd = fake(&[Some(false), Some(true)]);
 
-    guard(&cmd, [CHANGE.to_string(), CHANGE.to_string()]);
+    guard(&cmd, &|| true, [CHANGE.to_string(), CHANGE.to_string()]);
 
     assert_eq!(
         cmd.runs.lock().unwrap().len(),
@@ -144,7 +144,7 @@ fn turning_the_screen_on_twice_is_not_repeated() {
 fn the_guard_never_disables_an_output() {
     let cmd = fake(&[Some(false), Some(true), Some(false)]);
 
-    guard(&cmd, [CHANGE.to_string(), CHANGE.to_string()]);
+    guard(&cmd, &|| true, [CHANGE.to_string(), CHANGE.to_string()]);
 
     assert!(
         cmd.runs
@@ -162,7 +162,7 @@ fn the_guard_never_disables_an_output() {
 fn a_virtual_screen_that_is_not_listed_has_its_unit_started() {
     let cmd = fake(&[None]);
 
-    guard(&cmd, [CHANGE.to_string()]);
+    guard(&cmd, &|| true, [CHANGE.to_string()]);
 
     assert_eq!(
         *cmd.runs.lock().unwrap(),
@@ -177,7 +177,7 @@ fn a_virtual_screen_that_is_not_listed_has_its_unit_started() {
 fn every_check_waits_two_seconds_for_kwin_to_settle_first() {
     let cmd = fake(&[Some(true)]);
 
-    guard(&cmd, [CHANGE.to_string(), CHANGE.to_string()]);
+    guard(&cmd, &|| true, [CHANGE.to_string(), CHANGE.to_string()]);
 
     assert_eq!(*cmd.paused.lock().unwrap(), Duration::from_secs(6));
 }
@@ -186,12 +186,21 @@ fn every_check_waits_two_seconds_for_kwin_to_settle_first() {
 fn a_failed_check_does_not_stop_the_guard() {
     let cmd = fake(&[]);
 
-    guard(&cmd, [CHANGE.to_string()]);
+    guard(&cmd, &|| true, [CHANGE.to_string()]);
 
     assert_eq!(
         *cmd.checks.lock().unwrap(),
         2,
         "it kept going after the failure"
     );
+    assert!(cmd.runs.lock().unwrap().is_empty());
+}
+
+#[test]
+fn a_virtual_screen_that_is_off_stays_off_between_streams() {
+    let cmd = fake(&[Some(false)]);
+
+    guard(&cmd, &|| false, Vec::<String>::new());
+
     assert!(cmd.runs.lock().unwrap().is_empty());
 }

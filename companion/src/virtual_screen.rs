@@ -94,6 +94,15 @@ pub fn others_on(kscreen: &Value) -> Vec<String> {
         .collect()
 }
 
+/// Whether KScreen lists the virtual screen and it is on.
+pub fn virtual_on(kscreen: &Value) -> bool {
+    kscreen["outputs"].as_array().is_some_and(|outputs| {
+        outputs
+            .iter()
+            .any(|o| o["name"] == OUTPUT && o["enabled"] == true)
+    })
+}
+
 /// Whether KScreen lists the virtual screen, on or off.
 pub fn virtual_listed(kscreen: &Value) -> bool {
     kscreen["outputs"]
