@@ -31,10 +31,12 @@ work the way they work on your Mac.
   at 2560×1600 and 60 fps over home Wi-Fi for 5 hours with 0 dropped frames
   (2026-10-08).
 
-No accounts, and no usage data leaves your Mac unless you opt in. Event Horizon
-talks to your own PC, your local network, and GitHub to check for updates once a
-day. GitHub counts those checks, which is how we know how many copies are in
-use. Diagnostics are off by default and stay on your Mac.
+No accounts, and no usage data leaves your Mac unless you opt in. Turn on Share
+usage stats in Settings › General and Event Horizon sends usage and crash
+reports to PostHog, which keeps no IP address. Otherwise it talks to your own
+PC, your local network, and GitHub to check for updates once a day. GitHub
+counts those checks, which is how we know how many copies are in use.
+Diagnostics are off by default and stay on your Mac.
 
 ## Install
 

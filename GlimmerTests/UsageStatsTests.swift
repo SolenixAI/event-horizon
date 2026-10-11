@@ -84,6 +84,16 @@ struct UsageStatsTests {
         #expect(ended["error_kind"] as? String == "other")
     }
 
+    // Here, not in CrashReportsTests: it shares UsageStats' defaults with this serialized suite.
+    @Test func crashReportsWaitForTheSwitch() {
+        CrashReports.sendNew()
+        #expect(defaults.object(forKey: CrashReports.sinceKey) == nil)
+        UsageStats.setEnabled(true)
+        #expect(defaults.object(forKey: CrashReports.sinceKey) != nil)
+        UsageStats.setEnabled(false)
+        #expect(defaults.object(forKey: CrashReports.sinceKey) == nil)
+    }
+
     @Test func turningOffForgetsTheInstall() {
         defaults.set("old-id", forKey: UsageStats.installIDKey)
         UsageStats.setEnabled(false)
