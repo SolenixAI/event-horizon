@@ -1,9 +1,10 @@
 //! The display guard: keeps the virtual screen on. KWin can switch the virtual
-//! output off when a monitor wakes or is plugged in. The guard turns it back
-//! on, and never disables an output.
+//! output off when a monitor wakes or is plugged in, and a monitor power-cycle
+//! can stop the screen's unit. The guard turns the output back on, starts the
+//! unit when the output is gone, and never disables an output.
 
 use crate::linux_install::Commands;
-use crate::virtual_screen::OUTPUT;
+use crate::virtual_screen::{OUTPUT, SCREEN_SERVICE};
 use serde_json::Value;
 use std::io::{BufRead, BufReader};
 use std::process::{Command, Stdio};
@@ -49,14 +50,19 @@ fn enforce(cmd: &dyn Commands) {
     }
 }
 
-/// Turns the virtual output on when KScreen lists it as off. An output that is
-/// missing is left alone: the screen's own unit brings it back.
+/// Turns the virtual output on when KScreen lists it as off, and starts the
+/// screen's unit when KScreen does not list it: systemd never restarts a unit
+/// that was stopped, and a monitor power-cycle can stop it.
 fn enforce_once(cmd: &dyn Commands) -> Result<(), String> {
     let text = cmd.capture("kscreen-doctor", &["--json"])?;
     let json: Value = serde_json::from_str(&text).map_err(|e| e.to_string())?;
-    if virtual_enabled(&json) == Some(false) {
-        let arg = format!("output.{OUTPUT}.enable");
-        cmd.run("kscreen-doctor", &[arg.as_str()])?;
+    match virtual_enabled(&json) {
+        Some(false) => {
+            let arg = format!("output.{OUTPUT}.enable");
+            cmd.run("kscreen-doctor", &[arg.as_str()])?;
+        }
+        None => cmd.run("systemctl", &["--user", "start", SCREEN_SERVICE])?,
+        Some(true) => {}
     }
     Ok(())
 }
