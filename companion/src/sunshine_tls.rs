@@ -118,25 +118,37 @@ pub fn load_pinned_der(path: &Path) -> Result<Vec<u8>, String> {
 /// writes it under its appdata folder, `credentials/cacert.pem`. On Linux, a
 /// Flatpak Sunshine keeps its appdata under `~/.var/app`, otherwise it uses
 /// `$XDG_CONFIG_HOME/sunshine` or `~/.config/sunshine` (`appdata()` in Sunshine's
-/// `src/platform/linux/misc.cpp`). `SUNSHINE_CERT_PATH` overrides all of it.
-/// Elsewhere there is no default yet, so the companion refuses to start
-/// without the override rather than guess.
-pub fn default_cert_path() -> Option<PathBuf> {
+/// `src/platform/linux/misc.cpp`). On Windows, Sunshine's appdata is `config`
+/// beside its program, which is where the installer puts it (`sunshine_dir` in
+/// `src/os/windows/install.rs`). `SUNSHINE_CERT_PATH` overrides all of it.
+/// Elsewhere there is no default, so every call to Sunshine is refused.
+pub fn default_cert_path() -> PathBuf {
     if let Some(path) = std::env::var_os("SUNSHINE_CERT_PATH").filter(|p| !p.is_empty()) {
-        return Some(PathBuf::from(path));
+        return PathBuf::from(path);
+    }
+    if cfg!(windows) {
+        let program_files =
+            std::env::var_os("ProgramFiles").unwrap_or_else(|| "C:\\Program Files".into());
+        return PathBuf::from(program_files)
+            .join("Sunshine")
+            .join("config")
+            .join("credentials")
+            .join("cacert.pem");
     }
     if !cfg!(target_os = "linux") {
-        return None;
+        return PathBuf::new();
     }
-    let home = PathBuf::from(std::env::var_os("HOME")?);
+    let home = std::env::var_os("HOME")
+        .map(PathBuf::from)
+        .unwrap_or_default();
     let flatpak =
         home.join(".var/app/dev.lizardbyte.app.Sunshine/config/sunshine/credentials/cacert.pem");
     if flatpak.is_file() {
-        return Some(flatpak);
+        return flatpak;
     }
     let config = std::env::var_os("XDG_CONFIG_HOME")
         .filter(|v| !v.is_empty())
         .map(PathBuf::from)
         .unwrap_or_else(|| home.join(".config"));
-    Some(config.join("sunshine/credentials/cacert.pem"))
+    config.join("sunshine/credentials/cacert.pem")
 }

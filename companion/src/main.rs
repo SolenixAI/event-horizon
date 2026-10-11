@@ -118,25 +118,11 @@ async fn main() {
             .or_else(|| std::env::var(key).ok())
             .unwrap_or_default()
     };
-    let Some(cert_path) = event_horizon_companion::sunshine_tls::default_cert_path() else {
-        eprintln!("companion: Sunshine's certificate path is not set (SUNSHINE_CERT_PATH)");
-        std::process::exit(1);
-    };
-    let pinned = match event_horizon_companion::sunshine_tls::load_pinned_der(&cert_path) {
-        Ok(der) => der,
-        Err(e) => {
-            eprintln!("companion: {e}");
-            std::process::exit(1);
-        }
-    };
-    let sunshine = match LocalSunshine::new(get("SUNSHINE_USER"), get("SUNSHINE_PASSWORD"), &pinned)
-    {
-        Ok(sunshine) => sunshine,
-        Err(e) => {
-            eprintln!("companion: {e}");
-            std::process::exit(1);
-        }
-    };
+    let sunshine = LocalSunshine::new(
+        get("SUNSHINE_USER"),
+        get("SUNSHINE_PASSWORD"),
+        event_horizon_companion::sunshine_tls::default_cert_path(),
+    );
     let macs = dir.join("macs.json");
 
     // `--list-macs` and `--unpair <mac id>`: the Macs this PC trusts, from the
