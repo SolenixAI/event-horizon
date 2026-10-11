@@ -15,6 +15,21 @@ extension AppModel {
         nativeStreamError = failure.message
         nativeStreamErrorKind = failure.kind
         nativeStreamErrorHostID = host.id
+        if failure.kind == .pairing { repairInPlace(host) }
+    }
+
+    /// A PC that no longer knows this Mac opens its pair step at once, rather than
+    /// a banner the user must act on. The stream asked for waits for the pairing.
+    func repairInPlace(_ host: Host) {
+        streamAfterPairing = lastLaunchAttempt.flatMap { $0.host.id == host.id ? $0 : nil }
+        guard !pairSheetShown else { return }
+        requestPairing(for: host)
+    }
+
+    /// The PC paired: its error goes. The stream that waited stays for Stream Now.
+    func pairingSucceeded(hostID: String) {
+        if nativeStreamErrorHostID == hostID { nativeStreamError = nil }
+        if let waiting = streamAfterPairing, waiting.host.id != hostID { streamAfterPairing = nil }
     }
 
     /// A connect the user stopped (Cancel, the quit chord, the close button)

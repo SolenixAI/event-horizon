@@ -129,6 +129,7 @@ struct PairSheet: View {
             // No auto-dismiss: the success screen shows Done / "Stream Now" buttons,
             // and a 900ms auto-close made them unclickable. The user dismisses it.
             selectPairedHost()
+            if let id = pairedHost?.id { model.pairingSucceeded(hostID: id) }
             embedded?.paired()
         }
     }
@@ -228,7 +229,14 @@ struct PairSheet: View {
                     Spacer()
                     Button("Stream Now") {
                         selectPairedHost()
-                        model.streamDefaultApp()
+                        // The stream a re-pair interrupted, on the freshly saved PC; else the default.
+                        if let waiting = model.streamAfterPairing,
+                           let host = model.hosts.first(where: { $0.id == waiting.host.id }) {
+                            model.streamAfterPairing = nil
+                            model.requestStream(app: waiting.app, on: host)
+                        } else {
+                            model.streamDefaultApp()
+                        }
                         dismiss()
                     }
                     .keyboardShortcut(.defaultAction)
