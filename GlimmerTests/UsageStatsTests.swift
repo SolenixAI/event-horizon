@@ -36,11 +36,17 @@ struct UsageStatsTests {
     @Test func offByDefaultSendsNothing() async {
         #expect(UsageStats.capture("app_opened") == nil)
         UsageStats.connectStarted()
-        UsageStats.sessionLive()
-        UsageStats.streamFinished(receipt: nil, failure: .unreachable, cancelled: false)
-        await Task.yield()
+        #expect(UsageStats.sessionLive() == nil)
+        #expect(UsageStats.streamFinished(receipt: nil, failure: .unreachable, cancelled: false) == nil)
         #expect(await sent.requests.isEmpty)
         #expect(defaults.string(forKey: UsageStats.installIDKey) == nil)
+    }
+
+    @Test func turningOnMidStreamReportsNoHalfSession() {
+        UsageStats.connectStarted()
+        UsageStats.sessionLive()
+        defaults.set(true, forKey: UsageStats.enabledKey)
+        #expect(UsageStats.streamFinished(receipt: nil, failure: nil, cancelled: false) == nil)
     }
 
     @Test func onSendsOneTaggedEvent() async throws {
@@ -58,12 +64,24 @@ struct UsageStatsTests {
         #expect(body["distinct_id"] as? String == defaults.string(forKey: UsageStats.installIDKey))
     }
 
-    @Test func failureSendsOnlyItsKind() throws {
-        let request = try #require(UsageStats.request(
-            event: "stream_failed", properties: ["error_kind": "unreachable"], installID: "test"))
-        let properties = try #require(try Self.body(request)["properties"] as? [String: Any])
-        let allowed: Set = ["error_kind", "app", "app_version", "os_version", "$process_person_profile", "internal"]
-        #expect(Set(properties.keys).isSubset(of: allowed))
+    @Test func failuresSendOnlyAllowedKeys() async throws {
+        defaults.set(true, forKey: UsageStats.enabledKey)
+        UsageStats.connectStarted()
+        await UsageStats.streamFinished(receipt: nil, failure: .unreachable, cancelled: false)?.value
+        UsageStats.connectStarted()
+        await UsageStats.sessionLive()?.value
+        await UsageStats.streamFinished(receipt: nil, failure: .other, cancelled: false)?.value
+        let bodies = try await sent.requests.map(Self.body)
+        #expect(bodies.compactMap { $0["event"] as? String } == ["stream_failed", "session_started", "session_ended"])
+        let allowed: Set = ["error_kind", "outcome", "duration_minutes", "connect_seconds",
+                            "app", "app_version", "os_version", "$process_person_profile", "internal"]
+        for body in bodies {
+            let properties = try #require(body["properties"] as? [String: Any])
+            #expect(Set(properties.keys).isSubset(of: allowed))
+        }
+        let ended = try #require(bodies.last?["properties"] as? [String: Any])
+        #expect(ended["outcome"] as? String == "failed")
+        #expect(ended["error_kind"] as? String == "other")
     }
 
     @Test func turningOffForgetsTheInstall() {

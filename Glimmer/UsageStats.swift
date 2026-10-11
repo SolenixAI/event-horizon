@@ -35,28 +35,35 @@ enum UsageStats {
         connectStartedAt = Date()
     }
 
-    /// Latched once per session, like the receipt's live edge.
-    static func sessionLive() {
-        guard liveAt == nil else { return }
+    /// Latched once per session, like the receipt's live edge, and only while
+    /// stats are on, so turning them on mid-stream never reports half a session.
+    @discardableResult
+    static func sessionLive() -> Task<Void, Never>? {
+        guard liveAt == nil, defaults.bool(forKey: enabledKey) else { return nil }
         let now = Date()
         liveAt = now
         var properties: [String: Any] = [:]
         if let start = connectStartedAt {
             properties["connect_seconds"] = rounded(now.timeIntervalSince(start))
         }
-        capture("session_started", properties)
+        return capture("session_started", properties)
     }
 
-    /// One event per stream attempt: a failure, or the end of a session that went live.
-    static func streamFinished(receipt: SessionReceipt?, failure: AppModel.StreamErrorKind?, cancelled: Bool) {
+    /// One event per attempt: the end of a session that went live, however it
+    /// ended, or the failure of one that never did.
+    @discardableResult
+    static func streamFinished(
+        receipt: SessionReceipt?, failure: AppModel.StreamErrorKind?, cancelled: Bool
+    ) -> Task<Void, Never>? {
         defer { connectStartedAt = nil; liveAt = nil }
-        guard !cancelled else { return }
-        if let failure {
-            capture("stream_failed", ["error_kind": "\(failure)", "went_live": liveAt != nil])
-            return
+        guard !cancelled else { return nil }
+        guard let liveAt else {
+            return failure.flatMap { capture("stream_failed", ["error_kind": "\($0)"]) }
         }
-        guard let liveAt else { return }
-        var properties: [String: Any] = ["duration_minutes": rounded(Date().timeIntervalSince(liveAt) / 60)]
+        var properties: [String: Any] = [
+            "duration_minutes": rounded(Date().timeIntervalSince(liveAt) / 60),
+            "outcome": failure == nil ? "ended" : "failed"]
+        if let failure { properties["error_kind"] = "\(failure)" }
         if let receipt {
             properties["width"] = receipt.width
             properties["height"] = receipt.height
@@ -64,7 +71,7 @@ enum UsageStats {
             if let rtt = receipt.medianRttMs { properties["rtt_ms"] = rounded(rtt) }
             if let goodput = receipt.avgGoodputMbps { properties["goodput_mbps"] = rounded(goodput) }
         }
-        capture("session_ended", properties)
+        return capture("session_ended", properties)
     }
 
     /// Turning stats off forgets the install's ID, so turning them on again starts fresh.

@@ -135,9 +135,11 @@ struct GeneralPane: View {
             Section("Privacy") {
                 Toggle(isOn: $shareUsageStats) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Share anonymous usage stats")
-                        Text("How often streams start, how long they last and how smoothly they run. "
-                            + "Never your PC's name or address, or what you play.")
+                        Text("Share usage stats")
+                        Text("When you open Event Horizon and stream, how long and how smoothly streams run, "
+                            + "their size, your country, and the app and macOS versions, under a random ID "
+                            + "that's forgotten when you turn this off. Never your PC's name or address, "
+                            + "or what you play.")
                             .font(.footnote).foregroundStyle(.secondary)
                     }
                 }
