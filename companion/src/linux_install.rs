@@ -10,6 +10,8 @@ const SUNSHINE_APP: &str = "dev.lizardbyte.app.Sunshine";
 const SUNSHINE_SERVICE: &str = "app-dev.lizardbyte.app.Sunshine.service";
 const SUNSHINE_USER: &str = "eventhorizon";
 const SERVICE: &str = "event-horizon-companion.service";
+const VIRTUAL_TRIES: u32 = 15;
+const VIRTUAL_WAIT: Duration = Duration::from_secs(1);
 const UDEV_RULES: &str = "/etc/udev/rules.d/60-sunshine.rules";
 const SCREEN_PASSWORD_FILE: &str = "virtual-screen-vnc";
 const PLACE_TRIES: u32 = 40;
@@ -366,11 +368,7 @@ pub fn stream_screen(
 ) -> Result<(), String> {
     let saved_path = layout.stream_screen_saved();
     if on {
-        let text = cmd.capture("kscreen-doctor", &["--json"])?;
-        let json: Value = serde_json::from_str(&text).map_err(|e| e.to_string())?;
-        let Some(others) = virtual_screen::others_on(&json) else {
-            return Ok(());
-        };
+        let others = screen_for_stream(cmd)?;
         let list: String = others.iter().map(|o| format!("{o}\n")).collect();
         files.write(&saved_path, &list)?;
         let args = virtual_screen::only_screen_args(&others);
@@ -391,6 +389,29 @@ pub fn stream_screen(
     let refs: Vec<&str> = args.iter().map(String::as_str).collect();
     cmd.run("kscreen-doctor", &refs)?;
     files.write(&saved_path, "")
+}
+
+/// The virtual screen must be listed before a stream can make it the only screen. A
+/// missing one is started and waited for: a stream that found none fell back to the
+/// desk monitor, so the Mac saw the wrong size. Err when it never appears, and then
+/// no monitor is turned off.
+fn screen_for_stream(cmd: &dyn Commands) -> Result<Vec<String>, String> {
+    let mut started = false;
+    for _ in 0..VIRTUAL_TRIES {
+        let text = cmd.capture("kscreen-doctor", &["--json"])?;
+        let json: Value = serde_json::from_str(&text).map_err(|e| e.to_string())?;
+        if virtual_screen::virtual_listed(&json) {
+            return Ok(virtual_screen::others_on(&json));
+        }
+        if !started {
+            cmd.run("systemctl", &["--user", "start", SCREEN_SERVICE])?;
+            started = true;
+        }
+        cmd.pause(VIRTUAL_WAIT);
+    }
+    Err(format!(
+        "the virtual screen did not appear after {SCREEN_SERVICE} started; no monitor was turned off"
+    ))
 }
 
 fn kscreen_placement(cmd: &dyn Commands) -> Option<Vec<String>> {

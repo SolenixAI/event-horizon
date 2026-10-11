@@ -226,6 +226,18 @@ fn kscreen_answer(desk_width: i64, desk_scale: f64, virtual_on: bool) -> String 
     json!({ "outputs": outputs }).to_string()
 }
 
+fn kscreen_with_virtual_off(desk_width: i64) -> String {
+    json!({ "outputs": [
+        { "name": "DP-1", "enabled": true, "connected": true,
+          "size": { "width": desk_width, "height": 1080 },
+          "scale": 1.0, "pos": { "x": 0, "y": 0 }, "priority": 1 },
+        { "name": OUTPUT, "enabled": false, "connected": true,
+          "size": { "width": 2560, "height": 1600 },
+          "scale": 1.75, "pos": { "x": desk_width, "y": 0 }, "priority": 2 }
+    ]})
+    .to_string()
+}
+
 #[test]
 fn on_kde_wayland_the_screen_unit_runs_krfb_at_the_default_size() {
     let (cmd, files) = pc();
@@ -629,7 +641,32 @@ fn the_end_of_a_stream_brings_back_the_saved_screens_with_the_first_one_primary(
 }
 
 #[test]
-fn a_stream_never_turns_a_monitor_off_while_the_virtual_screen_is_missing() {
+fn a_stream_starts_a_missing_virtual_screen_and_then_makes_it_the_only_screen() {
+    let (cmd, files) = pc();
+    let layout = kde_layout();
+    cmd.kscreen
+        .lock()
+        .unwrap()
+        .push_back(kscreen_answer(1920, 1.0, false));
+    cmd.kscreen
+        .lock()
+        .unwrap()
+        .push_back(kscreen_answer(1920, 1.0, true));
+
+    linux_install::stream_screen(&cmd, &files, &layout, true).unwrap();
+
+    let log = log_of(&cmd.log);
+    assert!(log.iter().any(|l| {
+        l == "run systemctl --user start event-horizon-virtual-screen.service"
+    }));
+    assert!(log.iter().any(|l| {
+        l == &format!("run kscreen-doctor output.{OUTPUT}.enable output.{OUTPUT}.priority.1 output.DP-1.disable")
+    }));
+    assert_eq!(files.read(&saved_outputs(&layout)).as_deref(), Some("DP-1\n"));
+}
+
+#[test]
+fn a_stream_that_cannot_start_the_virtual_screen_fails_and_turns_no_monitor_off() {
     let (cmd, files) = pc();
     let layout = kde_layout();
     cmd.kscreen
@@ -637,10 +674,27 @@ fn a_stream_never_turns_a_monitor_off_while_the_virtual_screen_is_missing() {
         .unwrap()
         .push_back(kscreen_answer(1920, 1.0, false));
 
-    linux_install::stream_screen(&cmd, &files, &layout, true).unwrap();
+    let result = linux_install::stream_screen(&cmd, &files, &layout, true);
 
+    assert!(result.is_err());
     assert!(!log_of(&cmd.log).iter().any(|l| l.contains("disable")));
     assert_eq!(files.read(&saved_outputs(&layout)), None);
+}
+
+#[test]
+fn a_stream_turns_on_a_virtual_screen_that_is_listed_but_off() {
+    let (cmd, files) = pc();
+    let layout = kde_layout();
+    cmd.kscreen
+        .lock()
+        .unwrap()
+        .push_back(kscreen_with_virtual_off(1920));
+
+    linux_install::stream_screen(&cmd, &files, &layout, true).unwrap();
+
+    assert!(log_of(&cmd.log).iter().any(|l| {
+        l == &format!("run kscreen-doctor output.{OUTPUT}.enable output.{OUTPUT}.priority.1 output.DP-1.disable")
+    }));
 }
 
 #[test]

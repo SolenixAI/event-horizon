@@ -82,24 +82,23 @@ pub fn placement_args(kscreen: &Value) -> Option<Vec<String>> {
     ])
 }
 
-/// The outputs other than the virtual screen that are on now, in KScreen's order:
-/// the ones a stream turns off. None while the virtual screen is missing or off,
-/// so a stream never leaves a PC without a screen.
-pub fn others_on(kscreen: &Value) -> Option<Vec<String>> {
-    let outputs = kscreen["outputs"].as_array()?;
-    if !outputs
-        .iter()
-        .any(|o| o["name"] == OUTPUT && o["enabled"] == true)
-    {
-        return None;
-    }
-    Some(
-        outputs
-            .iter()
-            .filter(|o| o["name"] != OUTPUT && o["enabled"] == true)
-            .filter_map(|o| o["name"].as_str().map(str::to_string))
-            .collect(),
-    )
+/// The screens a stream turns off: every other screen that is on. The virtual screen
+/// itself is left out; `only_screen_args` turns it on.
+pub fn others_on(kscreen: &Value) -> Vec<String> {
+    kscreen["outputs"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|o| o["name"] != OUTPUT && o["enabled"] == true)
+        .filter_map(|o| o["name"].as_str().map(str::to_string))
+        .collect()
+}
+
+/// Whether KScreen lists the virtual screen, on or off.
+pub fn virtual_listed(kscreen: &Value) -> bool {
+    kscreen["outputs"]
+        .as_array()
+        .is_some_and(|outputs| outputs.iter().any(|o| o["name"] == OUTPUT))
 }
 
 /// While a stream is live the virtual screen is the only screen, so the mouse and
