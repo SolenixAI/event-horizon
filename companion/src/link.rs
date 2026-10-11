@@ -74,9 +74,20 @@ where
     P: Prompt + 'static,
     A: Awake + 'static,
 {
+    let (mac_id, mac_name) = (request.mac_id.clone(), request.mac_name.clone());
+    // The Mac starts its Sunshine handshake only after this answer, so a pairing it
+    // left open on an earlier try goes first and cannot refuse the new one. A
+    // Sunshine that cannot clear is not a reason to refuse the ask.
+    if let Err(e) = link
+        .host
+        .sunshine()
+        .cancel_pairings(&mac_id, &mac_name)
+        .await
+    {
+        eprintln!("pair: could not clear an earlier pairing: {e:?}");
+    }
     let code = new_code();
     let ticket = new_ticket();
-    let (mac_id, mac_name) = (request.mac_id.clone(), request.mac_name.clone());
     let host = link.host.clone();
     let shown = code.clone();
     let answer = tokio::spawn(async move { host.pair(request, code).await });

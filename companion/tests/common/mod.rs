@@ -14,6 +14,8 @@ pub struct FakeSunshine {
     pub pins: Arc<Mutex<Vec<(String, String)>>>,
     /// Sunshine's client id for every Mac it unpaired, in order.
     pub unpaired: Arc<Mutex<Vec<String>>>,
+    /// (Mac id, Mac name) for every clearing of a Mac's waiting pairings.
+    pub cleared: Arc<Mutex<Vec<(String, String)>>>,
     pub down: Arc<AtomicBool>,
     /// Sunshine's apps document, and how many saves it took.
     pub apps: Arc<Mutex<serde_json::Value>>,
@@ -25,6 +27,7 @@ impl Default for FakeSunshine {
         Self {
             pins: Default::default(),
             unpaired: Default::default(),
+            cleared: Default::default(),
             down: Default::default(),
             apps: Arc::new(Mutex::new(serde_json::json!({ "apps": [], "env": {} }))),
             saves: Default::default(),
@@ -92,6 +95,17 @@ impl SunshineApi for FakeSunshine {
         } else {
             format!("uuid-{mac_id}-{pairings}")
         }))
+    }
+
+    async fn cancel_pairings(&self, mac_id: &str, mac_name: &str) -> Result<usize, SunshineError> {
+        if self.is_down() {
+            return Err(SunshineError::Unreachable("fake: down".into()));
+        }
+        self.cleared
+            .lock()
+            .unwrap()
+            .push((mac_id.to_string(), mac_name.to_string()));
+        Ok(0)
     }
 
     async fn unpair(&self, client: &str) -> Result<(), SunshineError> {

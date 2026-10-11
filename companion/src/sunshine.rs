@@ -22,6 +22,19 @@ pub fn pairing_for(pending: &Value, mac_id: &str) -> Option<String> {
         .map(str::to_string)
 }
 
+/// The waiting pairings a Mac left under its id or its display name, oldest first.
+pub fn stale_pairings(pending: &Value, mac_id: &str, mac_name: &str) -> Vec<String> {
+    pending["pairings"]
+        .as_array()
+        .map(|list| {
+            list.iter()
+                .filter(|p| p["name"] == mac_id || p["name"] == mac_name)
+                .filter_map(|p| p["id"].as_str().map(str::to_string))
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
 /// The ids of Sunshine's paired clients.
 fn client_ids(list: &Value) -> Vec<String> {
     list["named_certs"]
@@ -173,6 +186,30 @@ impl SunshineApi for LocalSunshine {
         }
         let after = self.clients().await?;
         Ok(after.into_iter().find(|id| !before.contains(id)))
+    }
+
+    async fn cancel_pairings(&self, mac_id: &str, mac_name: &str) -> Result<usize, SunshineError> {
+        let mut cancelled = 0;
+        for pairing_id in stale_pairings(&self.pending().await?, mac_id, mac_name) {
+            // DELETE /api/pin; no Origin header, so Sunshine skips its browser CSRF check.
+            let response = self
+                .client()?
+                .delete(format!("{}/api/pin", self.base))
+                .basic_auth(&self.user, Some(&self.password))
+                .json(&json!({ "pairing_id": pairing_id }))
+                .send()
+                .await
+                .map_err(|e| SunshineError::Unreachable(format!("{e:?}")))?;
+            let body: Value = response
+                .json()
+                .await
+                .map_err(|e| SunshineError::Rejected(e.to_string()))?;
+            // `false`: the pairing finished or expired in the meantime.
+            if body["status"] == true {
+                cancelled += 1;
+            }
+        }
+        Ok(cancelled)
     }
 
     async fn unpair(&self, client: &str) -> Result<(), SunshineError> {

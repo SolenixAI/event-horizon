@@ -195,17 +195,17 @@ extension AppModel {
     }
 
     /// The companion's half of a pairing: it makes the code, which the sheet
-    /// shows, and then waits for the answer at the PC.
+    /// shows, and then waits for the answer at the PC. The ask is awaited here,
+    /// before the Mac starts its Sunshine handshake: the companion clears a
+    /// pairing this Mac left open on an earlier try, which would refuse the new one.
     private func companionAnswer(
         _ companion: CompanionClient, viaCompanion: Bool, macID: String, pin: String
-    ) -> Task<CompanionClient.PairResult, Never> {
-        Task {
-            guard viaCompanion,
-                  let asked = await companion.ask(macID: macID, macName: NetworkClient.pairingDeviceName, pin: pin)
-            else { return .unavailable }
-            self.companionCode = asked.code
-            return await companion.answer(ticket: asked.ticket)
-        }
+    ) async -> Task<CompanionClient.PairResult, Never> {
+        guard viaCompanion,
+              let asked = await companion.ask(macID: macID, macName: NetworkClient.pairingDeviceName, pin: pin)
+        else { return Task { .unavailable } }
+        companionCode = asked.code
+        return Task { await companion.answer(ticket: asked.ticket) }
     }
 
     func pair(attempt: PairingAttempt, pin: String) async -> Host? {
@@ -248,12 +248,13 @@ extension AppModel {
         guard (try? checkPairing(attempt)) != nil else { return nil }
         pairingViaCompanion = viaCompanion
         let macID = (try? await IdentityManager.shared.uniqueID()) ?? NetworkClient.pairingDeviceName
-        let companionAsk = companionAnswer(companion, viaCompanion: viaCompanion, macID: macID, pin: pin)
+        let companionAsk = await companionAnswer(companion, viaCompanion: viaCompanion, macID: macID, pin: pin)
         defer {
             companionAsk.cancel()
             pairingViaCompanion = false
             companionCode = nil
         }
+        guard (try? checkPairing(attempt)) != nil else { return nil }
         do {
             pairingPhase = .awaitingPin
             // Always the full handshake: this /serverinfo came over plain HTTP,
