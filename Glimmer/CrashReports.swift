@@ -21,7 +21,8 @@ enum CrashReports {
     static func startCounting() { UsageStats.defaults.set(Date(), forKey: sinceKey) }
     static func stopCounting() { UsageStats.defaults.removeObject(forKey: sinceKey) }
 
-    /// At launch, each report newer than the last one sent becomes one `$exception` event.
+    /// At launch, each crash newer than the clock becomes one `$exception` event.
+    /// The clock is read again on the main actor, so a switch flipped meanwhile counts.
     static func sendNew() {
         guard UsageStats.defaults.bool(forKey: UsageStats.enabledKey) else { return }
         guard let since = UsageStats.defaults.object(forKey: sinceKey) as? Date else {
@@ -33,28 +34,48 @@ enum CrashReports {
         let bundleID = Bundle.main.bundleIdentifier ?? ""
         Task.detached(priority: .utility) {
             let reports = newReports(in: folder, appName: appName, since: since)
-            await MainActor.run {
-                for report in reports.prefix(maxPerLaunch) {
-                    guard let properties = exceptionProperties(
-                        report: report.text, bundleID: bundleID, appName: appName) else { continue }
-                    UsageStats.capture("$exception", properties)
-                }
-                if let newest = reports.map(\.date).max() { UsageStats.defaults.set(newest, forKey: sinceKey) }
-            }
+            await MainActor.run { send(reports, bundleID: bundleID, appName: appName) }
         }
     }
 
+    /// Up to 10 a launch, oldest first; the clock stops at the last one sent, so
+    /// the rest go next launch.
+    private static func send(_ reports: [(date: Date, text: String)], bundleID: String, appName: String) {
+        guard UsageStats.defaults.bool(forKey: UsageStats.enabledKey),
+              let since = UsageStats.defaults.object(forKey: sinceKey) as? Date else { return }
+        let due = reports.filter { $0.date > since }.prefix(maxPerLaunch)
+        for report in due {
+            guard let properties = exceptionProperties(
+                report: report.text, bundleID: bundleID, appName: appName) else { continue }
+            UsageStats.capture("$exception", properties)
+        }
+        if let last = due.last { UsageStats.defaults.set(last.date, forKey: sinceKey) }
+    }
+
+    /// Reports of this app whose crash, as the report itself dates it, is newer than `since`.
+    /// The file's own date only narrows the search: macOS can write a report late.
     nonisolated static func newReports(in folder: URL, appName: String, since: Date) -> [(date: Date, text: String)] {
         let keys: Set<URLResourceKey> = [.contentModificationDateKey]
         let files = (try? FileManager.default.contentsOfDirectory(
             at: folder, includingPropertiesForKeys: Array(keys))) ?? []
         return files.compactMap { url -> (date: Date, text: String)? in
             guard url.lastPathComponent.hasPrefix("\(appName)-"), url.pathExtension == "ips",
-                  let date = try? url.resourceValues(forKeys: keys).contentModificationDate, date > since,
-                  let text = try? String(contentsOf: url, encoding: .utf8) else { return nil }
-            return (date, text)
+                  let written = try? url.resourceValues(forKeys: keys).contentModificationDate, written > since,
+                  let text = try? String(contentsOf: url, encoding: .utf8),
+                  let crashed = crashDate(report: text), crashed > since else { return nil }
+            return (crashed, text)
         }
         .sorted { $0.date < $1.date }
+    }
+
+    /// The crash time from the report's header line, e.g. "2026-10-10 18:36:45.00 -0230".
+    nonisolated static func crashDate(report: String) -> Date? {
+        guard let line = report.split(separator: "\n", maxSplits: 1).first,
+              let stamp = json(line)?["timestamp"] as? String else { return nil }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SS Z"
+        return formatter.date(from: stamp)
     }
 
     /// An .ips report is a header line, then a JSON body. Keeps the exception, the

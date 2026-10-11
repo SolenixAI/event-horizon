@@ -12,6 +12,7 @@ import Testing
 @MainActor
 struct CrashReportsTests {
     private static let header = #"{"app_name":"Event Horizon","bundleID":"dev.solenix.eventhorizon","#
+        + #""timestamp":"2026-10-10 18:36:45.00 -0230","#
         + #""app_version":"2026.10.8","os_version":"macOS 26.7 (25G224)"}"#
     private static let body = #"{"exception":{"type":"EXC_BREAKPOINT","signal":"SIGTRAP"},"#
         + #""termination":{"indicator":"Trace/BPT trap: 5","reasons":["/Users/someone/secret"]},"#
@@ -60,14 +61,21 @@ struct CrashReportsTests {
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: folder) }
-        let since = Date()
         let old = folder.appendingPathComponent("Event Horizon-old.ips")
         try Self.report.write(to: old, atomically: true, encoding: .utf8)
         try FileManager.default.setAttributes(
-            [.modificationDate: since.addingTimeInterval(-60)], ofItemAtPath: old.path)
+            [.modificationDate: Date(timeIntervalSince1970: 1_791_666_000)], ofItemAtPath: old.path)
         try Self.report.write(to: folder.appendingPathComponent("Event Horizon-new.ips"), atomically: true, encoding: .utf8)
         try Self.report.write(to: folder.appendingPathComponent("Other-new.ips"), atomically: true, encoding: .utf8)
-        let found = CrashReports.newReports(in: folder, appName: "Event Horizon", since: since.addingTimeInterval(-1))
+        let crashed = try #require(CrashReports.crashDate(report: Self.report))
+        let found = CrashReports.newReports(in: folder, appName: "Event Horizon", since: crashed.addingTimeInterval(-1))
         #expect(found.count == 1)
+        // A report written after opting in, of a crash from before it, stays behind.
+        #expect(CrashReports.newReports(in: folder, appName: "Event Horizon", since: crashed).isEmpty)
+    }
+
+    @Test func theCrashTimeComesFromTheReport() throws {
+        let crashed = try #require(CrashReports.crashDate(report: Self.report))
+        #expect(crashed == Date(timeIntervalSince1970: 1_791_666_405))
     }
 }
