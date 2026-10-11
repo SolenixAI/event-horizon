@@ -16,7 +16,7 @@ struct VideoRecoveryEventTests {
 
         func depacketizerDidAssembleFrame(_ unit: DecodeUnit) {
             guard unit.frameType == VideoDepacketizer.FRAME_TYPE_IDR,
-                  let ms = TelemetryCounters.shared.p2.resolveIdrArrival(
+                  let ms = TelemetryCounters.shared.idrRoundTrip.resolveIdrArrival(
                     TelemetryCounters.monotonicNowNanos()) else { return }
             matches.append(ms)
         }
@@ -26,14 +26,19 @@ struct VideoRecoveryEventTests {
         func depacketizerReceivedKeyFrame(frameNumber: Int) {}
     }
 
+    /// The round trip runs on this test's own P2 state, so a parallel test's IDR
+    /// request (EnetControlChannelTests) can't land in it.
     @Test func rfiRecoveryLeavesExplicitIdrRequestForTheIdr() {
+        let roundTrip = TelemetryCounters.P2State()
+        TelemetryCounters.$idrRoundTripOverride.withValue(roundTrip) {
+            rfiRecoveryLeavesExplicitIdrRequest(roundTrip)
+        }
+    }
+
+    private func rfiRecoveryLeavesExplicitIdrRequest(_ roundTrip: TelemetryCounters.P2State) {
         let tracker = FrameTimingTracker(sessionId: "test")
         FrameTimingTracker.installForTesting(tracker)
-        TelemetryCounters.shared.p2.reset()
-        defer {
-            FrameTimingTracker.installForTesting(nil)
-            TelemetryCounters.shared.p2.reset()
-        }
+        defer { FrameTimingTracker.installForTesting(nil) }
 
         let delegate = RoundTripDelegate()
         let depacketizer = VideoDepacketizer(delegate: delegate,
@@ -49,13 +54,13 @@ struct VideoRecoveryEventTests {
 
         send(frame: 1, type: 2)
         depacketizer.waitingForRefInvalFrame = true
-        TelemetryCounters.shared.p2.stampIdrRequest(TelemetryCounters.monotonicNowNanos())
+        roundTrip.stampIdrRequest(TelemetryCounters.monotonicNowNanos())
         send(frame: 2, type: 4)
         #expect(delegate.matches.isEmpty)
-        #expect(TelemetryCounters.shared.p2.lastIdrRoundTripMs == nil)
+        #expect(roundTrip.lastIdrRoundTripMs == nil)
         send(frame: 3, type: 2)
         #expect(delegate.matches.count == 1)
-        #expect(TelemetryCounters.shared.p2.resolveIdrArrival(TelemetryCounters.monotonicNowNanos()) == nil)
+        #expect(roundTrip.resolveIdrArrival(TelemetryCounters.monotonicNowNanos()) == nil)
     }
 
     private func object(_ fields: [String]) throws -> [String: Any] {
