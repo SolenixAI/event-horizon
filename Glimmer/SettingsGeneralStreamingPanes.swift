@@ -307,9 +307,7 @@ struct QualityPane: View {
                     }
                 }
                 if awdl.refusedThisApp {
-                    Label("The network helper didn't accept this copy of Event Horizon, so Wi-Fi streams "
-                          + "may stutter. Use the copy in Applications, signed by the same developer as the helper.",
-                          systemImage: "exclamationmark.triangle.fill")
+                    Label(AWDLHelperManager.refusalMessage, systemImage: "exclamationmark.triangle.fill")
                         .font(.footnote).foregroundStyle(.orange)
                 }
                 if case .unavailable(let why) = awdl.state {
