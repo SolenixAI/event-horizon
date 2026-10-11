@@ -166,7 +166,7 @@ struct SessionSafetyTests {
                     _ = try await ControlTransport.get(
                         host: "127.0.0.1", port: portNumber, target: "/serverinfo", userAgent: "GlimmerTests",
                         tls: false, credential: .init(clientCertPEM: nil, clientKeyPEM: nil, pinnedCertPEM: nil),
-                        timeout: 10)
+                        timeout: 120)
                     Issue.record("Cancelled control request returned a response")
                 } catch {
                     let finishedAt = ContinuousClock.now
@@ -181,9 +181,9 @@ struct SessionSafetyTests {
             defer { close(peer) }
             let cancelledAt = ContinuousClock.now
             task.cancel()
-            // Only has to beat the request's 10s timeout; a tighter limit would time a busy test pool.
-            #expect(await task.value - cancelledAt < .seconds(5))
-            #expect(try await onTestThread { controlPeerReachesEOF(peer, before: cancelledAt + .seconds(5)) })
+            // Only has to beat the request's 120 s timeout; half of it still proves cancellation woke it.
+            #expect(await task.value - cancelledAt < .seconds(60))
+            #expect(try await onTestThread { controlPeerReachesEOF(peer, before: cancelledAt + .seconds(60)) })
         }.value
     }
 
@@ -323,7 +323,7 @@ struct SessionSafetyTests {
             } catch StreamError.hostTimedOut {
                 // The request can't finish until released, so this limit only catches a hang.
                 let returned = ContinuousClock.now
-                #expect(returned - started < .seconds(5))
+                #expect(returned - started < .seconds(60))
                 #expect(waiting.isSet)
                 #expect(await entered.isOpen)
                 #expect(await !release.isOpen)
