@@ -189,8 +189,9 @@ and `Sunshine-Windows-ARM64-installer.msi`. The Flathub app ID is
   `CERTIFICATE_FILE`), `src/confighttp.cpp`
   (`https_server_t server {config::nvhttp.cert, config::nvhttp.pkey}`), and
   `src/crypto.cpp` (`gen_creds`, common name only). Code:
-  `companion/src/sunshine_tls.rs`. Device check: the first connection on citadel
-  after its drive is unlocked.
+  `companion/src/sunshine_tls.rs`. Device check passed on citadel on 2026-10-11
+  at about 18:09 local: the pinned certificate lists Sunshine's apps (7), and
+  another self-signed certificate is refused.
 
 ---
 
@@ -743,13 +744,14 @@ Each line is the simplest path for one question. Open items are `<?>`.
   (line 144 branch not read).
 - `<?>` 2026-10-09T19:12-02:30 — Can a Flatpak-sandboxed companion read host
   `/proc/<pid>/exe` for a KWin window pid? Source: none yet (test).
-- `<~>` 2026-10-11T17:10-02:30 — What is the Flatpak's Sunshine config folder?
+- `<✓>` 2026-10-11T17:10-02:30 — What is the Flatpak's Sunshine config folder?
   Source-determined: Sunshine's `appdata()` uses `$XDG_CONFIG_HOME/sunshine`
   when that is set, else `~/.config/sunshine` (`src/platform/linux/misc.cpp` at
   v2026.914.233613). A Flatpak sets `XDG_CONFIG_HOME` to
   `~/.var/app/dev.lizardbyte.app.Sunshine/config`, so the certificate is
   `~/.var/app/dev.lizardbyte.app.Sunshine/config/sunshine/credentials/cacert.pem`.
-  Device check pending: list that file on citadel after its drive is unlocked.
+  Device check passed on citadel on 2026-10-11 at about 18:09 local: the file is
+  there (726 bytes of DER through the companion), so the path is verified.
 - `<✓>` 2026-10-11T17:10-02:30 — Which TLS certificate should the companion
   trust for `https://localhost:47990`? Answer: the pinned
   `credentials/cacert.pem` under Sunshine's appdata, and nothing else (section
