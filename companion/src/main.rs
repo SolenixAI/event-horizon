@@ -7,7 +7,8 @@
 #[tokio::main]
 async fn main() {
     use event_horizon_companion::{
-        Host, discovery, games, library, link, play, setup, sunshine::LocalSunshine, tls,
+        Host, discovery, games, library, link, pair_window::PairWindow, play, setup,
+        sunshine::LocalSunshine, tls,
     };
     tls::install_default_provider();
 
@@ -81,6 +82,7 @@ async fn main() {
     if installing {
         match event_horizon_companion::os::linux::install(&dir) {
             Ok(()) => {
+                open_pair_window(&dir);
                 println!("This PC is ready. Open Event Horizon on your Mac.");
                 if let Some(why) = event_horizon_companion::os::linux::screen_skip(&dir) {
                     println!("{why}");
@@ -97,6 +99,9 @@ async fn main() {
     if installing {
         let elevated_child = args.iter().any(|a| a == "--elevated");
         let result = event_horizon_companion::os::windows::install(&dir, elevated_child).await;
+        if result.is_ok() && !elevated_child {
+            open_pair_window(&dir);
+        }
         // One message at the end (not on CI, where nobody can click it).
         if std::env::var_os("CI").is_none() && !elevated_child {
             let text = match &result {
@@ -163,13 +168,17 @@ async fn main() {
     #[cfg(target_os = "linux")]
     let host = Host::new(
         sunshine.clone(),
-        event_horizon_companion::os::linux::Notification,
+        PairWindow::new(
+            event_horizon_companion::os::linux::Notification,
+            &dir,
+            unix_now,
+        ),
         event_horizon_companion::os::linux::SessionInhibit,
     );
     #[cfg(windows)]
     let host = Host::new(
         sunshine.clone(),
-        event_horizon_companion::os::windows::Dialog,
+        PairWindow::new(event_horizon_companion::os::windows::Dialog, &dir, unix_now),
         event_horizon_companion::os::windows::PowerRequest,
     );
 
@@ -258,6 +267,28 @@ fn config_dir() -> std::path::PathBuf {
             std::path::PathBuf::from(std::env::var_os("HOME").unwrap_or_default()).join(".config")
         });
     base.join("event-horizon")
+}
+
+/// Unix time in seconds.
+#[cfg(any(target_os = "linux", windows))]
+fn unix_now() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or_default()
+}
+
+/// A PC that trusts no Mac yet lets the first one pair with the code alone for a
+/// few minutes, so a PC with its monitor off can be set up.
+#[cfg(any(target_os = "linux", windows))]
+fn open_pair_window(dir: &std::path::Path) {
+    use event_horizon_companion::{link, pair_window};
+    if !link::list(&dir.join("macs.json")).is_empty() {
+        return;
+    }
+    if let Err(e) = pair_window::open(dir, unix_now()) {
+        eprintln!("pairing window: {e}");
+    }
 }
 
 #[cfg(any(target_os = "linux", windows))]
