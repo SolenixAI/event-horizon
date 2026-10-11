@@ -14,8 +14,13 @@ suppressor.start()
 
 let listener = NSXPCListener(machServiceName: glimmerHelperMachServiceName)
 // The OS checks every peer's code signature before the delegate sees it, so
-// only our signed app can ever reach HelperService.
-listener.setConnectionCodeSigningRequirement(HelperService.designatedRequirement)
+// only our signed app can ever reach HelperService. Without a team of its own
+// the helper cannot name a trusted app, so it does not listen at all.
+guard let requirement = HelperService.clientRequirement(team: HelperService.ownTeam()) else {
+    os_log("Helper has no signing team; refusing every client", log: log, type: .error)
+    exit(1)
+}
+listener.setConnectionCodeSigningRequirement(requirement)
 let service = HelperService(suppressor: suppressor)
 listener.delegate = service
 listener.resume()
