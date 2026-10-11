@@ -1,14 +1,35 @@
 import Foundation
+import Security
 
 final class HelperService: NSObject, NSXPCListenerDelegate, GlimmerHelperProtocol {
     private let suppressor: AWDLSuppressor
 
-    // Every XPC peer must be our bundle id AND Apple-anchored Developer ID (Team
-    // 5T7M4RH3F8). main.swift hands this to the listener, so the OS rejects any
-    // other process before it can reach this root helper.
-    static let designatedRequirement =
-        "identifier \"dev.solenix.eventhorizon\" and anchor apple generic "
-        + "and certificate leaf[subject.OU] = \"5T7M4RH3F8\""
+    // Every XPC peer must be our bundle id, Apple-anchored, and signed by the team
+    // that signed this helper. main.swift hands this to the listener, so the OS
+    // rejects any other process before it can reach this root helper. The team is
+    // read from the helper's own signature, so each builder's signed build trusts
+    // its own app. A helper with no team trusts no one.
+    static func clientRequirement(team: String?) -> String? {
+        guard let team, team.count == 10,
+              team.allSatisfy({ $0.isASCII && ($0.isUppercase || $0.isNumber) })
+        else { return nil }
+        return "identifier \"dev.solenix.eventhorizon\" and anchor apple generic "
+            + "and certificate leaf[subject.OU] = \"\(team)\""
+    }
+
+    /// The team identifier in this process's own code signature, if it has one.
+    static func ownTeam() -> String? {
+        var code: SecCode?
+        guard SecCodeCopySelf([], &code) == errSecSuccess, let code else { return nil }
+        var staticCode: SecStaticCode?
+        guard SecCodeCopyStaticCode(code, [], &staticCode) == errSecSuccess, let staticCode else { return nil }
+        var info: CFDictionary?
+        guard SecCodeCopySigningInformation(staticCode, SecCSFlags(rawValue: kSecCSSigningInformation), &info)
+                == errSecSuccess,
+              let dict = info as? [String: Any]
+        else { return nil }
+        return dict[kSecCodeInfoTeamIdentifier as String] as? String
+    }
 
     init(suppressor: AWDLSuppressor) {
         self.suppressor = suppressor

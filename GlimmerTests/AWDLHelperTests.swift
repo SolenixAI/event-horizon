@@ -299,3 +299,18 @@ private final class HelperTestListener: NSObject, NSXPCListenerDelegate, Sendabl
         #expect(harness.refusals == 6)
     }
 }
+
+/// The helper trusts the app signed by its own team, so any builder's signed
+/// build works, and an unsigned helper trusts no one.
+@Suite struct HelperClientRequirementTests {
+    @Test func aTeamGivesTheRequirementForTheAppSignedByThatTeam() {
+        #expect(HelperService.clientRequirement(team: "QW543253U8")
+            == "identifier \"dev.solenix.eventhorizon\" and anchor apple generic "
+            + "and certificate leaf[subject.OU] = \"QW543253U8\"")
+    }
+
+    @Test(arguments: [nil, "", "QW543253U", "QW543253U8\" or true", "qw543253u8"])
+    func noValidTeamTrustsNoOne(team: String?) {
+        #expect(HelperService.clientRequirement(team: team) == nil)
+    }
+}

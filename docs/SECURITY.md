@@ -178,10 +178,10 @@ an open request ends only when it completes, fails or expires.
 ## Pinning
 
 Host certs are pinned **after** successful pairing. The pin lives in a file at
-`~/Library/Application Support/Event Horizon/PinnedHosts/<hostID>.pem`, where `hostID`
-is the host's UUID (or its hostname, when that is all we have) with anything
-outside `[A-Za-z0-9-_.]` replaced by `_`. `PinnedCertStore` (`Types+Cert.swift`)
-owns it.
+`~/Library/Application Support/Event Horizon/PinnedHosts/<hostID>.pem`, where
+`hostID` is the host's UUID (or its hostname, when that is all we have) with
+anything outside `[A-Za-z0-9-_.]` replaced by `_`. `PinnedCertStore`
+(`Types+Cert.swift`) owns it.
 
 That file is the only pin source because our pairing flow is what writes it,
 after the RSA-verified handshake, not because of its file mode: mode 0600 keeps
@@ -259,8 +259,10 @@ up.
   `reSuppressCount`) are read-only. It is not a run-anything-as-root backdoor.
   It accepts a connection only from the signed Glimmer app, not a process that
   merely claims the bundle id: the caller's code signature must satisfy the
-  designated requirement in `helper/HelperService.swift`,
-  `identifier "dev.solenix.eventhorizon" and anchor apple generic and certificate leaf[subject.OU] = "5T7M4RH3F8"`.
+  requirement in `helper/HelperService.swift`,
+  `identifier "dev.solenix.eventhorizon" and anchor apple generic and certificate leaf[subject.OU] = "<team>"`,
+  where `<team>` is read from the helper's own signature. Each builder's signed
+  build trusts only its own app; a helper with no team exits without listening.
 
 **The defense-in-depth the sandbox used to provide** was containment of a
 memory-safety exploit in the streaming-protocol parsers reachable from a
