@@ -10,6 +10,7 @@ pub mod library;
 pub mod link;
 pub mod linux_install;
 pub mod os;
+pub mod pair_window;
 pub mod play;
 mod ports;
 pub mod setup;
