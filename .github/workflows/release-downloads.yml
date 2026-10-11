@@ -1,0 +1,45 @@
+# Once a day, send each release asset's cumulative download count to PostHog.
+# Downloads per day are the change between snapshots; appcast.xml counts are
+# Sparkle's daily update checks, so they stand in for active installs.
+name: Release downloads
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+permissions: {}
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Send the snapshot to PostHog
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # The project's public ingestion key: it can only write events, and the
+          # app and solenix.dev ship it too.
+          POSTHOG_KEY: phc_yiiguNiBP8LGF8vrcWnDVMs3CkaEBLPk3gwGNrpqLs5G
+        run: |
+          gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" \
+            | jq -s --arg key "$POSTHOG_KEY" '{
+                api_key: $key,
+                batch: [ add[] | select(.draft | not) | . as $r | .assets[] | {
+                  event: "release_asset_downloads",
+                  distinct_id: "github-releases",
+                  properties: {
+                    app: "event-horizon",
+                    tag: $r.tag_name,
+                    prerelease: $r.prerelease,
+                    asset: .name,
+                    kind: (if .name == "appcast.xml" then "update_check"
+                      elif (.name | test("companion"; "i")) then "companion"
+                      elif (.name | test("\\.(dmg|zip)$")) then "mac"
+                      else "other" end),
+                    download_count: .download_count,
+                    "$process_person_profile": false
+                  }
+                } ]
+              }' > batch.json
+          jq '.batch | length' batch.json
+          curl --fail-with-body -sS -X POST https://us.i.posthog.com/batch/ \
+            -H 'Content-Type: application/json' --data @batch.json
