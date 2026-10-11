@@ -77,7 +77,8 @@ struct AudioResamplerHoldTests {
     }
 
     @Test func skewMemoryIsPerOutputDevice() throws {
-        let suite = "dev.solenix.eventhorizon.tests.\(UUID().uuidString)"
+        let suite = "dev.solenix.eventhorizon.tests.resampler-skew-per-device"
+        ScratchDefaults.drop(suite)
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { ScratchDefaults.drop(suite) }
         let speakers = AudioDecoder.resamplerSkewKey(host: "pc", deviceUID: "speakers")

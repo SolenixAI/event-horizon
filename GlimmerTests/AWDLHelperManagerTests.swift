@@ -47,11 +47,16 @@ private final class HelperHarness {
     let unregistered = DispatchSemaphore(value: 0)
     let registered = DispatchSemaphore(value: 0)
     private let defaults: UserDefaults
-    private let suite = "AWDLTests.\(UUID().uuidString)"
+    /// One fixed domain per test (its name), so a run leaves no new plist behind.
+    private let suite: String
 
-    init() throws {
+    init(test: String = #function) throws {
+        suite = "dev.solenix.eventhorizon.tests.awdl.\(test.prefix { $0 != "(" })"
+        ScratchDefaults.drop(suite)
         defaults = try #require(UserDefaults(suiteName: suite))
     }
+
+    deinit { ScratchDefaults.drop(suite) }
 
     func makeManager() -> AWDLHelperManager {
         AWDLHelperManager(operations: .init(
