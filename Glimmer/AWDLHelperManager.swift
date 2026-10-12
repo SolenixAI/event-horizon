@@ -1,5 +1,6 @@
 import Combine
 import Foundation
+import Security
 import ServiceManagement
 import SwiftUI
 import os.log
@@ -159,6 +160,8 @@ final class AWDLHelperManager: ObservableObject {
         var setDown: (Bool, String) async -> Bool
         var invalidate: () async -> Void
         var reachable: () async -> Bool
+        /// The helper trusts its own team, so it can refuse only a copy with no team.
+        var appIsTeamSigned: () -> Bool = { AWDLHelperManager.ownTeam() != nil }
         var count: () async -> UInt64?
         var sleep: (Duration) async throws -> Void = { try await Task.sleep(for: $0) }
         var telemetry: (Bool, UInt64) -> Void = {
@@ -188,6 +191,21 @@ final class AWDLHelperManager: ObservableObject {
     var refusedThisApp: Bool { refusalActive }
     static let refusalMessage = "The network helper didn't accept this copy of Event Horizon, so Wi-Fi streams "
         + "may stutter. Use the copy in Applications, signed by the same developer as the helper."
+    /// A team-signed app is never refused, so failing calls mean launchd could not start
+    /// the helper - after a signing change it keeps the old rule until a restart.
+    static let notRunningMessage = "The network helper couldn't start, so Wi-Fi streams may stutter. "
+        + "Restart your Mac to finish setting it up."
+    var refusalNotice: String { operations.appIsTeamSigned() ? Self.notRunningMessage : Self.refusalMessage }
+
+    /// This copy's signing team, read from its own signature (nil when unsigned or ad hoc).
+    nonisolated static func ownTeam() -> String? {
+        var code: SecCode?, staticCode: SecStaticCode?, info: CFDictionary?
+        guard SecCodeCopySelf([], &code) == errSecSuccess, let code,
+              SecCodeCopyStaticCode(code, [], &staticCode) == errSecSuccess, let staticCode,
+              SecCodeCopySigningInformation(staticCode, SecCSFlags(rawValue: kSecCSSigningInformation), &info)
+                == errSecSuccess, let dict = info as? [String: Any] else { return nil }
+        return dict[kSecCodeInfoTeamIdentifier as String] as? String
+    }
     private let log = Logger(subsystem: "dev.solenix.eventhorizon", category: "AWDLHelper")
     private static let promptSuppressedKey = "awdlHelperPromptSuppressed"
     /// Saved intent lets registration self-heal after an update without undoing an explicit off choice.
