@@ -235,11 +235,16 @@ endif
 
 # Install the everything-but-publish build (see `release`) to /Applications.
 # `reinstall`/`open`/`dev` build on this.
+# launchd finds the AWDL helper's app by bundle id, so a build copy left registered
+# can stand in for the installed one. Only the installed app stays registered.
 install: release
 	@SRC="$(DERIVED)/Build/Products/Release/Event Horizon.app"; \
 	echo "▶ Installing Event Horizon.app to $(GLIMMER_APP_DST)..."; \
 	if [ -d "$(GLIMMER_APP_DST)" ]; then echo "  removing existing $(GLIMMER_APP_DST)"; rm -rf "$(GLIMMER_APP_DST)"; fi; \
 	cp -R "$$SRC" "$(GLIMMER_APP_DST)"; \
+	LSREG=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister; \
+	for c in Debug Release; do $$LSREG -u "$(DERIVED)/Build/Products/$$c/Event Horizon.app" 2>/dev/null; done; \
+	$$LSREG -f "$(GLIMMER_APP_DST)"; \
 	COMMIT=$$(sed -nE 's/.*static let commit = "([^"]+)".*/\1/p' Glimmer/BuildInfo.generated.swift); \
 	echo "  ✓ installed build $$COMMIT"; \
 	if pgrep -x "Event Horizon" >/dev/null 2>&1; then \
