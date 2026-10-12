@@ -39,7 +39,8 @@
 
 GLIMMER_APP_DST ?= /Applications/Event Horizon.app
 CONFIG          ?= Debug
-DERIVED         := $(CURDIR)/build
+# .noindex: Spotlight skips it, so searching "Event Horizon" finds only /Applications.
+DERIVED         := $(CURDIR)/build.noindex
 GLIMMER_APP_SRC := $(DERIVED)/Build/Products/$(CONFIG)/Event Horizon.app
 STREAM_XCCONFIG := Glimmer/StreamLib.xcconfig
 INSTRUMENTS_DIR := $(HOME)/Library/Developer/Xcode/Instruments
@@ -193,7 +194,7 @@ ensure-signing:
 # sandboxed installer XPC), and Apple deprecated it for distribution. The helper
 # signs each nested component preserving its own entitlements, the app last.
 # Build the AWDL helper daemon with swiftc (system frameworks only, so it doesn't
-# need the StreamLib xcconfig). Output lives under build/.
+# need the StreamLib xcconfig). Output lives under build.noindex/.
 $(HELPER_BIN): $(HELPER_SRCS)
 	@echo "▶ Building AWDL helper (swiftc, $(HELPER_TARGET))..."
 	@mkdir -p $(DERIVED)
