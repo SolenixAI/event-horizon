@@ -50,4 +50,11 @@ struct VolumeKeyTests {
         #expect(!volume.isMuted)
         #expect(volume.level == 0.4)
     }
+
+    /// A re-signed build loses its Accessibility grant: the stream asks once per launch, never while trusted.
+    @Test func anUntrustedStreamAsksForAccessOncePerLaunch() {
+        var ask = VolumeKeyAccessAsk()
+        let answers = [ask.shouldAsk(granted: true), ask.shouldAsk(granted: false), ask.shouldAsk(granted: false)]
+        #expect(answers == [false, true, false])
+    }
 }

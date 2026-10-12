@@ -29,10 +29,22 @@ enum VolumeKey: Equatable {
 enum VolumeKeyAccess {
     static var isGranted: Bool { AXIsProcessTrusted() }
 
-    /// Shows the system prompt. Nothing calls this until the first-launch onboarding ships.
+    /// Shows the system prompt: from onboarding, and from a stream that lost the grant.
     @discardableResult
     static func requestAccess() -> Bool {
         AXIsProcessTrustedWithOptions(["AXTrustedCheckOptionPrompt": true] as CFDictionary)
+    }
+}
+
+/// macOS ties the grant to the code signature, so an update can drop it after onboarding.
+/// A stream that wants the keys asks again, once per launch.
+struct VolumeKeyAccessAsk {
+    private var asked = false
+
+    mutating func shouldAsk(granted: Bool) -> Bool {
+        guard !granted, !asked else { return false }
+        asked = true
+        return true
     }
 }
 
@@ -44,11 +56,13 @@ final class VolumeKeyTap {
     /// What a volume key does to the stream. Set once by the app.
     var onKey: ((VolumeKey) -> Void)?
     private var isWanted = false
+    private var accessAsk = VolumeKeyAccessAsk()
     private var tap: CFMachPort?
     private var source: CFRunLoopSource?
 
     /// The stream window became key or resigned key. Keys are taken only while it is key and access is granted.
     func setStreamIsKey(_ isKey: Bool) {
+        if isKey, accessAsk.shouldAsk(granted: VolumeKeyAccess.isGranted) { VolumeKeyAccess.requestAccess() }
         guard isKey, VolumeKeyAccess.isGranted else { disable(); return }
         if tap == nil { install() }
         isWanted = true
