@@ -307,7 +307,7 @@ struct QualityPane: View {
                     }
                 }
                 if awdl.refusedThisApp {
-                    Label(AWDLHelperManager.refusalMessage, systemImage: "exclamationmark.triangle.fill")
+                    Label(awdl.refusalNotice, systemImage: "exclamationmark.triangle.fill")
                         .font(.footnote).foregroundStyle(.orange)
                 }
                 if case .unavailable(let why) = awdl.state {

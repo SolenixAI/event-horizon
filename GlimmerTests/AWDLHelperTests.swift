@@ -301,6 +301,23 @@ private final class HelperTestListener: NSObject, NSXPCListenerDelegate, Sendabl
         #expect(!manager.refusedThisApp)
     }
 
+    @Test(arguments: [false, true])
+    func theNoticeNamesTheFixForWhyTheHelperFailed(appSigned: Bool) async throws {
+        let harness = try HelperHarness()
+        defer { harness.cleanUp() }
+        harness.refuseDown = true
+        harness.appSigned = appSigned
+        let manager = harness.makeManager()
+
+        manager.suppressForStream()
+        #expect(await harness.refusedThrice.waitAsync(for: .seconds(10)) == .success)
+        try await Task.sleep(for: .milliseconds(100))
+        // The helper trusts its own team, so it cannot refuse a team-signed app:
+        // failing calls then mean launchd could not start it, which a restart fixes.
+        #expect(manager.refusalNotice == (appSigned
+            ? AWDLHelperManager.notRunningMessage : AWDLHelperManager.refusalMessage))
+    }
+
     @Test func theHelperIsTriedAgainOnlyAfterTheCooldown() async throws {
         let harness = try HelperHarness()
         defer { harness.cleanUp() }

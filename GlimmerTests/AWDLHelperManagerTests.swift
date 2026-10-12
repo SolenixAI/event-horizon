@@ -35,6 +35,8 @@ final class HelperHarness {
     /// A helper that refuses every call, as an unsigned build's helper does.
     var refuseDown = false
     var refusals = 0
+    /// Whether this copy of the app carries a signing team, as an installed release does.
+    var appSigned = false
     let refusedThrice = DispatchSemaphore(value: 0)
     var clockNow = Date(timeIntervalSince1970: 1_000_000)
     var releaseGate: HelperGate?
@@ -100,6 +102,7 @@ final class HelperHarness {
             },
             invalidate: { self.events.append("invalidate") },
             reachable: { self.reachable },
+            appIsTeamSigned: { self.appSigned },
             count: {
                 if let client = self.client { return await client.reSuppressCount() }
                 await self.countGate?.wait()
