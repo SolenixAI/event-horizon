@@ -368,3 +368,19 @@ private final class HelperTestListener: NSObject, NSXPCListenerDelegate, Sendabl
         #expect(HelperService.clientRequirement(team: team) == nil)
     }
 }
+
+/// The daemon plist names the app that owns the helper, so System Settings
+/// groups it under Event Horizon. A stale identifier from a rename is caught here.
+@Suite struct HelperDaemonPlistTests {
+    private static let plistURL = URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent() // GlimmerTests
+        .deletingLastPathComponent() // repository root
+        .appendingPathComponent("helper/\(HelperConstants.daemonPlistName)")
+
+    @Test func theHelperIsAssociatedWithThisApp() throws {
+        let data = try Data(contentsOf: Self.plistURL)
+        let plist = try #require(try PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any])
+        let appIdentifier = try #require(Bundle.main.bundleIdentifier)
+        #expect(plist["AssociatedBundleIdentifiers"] as? [String] == [appIdentifier])
+    }
+}
