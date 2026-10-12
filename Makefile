@@ -241,6 +241,15 @@ endif
 # can stand in for the installed one. Only the installed app stays registered.
 install: release
 	@SRC="$(DERIVED)/Build/Products/Release/Event Horizon.app"; \
+	team() { codesign -dv "$$1" 2>&1 | sed -n 's/^TeamIdentifier=//p' | grep -v '^not set$$'; }; \
+	OLD_TEAM=$$( [ -d "$(GLIMMER_APP_DST)" ] && team "$(GLIMMER_APP_DST)" ); \
+	if [ -n "$$OLD_TEAM" ] && [ -z "$$(team "$$SRC")" ]; then \
+		echo "ERR: the installed app is signed by team $$OLD_TEAM, but this build is ad hoc." >&2; \
+		echo "     An ad hoc install resets permissions and the Wi-Fi helper refuses it." >&2; \
+		echo "     Restore the Apple Development certificate (security find-identity -v -p codesigning)," >&2; \
+		echo "     or pass ALLOW_ADHOC=1 to install it anyway." >&2; \
+		[ "$(ALLOW_ADHOC)" = 1 ] || exit 1; \
+	fi; \
 	echo "▶ Installing Event Horizon.app to $(GLIMMER_APP_DST)..."; \
 	if [ -d "$(GLIMMER_APP_DST)" ]; then echo "  removing existing $(GLIMMER_APP_DST)"; rm -rf "$(GLIMMER_APP_DST)"; fi; \
 	cp -R "$$SRC" "$(GLIMMER_APP_DST)"; \
