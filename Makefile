@@ -135,7 +135,7 @@ release:
 		$(MAKE) CONFIG=Release sign; \
 	fi
 
-# Build + run the hostless GlimmerTests unit-test bundle (swift-testing).
+# Build + run the app-hosted GlimmerTests unit-test bundle (swift-testing; TEST_HOST = the Debug app).
 # Mirrors the app build invocation (same xcconfig +
 # CODE_SIGNING_ALLOWED=NO) then runs the scheme's Test action. The shared
 # Glimmer scheme's BuildAction builds ONLY the app, so `make app`/`make dist`

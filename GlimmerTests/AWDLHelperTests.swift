@@ -380,6 +380,7 @@ private final class HelperTestListener: NSObject, NSXPCListenerDelegate, Sendabl
     @Test func theHelperIsAssociatedWithThisApp() throws {
         let data = try Data(contentsOf: Self.plistURL)
         let plist = try #require(try PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any])
+        // GlimmerTests is app-hosted (TEST_HOST), so Bundle.main is the app under test.
         let appIdentifier = try #require(Bundle.main.bundleIdentifier)
         #expect(plist["AssociatedBundleIdentifiers"] as? [String] == [appIdentifier])
     }
