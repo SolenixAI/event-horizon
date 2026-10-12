@@ -32,6 +32,7 @@
 		040BDEEE8B8E58AC0375BF3A /* StreamingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 448F2B492E4B38A0CFF51260 /* StreamingState.swift */; };
 		086CF5A56FDAE0E5A8341CEA /* Event Horizon Login Helper.app in Embed Login Helper */ = {isa = PBXBuildFile; fileRef = 68E50C51912216A5F5FDA2C6 /* Event Horizon Login Helper.app */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		109EA4B557EB9EFC0400C751 /* AWDLHelperManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C2C61CA646A8599B4EC06C5 /* AWDLHelperManager.swift */; };
+		DEC0DE202610121710000002 /* AWDLHelperManager+Signing.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202610121710000001 /* AWDLHelperManager+Signing.swift */; };
 		DEC0DE202609256700000001 /* AWDLStreamLease.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202609256700000002 /* AWDLStreamLease.swift */; };
 		DEC0DE202609256700000005 /* AWDLStreamLease.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202609256700000004 /* AWDLStreamLease.swift */; };
 		14DC834601C3BEE65839AC02 /* KeyboardScanMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 398ABCA94CDDF4D5B2770B8F /* KeyboardScanMap.swift */; };
@@ -498,6 +499,7 @@
 		DEC0DE202610020000000014 /* FuzzTests+Stream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FuzzTests+Stream.swift"; sourceTree = "<group>"; };
 		1A6B7F5AA2DBCDB1B8D9A413 /* HostsStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HostsStore.swift; sourceTree = "<group>"; };
 		2C2C61CA646A8599B4EC06C5 /* AWDLHelperManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AWDLHelperManager.swift; sourceTree = "<group>"; };
+		DEC0DE202610121710000001 /* AWDLHelperManager+Signing.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "AWDLHelperManager+Signing.swift"; sourceTree = "<group>"; };
 		DEC0DE202609256700000002 /* AWDLStreamLease.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AWDLStreamLease.swift; sourceTree = "<group>"; };
 		DEC0DE202609256700000004 /* AWDLStreamLease.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../Glimmer/AWDLStreamLease.swift; sourceTree = "<group>"; };
 		398ABCA94CDDF4D5B2770B8F /* KeyboardScanMap.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = KeyboardScanMap.swift; path = Stream/KeyboardScanMap.swift; sourceTree = "<group>"; };
@@ -1284,6 +1286,7 @@
 				A647C41163064ECDA1D86EA8 /* MacSystemStats.swift */,
 				71A5B2E11628E68BFAF05421 /* AppIcon.icon */,
 				2C2C61CA646A8599B4EC06C5 /* AWDLHelperManager.swift */,
+				DEC0DE202610121710000001 /* AWDLHelperManager+Signing.swift */,
 				DEC0DE202609258300000002 /* Protocol.swift */,
 				DEC0DE202609256700000002 /* AWDLStreamLease.swift */,
 				48756631ACFBD0A1FFEBD539 /* ControlTransport.swift */,
@@ -1861,6 +1864,7 @@
 				026FD8A0211FCD7B527606B0 /* StatsOverlaySettings.swift in Sources */,
 				FB153DF267467B06C6BE3467 /* MacSystemStats.swift in Sources */,
 				109EA4B557EB9EFC0400C751 /* AWDLHelperManager.swift in Sources */,
+				DEC0DE202610121710000002 /* AWDLHelperManager+Signing.swift in Sources */,
 				DEC0DE202609258300000001 /* Protocol.swift in Sources */,
 				DEC0DE202609256700000001 /* AWDLStreamLease.swift in Sources */,
 				C6C5CBE04F4781BF9891C433 /* ControlTransport.swift in Sources */,
