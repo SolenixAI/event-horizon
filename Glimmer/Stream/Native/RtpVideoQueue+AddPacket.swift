@@ -164,7 +164,7 @@ extension RtpVideoQueue {
            isFecRecoveryStillPossible(),
            receiveTimeUs &- bufferFirstRecvTimeUs < Self.reorderWindowUs {
             deferredDatagram = (rtp.bytes, receiveTimeUs)
-            TelemetryCounters.shared.reorderHoldTakenTotal.increment()
+            counters.reorderHoldTakenTotal.increment()
             return .finished(.queued)
         }
 
@@ -175,7 +175,7 @@ extension RtpVideoQueue {
                     + "(block \(multiFecCurrentBlockNumber + 1)/\(multiFecLastBlockNumber + 1)): "
                     + "\(receivedDataPackets)+\(receivedParityPackets) < \(bufferDataPackets) needed", Self.cat)
                 if currentFrameNumber == frameIndex {
-                    TelemetryCounters.shared.unrecoverableFrameTotal.increment()
+                    counters.unrecoverableFrameTotal.increment()
                     purgeAll()
                     if !reportedLostFrame {
                         depacketizer.queueLostFrame(Int(currentFrameNumber))
@@ -189,7 +189,7 @@ extension RtpVideoQueue {
             } else {
                 Diag.warn("NativeVideo unrecoverable frame \(currentFrameNumber): "
                     + "\(receivedDataPackets)+\(receivedParityPackets)=\(pending.count) < \(bufferDataPackets) needed", Self.cat)
-                TelemetryCounters.shared.unrecoverableFrameTotal.increment()
+                counters.unrecoverableFrameTotal.increment()
             }
         }
 
@@ -197,7 +197,7 @@ extension RtpVideoQueue {
         if fields.fecCurrentBlockNumber != expectedFecBlock {
             Diag.warn("NativeVideo unrecoverable frame \(frameIndex): lost FEC blocks "
                 + "\(expectedFecBlock + 1)..\(fields.fecCurrentBlockNumber)", Self.cat)
-            TelemetryCounters.shared.unrecoverableFrameTotal.increment()
+            counters.unrecoverableFrameTotal.increment()
             purgeAll()
             if !reportedLostFrame {
                 depacketizer.queueLostFrame(Int(currentFrameNumber))
@@ -271,7 +271,7 @@ extension RtpVideoQueue {
             // never reorder frames into the depacketizer; we only delayed the
             // loss DECISION). Replay drives addPacket re-entrantly, but the
             // one-deep slot is cleared first so depth is bounded to 1.
-            if deferredDatagram != nil { TelemetryCounters.shared.reorderHoldRescuedTotal.increment() }
+            if deferredDatagram != nil { counters.reorderHoldRescuedTotal.increment() }
             replayDeferredDatagram()
         }
     }

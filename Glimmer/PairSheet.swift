@@ -159,7 +159,8 @@ struct PairSheet: View {
                 // The PC made this code. The person checks it matches before Allow;
                 // the Sunshine PIN is never shown on this path.
                 CodeTiles(code: code)
-                Text("Check that your PC shows \(CompanionClient.spaced(code)), then click Allow there.")
+                Text("Check that your PC shows \(CompanionClient.spaced(code)), then click Allow there, "
+                     + "or on a Mac that already streams from it.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             } else if case .awaitingPin = model.pairingPhase, !model.pairingViaCompanion {

@@ -118,3 +118,32 @@ struct CompanionLeaseTests {
         #expect(CompanionClient.leaseOutcome(statusCode: 503) == .unreachable)
     }
 }
+
+/// A Mac the PC already trusts sees other Macs' requests with their codes.
+struct CompanionWaitingTests {
+    @Test func waitingMacsAreReadWithTheirCodes() {
+        let body: [String: Any] = ["waiting": [["mac_id": "mac-b", "mac_name": "Raptor", "code": "123456"]]]
+        #expect(CompanionClient.waiting(from: body)
+            == [CompanionClient.WaitingMac(macID: "mac-b", macName: "Raptor", code: "123456")])
+    }
+
+    @Test func malformedEntriesAreDropped() {
+        let body: [String: Any] = ["waiting": [
+            ["mac_id": "", "mac_name": "A", "code": "123456"],
+            ["mac_id": "b", "mac_name": "B", "code": "12345"],
+            ["mac_id": "c", "mac_name": "C", "code": "12345x"],
+            ["mac_id": "d", "mac_name": "D"]
+        ]]
+        #expect(CompanionClient.waiting(from: body).isEmpty)
+        #expect(CompanionClient.waiting(from: [:]).isEmpty)
+    }
+
+    @Test func theAlertNamesTheMacThePcAndTheSpacedCode() {
+        let den = Host(id: "pc-1", name: "den", customName: "Den PC", localAddress: "192.0.2.10",
+                       manualAddress: nil, apps: [], lastConnected: nil, serverCertPEM: nil,
+                       appVersion: nil, macAddress: nil)
+        let approval = AppModel.approval(.init(macID: "mac-b", macName: "Raptor", code: "123456"), on: den)
+        #expect(approval == WaitingApproval(hostID: "pc-1", pcName: "Den PC", macID: "mac-b",
+                                            macName: "Raptor", code: "123 456"))
+    }
+}

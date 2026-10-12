@@ -31,6 +31,14 @@ struct CompanionClient: Sendable {
         case renewed, refused, unreachable
     }
 
+    /// Another Mac asking this PC to pair, as a Mac the PC trusts sees it.
+    struct WaitingMac: Equatable, Sendable, Identifiable {
+        let macID: String
+        let macName: String
+        let code: String
+        var id: String { macID }
+    }
+
     enum ForgetOutcome: Equatable, Sendable {
         case forgotten, unreachable
     }
@@ -151,6 +159,44 @@ struct CompanionClient: Sendable {
         case 401, 403: .refused
         default: .unreachable
         }
+    }
+
+    /// Other Macs waiting for an answer from this PC. A PC with its monitor off
+    /// is answered on a Mac it already trusts.
+    func waiting(token: String) async -> [WaitingMac] {
+        guard let url = url("/pair/waiting") else { return [] }
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        guard let (data, response) = try? await send(request, timeout: 3),
+              (response as? HTTPURLResponse)?.statusCode == 200,
+              let body = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else { return [] }
+        return Self.waiting(from: body)
+    }
+
+    /// The waiting Macs in the PC's answer. Pure, so it is tested directly.
+    static func waiting(from body: [String: Any]) -> [WaitingMac] {
+        (body["waiting"] as? [[String: Any]] ?? []).compactMap { entry in
+            guard let id = entry["mac_id"] as? String, !id.isEmpty,
+                  let name = entry["mac_name"] as? String,
+                  let code = entry["code"] as? String, code.count == 6,
+                  code.allSatisfy({ $0.isASCII && $0.isNumber })
+            else { return nil }
+            return WaitingMac(macID: id, macName: name, code: code)
+        }
+    }
+
+    /// Allow or deny another Mac's request. True when the PC took the answer.
+    func decide(token: String, macID: String, allow: Bool) async -> Bool {
+        guard let escaped = macID.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
+              let url = url("/pair/waiting/\(escaped)") else { return false }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: ["allow": allow])
+        let response = try? await send(request, timeout: 5).1
+        return (response as? HTTPURLResponse)?.statusCode == 204
     }
 
     /// Remove this Mac from the PC. A 401 means the PC has no record of this

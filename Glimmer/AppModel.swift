@@ -582,6 +582,10 @@ final class AppModel {
     /// The launch the user last asked for, so Retry repeats exactly that.
     @ObservationIgnored var lastLaunchAttempt: (app: LibraryApp, host: Host)?
 
+    /// Another Mac waiting for this Mac to approve it on one of its PCs.
+    var waitingApproval: WaitingApproval?
+    @ObservationIgnored var approvalWatchTask: Task<Void, Never>?
+
     /// The stream a re-pair interrupted: offered as Stream Now once that PC pairs.
     @ObservationIgnored var streamAfterPairing: (app: LibraryApp, host: Host)?
 
@@ -591,8 +595,4 @@ final class AppModel {
 
     /// Why the last wake attempt failed, alongside `wakeFailedHostID`.
     var wakeFailureReason: WakeFailureReason?
-
-    enum WakeFailureReason {
-        case noAnswer, couldNotSend
-    }
 }

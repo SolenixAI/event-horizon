@@ -121,9 +121,10 @@ struct RtpVideoQueueRecoveryTests {
     /// On a reordering link, the next frame's first packet is held while the
     /// current frame's late shard lands; the frame completes and counts as rescued.
     @Test func reorderHoldIsTakenAndRescued() {
-        let counters = TelemetryCounters.shared
+        let counters = TelemetryCounters()
         let taken = counters.reorderHoldTakenTotal.value, rescued = counters.reorderHoldRescuedTotal.value
         let queue = makeQueue(av1: true)
+        queue.counters = counters
         queue.receivedOosData = true
         queue.addRawDatagram(datagram(seq: 0, frame: 1, fecIndex: 0, flags: RtpVideoQueue.FLAG_SOF),
                              receiveTimeUs: 1_000)

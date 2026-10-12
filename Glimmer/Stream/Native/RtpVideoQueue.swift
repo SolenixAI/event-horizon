@@ -76,6 +76,8 @@ final class RtpVideoQueue {
 
     let depacketizer: VideoDepacketizer
     let packetSize: Int
+    /// Where this queue reports its counts: the app-wide set unless a test gives it its own.
+    var counters: TelemetryCounters = .shared
 
     // Queue state (mirrors RTP_VIDEO_QUEUE). `internal` where the reconstruct
     // extension also reads/writes them (see the visibility note at the top).
@@ -421,7 +423,6 @@ final class RtpVideoQueue {
         // per-packet so the hot receive path adds nothing - the increments are
         // off the per-datagram path. Always live; the exporter only reads them
         // when telemetry is on.
-        let counters = TelemetryCounters.shared
         counters.videoPacketsTotal.increment(by: UInt64(max(0, packetsInWindow)))
         counters.videoFramesTotal.increment(by: UInt64(max(0, framesInWindow)))
         counters.fecRecoveredFramesTotal.increment(by: UInt64(max(0, fecRecoveredFramesInWindow)))
