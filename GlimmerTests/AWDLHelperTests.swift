@@ -311,11 +311,32 @@ private final class HelperTestListener: NSObject, NSXPCListenerDelegate, Sendabl
 
         manager.suppressForStream()
         #expect(await harness.refusedThrice.waitAsync(for: .seconds(10)) == .success)
+        // A team-signed app re-registers its helper once and tries again first.
+        if appSigned { #expect(await harness.refusedThrice.waitAsync(for: .seconds(10)) == .success) }
         try await Task.sleep(for: .milliseconds(100))
         // The helper trusts its own team, so it cannot refuse a team-signed app:
-        // failing calls then mean launchd could not start it, which a restart fixes.
+        // failing calls then mean launchd could not start it.
         #expect(manager.refusalNotice == (appSigned
             ? AWDLHelperManager.notRunningMessage : AWDLHelperManager.refusalMessage))
+    }
+
+    /// A registration made while another copy of the app was registered can leave a launch
+    /// rule the helper never passes. A signed app clears it by registering again, once.
+    @Test func aSignedAppReRegistersItsHelperOnceBeforeGivingUp() async throws {
+        let harness = try HelperHarness()
+        defer { harness.cleanUp() }
+        harness.refuseDown = true
+        harness.appSigned = true
+        let manager = harness.makeManager()
+
+        manager.suppressForStream()
+        #expect(await harness.refusedThrice.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.registered.waitAsync(for: .seconds(10)) == .success)
+        #expect(await harness.refusedThrice.waitAsync(for: .seconds(10)) == .success)
+        try await Task.sleep(for: .milliseconds(100))
+        #expect(manager.refusedThisApp)
+        #expect(harness.events.filter { $0 == "register" }.count == 1)
+        #expect(harness.refusals == 6)
     }
 
     @Test func theHelperIsTriedAgainOnlyAfterTheCooldown() async throws {

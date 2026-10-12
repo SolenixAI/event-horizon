@@ -180,6 +180,7 @@ final class AWDLHelperManager: ObservableObject {
     private var restorationTask: Task<Void, Never>?
     private var requestID = 0
     private var streamRequested = false
+    private var repairTried = false
     /// Set when the helper refused three calls in a row. Until then no stream starts it
     /// and no registration repair runs: each call starts the daemon, and each start
     /// toggles awdl0 under the stream.
@@ -189,23 +190,7 @@ final class AWDLHelperManager: ObservableObject {
     /// The helper refused this copy of the app (its signature is not the helper's
     /// team), so Wi-Fi streams run with AirDrop's radio on. Settings says so.
     var refusedThisApp: Bool { refusalActive }
-    static let refusalMessage = "The network helper didn't accept this copy of Event Horizon, so Wi-Fi streams "
-        + "may stutter. Use the copy in Applications, signed by the same developer as the helper."
-    /// A team-signed app is never refused, so failing calls mean launchd could not start
-    /// the helper - after a signing change it keeps the old rule until a restart.
-    static let notRunningMessage = "The network helper couldn't start, so Wi-Fi streams may stutter. "
-        + "Restart your Mac to finish setting it up."
     var refusalNotice: String { operations.appIsTeamSigned() ? Self.notRunningMessage : Self.refusalMessage }
-
-    /// This copy's signing team, read from its own signature (nil when unsigned or ad hoc).
-    nonisolated static func ownTeam() -> String? {
-        var code: SecCode?, staticCode: SecStaticCode?, info: CFDictionary?
-        guard SecCodeCopySelf([], &code) == errSecSuccess, let code,
-              SecCodeCopyStaticCode(code, [], &staticCode) == errSecSuccess, let staticCode,
-              SecCodeCopySigningInformation(staticCode, SecCSFlags(rawValue: kSecCSSigningInformation), &info)
-                == errSecSuccess, let dict = info as? [String: Any] else { return nil }
-        return dict[kSecCodeInfoTeamIdentifier as String] as? String
-    }
     private let log = Logger(subsystem: "dev.solenix.eventhorizon", category: "AWDLHelper")
     private static let promptSuppressedKey = "awdlHelperPromptSuppressed"
     /// Saved intent lets registration self-heal after an update without undoing an explicit off choice.
@@ -476,6 +461,15 @@ final class AWDLHelperManager: ObservableObject {
                 // A daemon that refuses us (an unsigned build fails its code
                 // requirement) will refuse every second: stop asking this stream.
                 misses = down ? 0 : misses + 1
+                if misses >= 3, operations.appIsTeamSigned(), !repairTried {
+                    // Its own team's helper never refuses this app, so it did not start:
+                    // a stale launch rule. Registering again replaces it, once per launch.
+                    repairTried = true
+                    Diag.notice("AWDL helper did not start - registering it again once", "Stream")
+                    heartbeatTask = nil
+                    enable()
+                    break
+                }
                 if misses >= 3 {
                     Diag.notice("AWDL helper refused 3 times - awdl0 left to macOS; no retry for \(Int(Self.refusalCooldown)) s", "Stream")
                     refusedUntil = operations.now().addingTimeInterval(Self.refusalCooldown)
