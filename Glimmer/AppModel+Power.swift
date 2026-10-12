@@ -312,3 +312,9 @@ final class WakeNotifier: NSObject, UNUserNotificationCenterDelegate {
         if connect { model.streamHeroApp() } else { model.wakeHost(host, thenConnect: true) }
     }
 }
+
+extension AppModel {
+    enum WakeFailureReason {
+        case noAnswer, couldNotSend
+    }
+}

@@ -1,6 +1,9 @@
 # See https://pre-commit.com for usage.
 # Install hooks once:  pre-commit install
 # Run on all files:    pre-commit run --all-files
+# A conflict-free `git merge` skips pre-commit, so SwiftLint also runs on
+# pre-merge-commit: a merge can push a file past a limit with no edit of ours.
+default_install_hook_types: [pre-commit, pre-merge-commit, pre-push]
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -113,7 +116,7 @@ repos:
         files: ^(Glimmer|GlimmerTests|helper|LoginHelper)/
         pass_filenames: true
         require_serial: true
-        stages: [pre-commit]
+        stages: [pre-commit, pre-merge-commit]
 
   # Unit-test gate on PUSH (not commit). `make test` runs the GlimmerTests
   # suite via xcodebuild - far heavier than the lint/secret hooks, so it's a

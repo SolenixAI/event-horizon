@@ -595,8 +595,4 @@ final class AppModel {
 
     /// Why the last wake attempt failed, alongside `wakeFailedHostID`.
     var wakeFailureReason: WakeFailureReason?
-
-    enum WakeFailureReason {
-        case noAnswer, couldNotSend
-    }
 }
