@@ -144,7 +144,9 @@ test:
 	@scripts/generate-build-info.sh
 	xcodebuild test -project Glimmer.xcodeproj -scheme Glimmer -configuration Debug \
 	  -xcconfig $(STREAM_XCCONFIG) \
-	  CODE_SIGNING_ALLOWED=NO -derivedDataPath $(DERIVED) -destination 'platform=macOS'
+	  CODE_SIGNING_ALLOWED=NO -derivedDataPath $(DERIVED) -destination 'platform=macOS'; \
+	  rc=$$?; /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister \
+	  -u "$(DERIVED)/Build/Products/Debug/Event Horizon.app" 2>/dev/null; exit $$rc
 
 app:
 	@echo "▶ Building Event Horizon.app ($(CONFIG))..."
