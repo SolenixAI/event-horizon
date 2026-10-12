@@ -143,7 +143,6 @@ extension RtpVideoQueue {
         // sub-µs locked add amortizes into dead air already paid; the steady
         // sub-threshold case adds exactly one compare.
         if gapUs > 20_000 {
-            let counters = TelemetryCounters.shared
             counters.videoGapOver20msTotal.increment()
             if gapUs > 50_000 { counters.videoGapOver50msTotal.increment() }
             if gapUs > 100_000 { counters.videoGapOver100msTotal.increment() }

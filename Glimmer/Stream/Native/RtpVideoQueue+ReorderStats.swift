@@ -54,7 +54,7 @@ extension RtpVideoQueue {
         // the only reorder signal worth alerting on.
         let holdMs = Double(Self.reorderWindowUs) / 1000.0
         if dispMs > holdMs {
-            TelemetryCounters.shared.reorderHoldExceededTotal.increment()
+            counters.reorderHoldExceededTotal.increment()
         }
         // Distribution (telemetry-gated; ~46 observations per reference session).
         if let tracker = FrameTimingTracker.shared {
@@ -67,7 +67,7 @@ extension RtpVideoQueue {
     /// (maybeLogMetrics, ~2s cadence). Session-lifetime maxes + the hold,
     /// so the exporter can emit the margin without touching this thread.
     func publishReorderDisplacementGauge() {
-        TelemetryCounters.shared.setReorderDisplacement(
+        counters.setReorderDisplacement(
             TelemetryCounters.ReorderDisplacementSnapshot(
                 maxMs: reorderDispSessionMaxMs,
                 maxPackets: reorderDispSessionMaxPackets,
