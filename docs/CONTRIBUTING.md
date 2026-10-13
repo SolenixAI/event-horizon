@@ -33,7 +33,7 @@ needs, and [SECURITY.md](SECURITY.md) covers the root helper.
 | `Glimmer/Models/`            | The PC record and a few settings types                                                       |
 | `helper/`                    | The opt-in root daemon that parks AirDrop's radio during a stream                            |
 | `LoginHelper/`               | The login item                                                                               |
-| `GlimmerTests/`              | Hostless unit tests                                                                          |
+| `GlimmerTests/`              | Unit tests, hosted in the Debug app                                                          |
 | `companion/`                 | The PC companion (Rust)                                                                      |
 | `scripts/`                   | Build, signing and release tooling the Makefile calls                                        |
 | `docs/agents/`               | Where agent skills find the issue tracker, triage labels and domain docs                     |
