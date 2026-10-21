@@ -48,8 +48,7 @@ repos:
     hooks:
       - id: markdownlint
         args: ["--fix", "--disable", "MD013", "MD029", "MD036", "MD041"]
-        # AGENTS.md is Arbiter, copied byte for byte from its release.
-        exclude: ^(third_party/|AGENTS\.md$)
+        exclude: ^third_party/
 
   # Prettier - yaml/markdown/json formatting.
   - repo: https://github.com/pre-commit/mirrors-prettier
@@ -58,7 +57,7 @@ repos:
       - id: prettier
         types_or: [yaml, markdown, json]
         args: ["--prose-wrap=always"]
-        exclude: ^(third_party/|AGENTS\.md$)
+        exclude: ^third_party/
 
   # Secret scanning via TruffleHog (replaces gitleaks).
   # Runs in --pre-commit / --staged mode against verifiable detectors so a

@@ -92,9 +92,7 @@ make
 compile-checks, `make test` runs the unit tests, and `make uninstall` removes
 it. The PC companion builds with `cargo build --release` in `companion/`. Start
 with [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and
-[docs/CONTRIBUTING.md](docs/CONTRIBUTING.md). Agents also follow
-[AGENTS.md](AGENTS.md), the [Arbiter](https://github.com/SolenixAI/arbiter)
-operating rules.
+[docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).
 
 ## Credits and license
 
