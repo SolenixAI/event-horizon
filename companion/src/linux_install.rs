@@ -391,12 +391,12 @@ fn companion_service(cmd: &dyn Commands, files: &dyn Files, layout: &Layout) -> 
     cmd.run("systemctl", &["--user", "restart", SERVICE])
 }
 
-/// The Sunshine watchdog's user unit: it restarts a wedged Sunshine. Restart=always
-/// keeps the watchdog itself running.
+/// The Sunshine watchdog's user unit: it restarts a wedged or stale Flatpak
+/// Sunshine after a stream ends. Restart=always keeps the watchdog running.
 fn watchdog_service(cmd: &dyn Commands, files: &dyn Files, layout: &Layout) -> Result<(), String> {
     let exe = layout.installed_companion();
     let unit = format!(
-        "[Unit]\nDescription=Event Horizon Sunshine watchdog: restarts Sunshine when it stops answering and no stream is live\nPartOf=graphical-session.target\nAfter=graphical-session.target\n\n[Service]\nExecStart={} sunshine-watchdog\nRestart=always\nRestartSec=10\n\n[Install]\nWantedBy=graphical-session.target\n",
+        "[Unit]\nDescription=Event Horizon Sunshine watchdog: repairs Sunshine health when no stream is live\nPartOf=graphical-session.target\nAfter=graphical-session.target\n\n[Service]\nExecStart={} sunshine-watchdog\nRestart=always\nRestartSec=10\n\n[Install]\nWantedBy=graphical-session.target\n",
         exe.display()
     );
     files.write(&layout.units().join(WATCHDOG_SERVICE), &unit)?;

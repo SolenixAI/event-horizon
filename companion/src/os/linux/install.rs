@@ -1,7 +1,7 @@
 //! `install` on Linux: the steps are in `linux_install`. This wires in the
 //! real PC: its environment, its files and its commands.
 
-use crate::linux_install::{self, Layout, SystemCommands, SystemFiles};
+use crate::linux_install::{self, Commands, Files, Layout, SystemCommands, SystemFiles};
 use crate::virtual_screen::screen_size;
 use std::path::Path;
 
@@ -49,14 +49,47 @@ fn layout(config_dir: &Path) -> Result<Layout, String> {
     Ok(Layout::from_env(config_dir, exe))
 }
 
-/// Keeps Sunshine answering: restarts it when its port stops answering and no stream is live.
+/// Keeps Sunshine healthy: restarts it when its port stops answering or its
+/// NVIDIA Flatpak extension changes, after any live stream ends.
 pub fn sunshine_watchdog(config_dir: &Path) -> Result<(), String> {
     let layout = layout(config_dir)?;
     let start = std::time::Instant::now();
     let answering = || port_answers(crate::sunshine_watchdog::HTTP_PORT);
-    crate::sunshine_watchdog::run(&SystemCommands, &SystemFiles, &layout, &answering, &|| {
-        start.elapsed()
-    })
+    let stale_nvidia_extension = || stale_nvidia_flatpak_extension();
+    crate::sunshine_watchdog::run(
+        &SystemCommands,
+        &SystemFiles,
+        &layout,
+        &answering,
+        &stale_nvidia_extension,
+        &|| start.elapsed(),
+    )
+}
+
+/// Checks Sunshine itself, not systemd's Flatpak wrapper: Flatpak puts the
+/// sandbox process in a dynamic `.scope` below the service unit's cgroup.
+/// The instance metadata records each extension's commit; compare its NVIDIA
+/// driver extension against Flatpak's active deployment.
+fn stale_nvidia_flatpak_extension() -> bool {
+    let pids = SystemCommands
+        .capture("pgrep", &["-x", "sunshine"])
+        .unwrap_or_default();
+    pids.lines()
+        .filter_map(|pid| pid.trim().parse::<u32>().ok())
+        .any(|pid| {
+            let metadata = Path::new("/proc")
+                .join(pid.to_string())
+                .join("root/.flatpak-info");
+            SystemFiles.read(&metadata).is_some_and(|text| {
+                crate::sunshine_watchdog::nvidia_extension_commits(&text)
+                    .iter()
+                    .any(|(id, running_commit)| {
+                        SystemCommands
+                            .capture("flatpak", &["--user", "info", "--show-commit", id.as_str()])
+                            .is_ok_and(|active_commit| active_commit.trim() != running_commit)
+                    })
+            })
+        })
 }
 
 /// Whether something accepts connections on the port, on this PC.

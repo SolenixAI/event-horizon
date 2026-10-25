@@ -1,9 +1,9 @@
-//! The Sunshine watchdog: restarts Sunshine when it stops answering on its HTTP port
-//! and no stream is live. Sunshine can wedge at startup in its screen capture, a
-//! portal call that never returns, and nothing else brings it back. A live stream
-//! is never touched.
+//! The Sunshine watchdog: restarts Sunshine when its HTTP port stays down or its
+//! NVIDIA Flatpak extension has changed since the running sandbox started. A live
+//! stream is never touched.
 
 use crate::linux_install::{Commands, Files, Layout, SUNSHINE_SERVICE};
+use std::collections::HashMap;
 use std::time::Duration;
 
 /// Sunshine's HTTP port. It stops accepting connections when Sunshine wedges.
@@ -54,6 +54,79 @@ impl Watch {
         self.down_since = None;
         Step::Restart
     }
+
+    /// A Sunshine process can keep its HTTP API alive while still using an
+    /// old NVIDIA Flatpak extension after an update. That state is
+    /// conclusive, so restart as soon as no stream is live rather than waiting
+    /// for the HTTP-port timeout.
+    pub fn step_with_stale_nvidia_extension(
+        &mut self,
+        now: Duration,
+        answering: bool,
+        streaming: bool,
+        stale_nvidia_extension: bool,
+    ) -> Step {
+        if streaming {
+            self.down_since = None;
+            return Step::Fine;
+        }
+        if stale_nvidia_extension {
+            self.down_since = None;
+            if self
+                .last_restart
+                .is_some_and(|last| now.saturating_sub(last) < RESTART_GAP)
+            {
+                return Step::Wait;
+            }
+            self.last_restart = Some(now);
+            return Step::Restart;
+        }
+        self.step(now, answering, false)
+    }
+}
+
+/// Whether Sunshine's running Flatpak instance has an older NVIDIA driver
+/// extension than the one currently installed. `/.flatpak-info` is the
+/// effective metadata for a running Flatpak instance; its `runtime-extensions`
+/// values include exact commit IDs.
+pub fn has_stale_nvidia_extension(
+    instance_info: &str,
+    installed_commits: &HashMap<String, String>,
+) -> bool {
+    nvidia_extension_commits(instance_info)
+        .iter()
+        .any(|(id, running)| {
+            installed_commits
+                .get(id)
+                .is_some_and(|active| active != running)
+        })
+}
+
+/// NVIDIA driver extension IDs and commit IDs recorded in a Flatpak instance.
+pub fn nvidia_extension_commits(instance_info: &str) -> Vec<(String, String)> {
+    let mut in_instance = false;
+    for line in instance_info.lines() {
+        let line = line.trim();
+        if line.starts_with('[') && line.ends_with(']') {
+            in_instance = line == "[Instance]";
+            continue;
+        }
+        if !in_instance {
+            continue;
+        }
+        let Some(value) = line.strip_prefix("runtime-extensions=") else {
+            continue;
+        };
+        return value
+            .split(';')
+            .filter_map(|extension| {
+                let (id, commit) = extension.split_once('=')?;
+                id.starts_with("org.freedesktop.Platform.GL.nvidia-")
+                    .then(|| (id.to_string(), commit.to_string()))
+            })
+            .collect();
+    }
+    Vec::new()
 }
 
 /// Whether a stream is live: the one-screen switch saves the outputs it turned off.
@@ -72,27 +145,61 @@ pub fn check(
     now: Duration,
     answering: bool,
 ) -> Result<Step, String> {
-    let step = watch.step(now, answering, streaming(files, layout));
+    check_with_stale_extension(cmd, files, layout, watch, now, answering, false)
+}
+
+fn check_with_stale_extension(
+    cmd: &dyn Commands,
+    files: &dyn Files,
+    layout: &Layout,
+    watch: &mut Watch,
+    now: Duration,
+    answering: bool,
+    stale_nvidia_extension: bool,
+) -> Result<Step, String> {
+    let step = watch.step_with_stale_nvidia_extension(
+        now,
+        answering,
+        streaming(files, layout),
+        stale_nvidia_extension,
+    );
     if step == Step::Restart {
-        eprintln!(
-            "sunshine watchdog: Sunshine stopped answering on port {HTTP_PORT}; restarting it"
-        );
+        if stale_nvidia_extension {
+            eprintln!(
+                "sunshine watchdog: Sunshine has a stale NVIDIA Flatpak extension; restarting it"
+            );
+        } else {
+            eprintln!(
+                "sunshine watchdog: Sunshine stopped answering on port {HTTP_PORT}; restarting it"
+            );
+        }
         cmd.run("systemctl", &["--user", "restart", SUNSHINE_SERVICE])?;
     }
     Ok(step)
 }
 
-/// Checks forever, every `CHECK_EVERY`. `answering` asks the port; `clock` gives the time.
+/// Checks forever, every `CHECK_EVERY`. `answering` asks the port, and
+/// `stale_nvidia_extension` compares Sunshine's loaded extension with Flatpak's
+/// active deployment. `clock` gives the time.
 pub fn run(
     cmd: &dyn Commands,
     files: &dyn Files,
     layout: &Layout,
     answering: &dyn Fn() -> bool,
+    stale_nvidia_extension: &dyn Fn() -> bool,
     clock: &dyn Fn() -> Duration,
 ) -> ! {
     let mut watch = Watch::default();
     loop {
-        if let Err(e) = check(cmd, files, layout, &mut watch, clock(), answering()) {
+        if let Err(e) = check_with_stale_extension(
+            cmd,
+            files,
+            layout,
+            &mut watch,
+            clock(),
+            answering(),
+            stale_nvidia_extension(),
+        ) {
             eprintln!("sunshine watchdog: {e}");
         }
         cmd.pause(CHECK_EVERY);
