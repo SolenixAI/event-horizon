@@ -7,6 +7,17 @@
 import Testing
 @testable import Glimmer
 
+@MainActor
+private final class FakeVolumeKeyPermission: VolumeKeyPermission {
+    var isGranted = false
+    private(set) var requestCount = 0
+
+    func requestAccess() -> Bool {
+        requestCount += 1
+        return false
+    }
+}
+
 struct VolumeKeyTests {
 
     /// The data1 word a system-defined media key carries: key type, state (0xA down, 0xB up), repeat bit.
@@ -31,6 +42,16 @@ struct VolumeKeyTests {
     @Test func otherMediaKeysAndOtherEventsAreIgnored() {
         #expect(VolumeKey.decode(subtype: 8, data1: data1(type: 2, down: true)) == nil)
         #expect(VolumeKey.decode(subtype: 7, data1: data1(type: 0, down: true)) == nil)
+    }
+
+    @MainActor @Test func aStreamWithoutAccessibilityDoesNotAskForIt() {
+        let permission = FakeVolumeKeyPermission()
+        let tap = VolumeKeyTap(permission: permission)
+
+        tap.setStreamIsKey(true)
+
+        #expect(permission.requestCount == 0)
+        tap.teardown()
     }
 
     @Test func aVolumeKeyStepsTheStreamLevel() {

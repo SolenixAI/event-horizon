@@ -26,12 +26,23 @@ enum VolumeKey: Equatable {
 }
 
 /// The Accessibility permission the volume keys need. Checking never prompts.
-enum VolumeKeyAccess {
-    static var isGranted: Bool { AXIsProcessTrusted() }
+@MainActor
+protocol VolumeKeyPermission {
+    var isGranted: Bool { get }
 
     /// Shows the system prompt from the explicit onboarding permission action.
     @discardableResult
-    static func requestAccess() -> Bool {
+    func requestAccess() -> Bool
+}
+
+@MainActor
+struct SystemVolumeKeyPermission: VolumeKeyPermission {
+    static let shared = SystemVolumeKeyPermission()
+
+    var isGranted: Bool { AXIsProcessTrusted() }
+
+    @discardableResult
+    func requestAccess() -> Bool {
         AXIsProcessTrustedWithOptions(["AXTrustedCheckOptionPrompt": true] as CFDictionary)
     }
 }
@@ -40,6 +51,12 @@ enum VolumeKeyAccess {
 @MainActor
 final class VolumeKeyTap {
     static let shared = VolumeKeyTap()
+
+    private let permission: any VolumeKeyPermission
+
+    init(permission: any VolumeKeyPermission = SystemVolumeKeyPermission.shared) {
+        self.permission = permission
+    }
 
     /// What a volume key does to the stream. Set once by the app.
     var onKey: ((VolumeKey) -> Void)?
@@ -51,7 +68,7 @@ final class VolumeKeyTap {
     /// volume keys keep their normal macOS behavior until the user enables them
     /// from the explicit permission action.
     func setStreamIsKey(_ isKey: Bool) {
-        guard isKey, VolumeKeyAccess.isGranted else { disable(); return }
+        guard isKey, permission.isGranted else { disable(); return }
         if tap == nil { install() }
         isWanted = true
         if let tap { CGEvent.tapEnable(tap: tap, enable: true) }
@@ -89,7 +106,7 @@ final class VolumeKeyTap {
         if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput, let tap {
             CGEvent.tapEnable(tap: tap, enable: true)
         }
-        guard isWanted, VolumeKeyAccess.isGranted, type.rawValue == 14,
+        guard isWanted, permission.isGranted, type.rawValue == 14,
               let mediaEvent = NSEvent(cgEvent: event),
               let key = VolumeKey.decode(subtype: Int(mediaEvent.subtype.rawValue), data1: mediaEvent.data1) else {
             return Unmanaged.passUnretained(event)
