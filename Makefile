@@ -1,16 +1,15 @@
 # Event Horizon - Mac-native game-streaming client.
 #
-# EVERYTHING BUT PUBLISH (the dev tier - notarized Release, installed, NOT
-# published). Every build here is byte-for-byte what ships - same Developer-ID
-# signing, notarization, and STRICT library validation - so there's no
-# adhoc/Debug divergence to chase:
-#   make                   Build (Release: Dev-ID + notarized) + install to
-#                          /Applications. Falls back to adhoc Release w/o a cert.
+# EVERYTHING BUT PUBLISH (the dev tier - Release, installed, NOT published).
+# With a Developer ID it is notarized and uses strict library validation. With
+# only Apple Development it uses the stable local identity; without either it
+# falls back to ad-hoc signing:
+#   make                   Build + install to /Applications.
 #   make dev               Run tests, then build + install + relaunch. Inner loop.
 #   make reinstall         Build + install + quit-and-relaunch (no tests).
 #   make install           Build + install, no relaunch (same as bare `make`).
 #   make open              Build + install + open.
-#   make release           Build the notarized Release app only (no install).
+#   make release           Build Release only (notarized with Developer ID when available).
 #   make app               Quick compile-only check (no signing / notarize).
 #   make test              Build + run the GlimmerTests unit-test bundle.
 #   make uninstall         Remove Event Horizon.app.
@@ -124,14 +123,18 @@ HELPER_TARGET := arm64-apple-macos26.0
 # `make dist`. Quick compile-only check: `make app`.
 all: install
 
-# Build the notarized Release app (everything but publish) WITHOUT installing.
-# Falls back to adhoc Release (un-notarized; TCC re-prompts) without a Dev ID cert.
+# Build the Release app (everything but publish) WITHOUT installing.
+# Prefer Developer ID + notarization; otherwise use the stable Apple Development
+# identity when available, and fall back to ad-hoc signing only without either.
 release:
 	@if [ -n "$(strip $(DEVELOPER_ID))" ]; then \
 		echo "  ▶ everything-but-publish: Developer ID + notarized (matches release)"; \
 		$(MAKE) CONFIG=Release notarize; \
+	elif [ -n "$(strip $(LOCAL_ID))" ]; then \
+		echo "  ▶ everything-but-publish: stable Apple Development signature (not notarized)"; \
+		$(MAKE) CONFIG=Release sign; \
 	else \
-		echo "  ▶ everything-but-publish: adhoc Release - no Developer ID cert (un-notarized; TCC re-prompts)"; \
+		echo "  ▶ everything-but-publish: ad-hoc Release - no signing identity (not notarized; TCC may re-prompt)"; \
 		$(MAKE) CONFIG=Release sign; \
 	fi
 
