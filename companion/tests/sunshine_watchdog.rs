@@ -1,5 +1,6 @@
 use event_horizon_companion::sunshine_watchdog::{
-    DOWN_FOR, RESTART_GAP, Step, Watch, has_stale_nvidia_extension, nvidia_extension_commits,
+    DOWN_FOR, RESTART_GAP, Step, Watch, flatpak_installation_option, flatpak_runtime_path,
+    has_stale_nvidia_extension, nvidia_extension_commits, nvidia_extension_id,
 };
 use std::collections::HashMap;
 use std::time::Duration;
@@ -55,44 +56,126 @@ fn a_restart_is_not_repeated_within_the_restart_gap() {
     );
 }
 
-const FLATPAK_INSTANCE: &str = "[Runtime]\nruntime-extensions=org.freedesktop.Platform.GL.nvidia-999=wrong-section\n\n[Instance]\nruntime-extensions=org.kde.Platform.Locale=locale;org.freedesktop.Platform.GL.nvidia-615-71-09=running-commit;org.freedesktop.Platform.GL.default=mesa\n";
+const FLATPAK_INSTANCE: &str = "[Runtime]\nruntime-extensions=org.freedesktop.Platform.GL.nvidia-999=wrong-section\n\n[Instance]\napp-path=/var/home/zephyr/.local/share/flatpak/app/dev.lizardbyte.app.Sunshine/files\nruntime-path=/var/lib/flatpak/runtime/org.kde.Platform/x86_64/6.11/commit/files\nruntime-extensions=org.kde.Platform.Locale=locale;org.freedesktop.Platform.GL.nvidia-615-71-09=running-commit;org.freedesktop.Platform.GL.default=mesa\n";
+const CURRENT_NVIDIA_ID: &str = "org.freedesktop.Platform.GL.nvidia-615-71-09";
 
 #[test]
 fn nvidia_extension_commits_are_read_from_the_instance_section() {
     assert_eq!(
         nvidia_extension_commits(FLATPAK_INSTANCE),
-        vec![(
-            "org.freedesktop.Platform.GL.nvidia-615-71-09".to_string(),
-            "running-commit".to_string()
-        )]
+        vec![(CURRENT_NVIDIA_ID.to_string(), "running-commit".to_string())]
     );
 }
 
 #[test]
-fn an_instance_with_the_active_nvidia_commit_is_not_stale() {
-    let active = HashMap::from([(
-        "org.freedesktop.Platform.GL.nvidia-615-71-09".to_string(),
-        "running-commit".to_string(),
-    )]);
+fn running_flatpak_runtime_path_is_read_from_the_instance_section() {
+    assert_eq!(
+        flatpak_runtime_path(FLATPAK_INSTANCE),
+        Some("/var/lib/flatpak/runtime/org.kde.Platform/x86_64/6.11/commit/files")
+    );
+    assert_eq!(
+        flatpak_runtime_path("[Runtime]\nruntime-path=/wrong-section\n"),
+        None
+    );
+}
 
-    assert!(!has_stale_nvidia_extension(FLATPAK_INSTANCE, &active));
+#[test]
+fn flatpak_commands_use_the_installation_of_the_running_runtime() {
+    assert_eq!(
+        flatpak_installation_option(
+            "/var/home/zephyr/.local/share/flatpak/runtime/org.kde.Platform"
+        ),
+        Some("--user")
+    );
+    assert_eq!(
+        flatpak_installation_option("/var/lib/flatpak/runtime/org.kde.Platform"),
+        Some("--system")
+    );
+    assert_eq!(
+        flatpak_installation_option("/opt/flatpak/app/sunshine"),
+        None
+    );
+}
+
+#[test]
+fn flatpak_extension_scope_comes_from_the_running_runtime_not_the_app() {
+    let runtime_path = flatpak_runtime_path(FLATPAK_INSTANCE).unwrap();
+
+    assert_eq!(
+        flatpak_installation_option(runtime_path),
+        Some("--system"),
+        "this instance has a user app path and a system runtime path"
+    );
+}
+
+#[test]
+fn host_driver_version_maps_to_the_versioned_nvidia_extension_id() {
+    assert_eq!(
+        nvidia_extension_id(" 615.71.09\n").as_deref(),
+        Some(CURRENT_NVIDIA_ID)
+    );
+    assert_eq!(nvidia_extension_id("unknown"), None);
+}
+
+#[test]
+fn an_instance_with_the_active_nvidia_commit_is_not_stale() {
+    let active = HashMap::from([(CURRENT_NVIDIA_ID.to_string(), "running-commit".to_string())]);
+
+    assert!(!has_stale_nvidia_extension(
+        FLATPAK_INSTANCE,
+        &active,
+        Some(CURRENT_NVIDIA_ID)
+    ));
 }
 
 #[test]
 fn an_instance_with_an_old_nvidia_commit_is_stale() {
-    let active = HashMap::from([(
-        "org.freedesktop.Platform.GL.nvidia-615-71-09".to_string(),
-        "updated-commit".to_string(),
-    )]);
+    let active = HashMap::from([(CURRENT_NVIDIA_ID.to_string(), "updated-commit".to_string())]);
 
-    assert!(has_stale_nvidia_extension(FLATPAK_INSTANCE, &active));
+    assert!(has_stale_nvidia_extension(
+        FLATPAK_INSTANCE,
+        &active,
+        Some(CURRENT_NVIDIA_ID)
+    ));
 }
 
 #[test]
-fn a_missing_active_commit_does_not_trigger_a_restart() {
+fn a_driver_version_change_restarts_when_the_new_extension_is_installed() {
+    let updated_id = "org.freedesktop.Platform.GL.nvidia-615-71-10";
+    let active = HashMap::from([(updated_id.to_string(), "new-commit".to_string())]);
+
+    assert!(has_stale_nvidia_extension(
+        FLATPAK_INSTANCE,
+        &active,
+        Some(updated_id)
+    ));
+}
+
+#[test]
+fn a_driver_version_change_waits_until_its_extension_is_installed() {
+    let active = HashMap::from([(CURRENT_NVIDIA_ID.to_string(), "running-commit".to_string())]);
+
     assert!(!has_stale_nvidia_extension(
         FLATPAK_INSTANCE,
-        &HashMap::new()
+        &active,
+        Some("org.freedesktop.Platform.GL.nvidia-615-71-10")
+    ));
+}
+
+#[test]
+fn a_removed_running_extension_is_stale_when_another_nvidia_ref_is_installed() {
+    let updated_id = "org.freedesktop.Platform.GL.nvidia-615-71-10";
+    let active = HashMap::from([(updated_id.to_string(), "new-commit".to_string())]);
+
+    assert!(has_stale_nvidia_extension(FLATPAK_INSTANCE, &active, None));
+}
+
+#[test]
+fn an_empty_or_unavailable_nvidia_installation_is_not_treated_as_stale() {
+    assert!(!has_stale_nvidia_extension(
+        FLATPAK_INSTANCE,
+        &HashMap::new(),
+        None
     ));
 }
 

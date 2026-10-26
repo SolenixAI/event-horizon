@@ -1,9 +1,9 @@
-//! The Sunshine watchdog: restarts Sunshine when its HTTP port stays down or its
-//! NVIDIA Flatpak extension has changed since the running sandbox started. A live
-//! stream is never touched.
+//! The Sunshine watchdog restarts Sunshine after a sustained failure or stale
+//! NVIDIA runtime. It never restarts during a live stream.
 
 use crate::linux_install::{Commands, Files, Layout, SUNSHINE_SERVICE};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use std::path::Path;
 use std::time::Duration;
 
 /// Sunshine's HTTP port. It stops accepting connections when Sunshine wedges.
@@ -55,10 +55,8 @@ impl Watch {
         Step::Restart
     }
 
-    /// A Sunshine process can keep its HTTP API alive while still using an
-    /// old NVIDIA Flatpak extension after an update. That state is
-    /// conclusive, so restart as soon as no stream is live rather than waiting
-    /// for the HTTP-port timeout.
+    /// A stale NVIDIA extension is decisive, so restart after streams end.
+    /// This check bypasses the HTTP-port timeout.
     pub fn step_with_stale_nvidia_extension(
         &mut self,
         now: Duration,
@@ -85,25 +83,88 @@ impl Watch {
     }
 }
 
-/// Whether Sunshine's running Flatpak instance has an older NVIDIA driver
-/// extension than the one currently installed. `/.flatpak-info` is the
-/// effective metadata for a running Flatpak instance; its `runtime-extensions`
-/// values include exact commit IDs.
+/// Whether Sunshine uses an older NVIDIA extension than the installed runtime.
+/// `/.flatpak-info` records the extension ID and commit loaded by the process.
 pub fn has_stale_nvidia_extension(
     instance_info: &str,
     installed_commits: &HashMap<String, String>,
+    expected_extension_id: Option<&str>,
 ) -> bool {
-    nvidia_extension_commits(instance_info)
+    let installed_ids = installed_commits.keys().cloned().collect();
+    let installed_commits = installed_commits
         .iter()
-        .any(|(id, running)| {
-            installed_commits
-                .get(id)
-                .is_some_and(|active| active != running)
-        })
+        .map(|(id, commit)| (id.clone(), HashSet::from([commit.clone()])))
+        .collect();
+    has_stale_nvidia_extension_with_installed_ids(
+        instance_info,
+        &installed_ids,
+        &installed_commits,
+        expected_extension_id,
+    )
+}
+
+/// Separates confirmed installed IDs from commits that Flatpak could read.
+/// A listed extension with a transiently unreadable commit is not stale.
+pub fn has_stale_nvidia_extension_with_installed_ids(
+    instance_info: &str,
+    installed_ids: &HashSet<String>,
+    installed_commits: &HashMap<String, HashSet<String>>,
+    expected_extension_id: Option<&str>,
+) -> bool {
+    let running = nvidia_extension_commits(instance_info);
+    if running.is_empty() || installed_ids.is_empty() {
+        return false;
+    }
+
+    if let Some(expected) = expected_extension_id.filter(|id| installed_ids.contains(*id)) {
+        return running.iter().any(|(id, commit)| {
+            id != expected
+                || installed_commits
+                    .get(expected)
+                    .is_some_and(|active| !active.contains(commit))
+        });
+    }
+
+    running.iter().any(|(id, commit)| {
+        if !installed_ids.contains(id) {
+            // Flatpak confirmed that this running NVIDIA ref was removed.
+            return true;
+        }
+        installed_commits
+            .get(id)
+            .is_some_and(|active| !active.contains(commit))
+    })
 }
 
 /// NVIDIA driver extension IDs and commit IDs recorded in a Flatpak instance.
 pub fn nvidia_extension_commits(instance_info: &str) -> Vec<(String, String)> {
+    instance_value(instance_info, "runtime-extensions=")
+        .into_iter()
+        .flat_map(|value| value.split(';'))
+        .filter_map(|extension| {
+            let (id, commit) = extension.split_once('=')?;
+            id.starts_with("org.freedesktop.Platform.GL.nvidia-")
+                .then(|| (id.to_string(), commit.to_string()))
+        })
+        .collect()
+}
+
+/// The installation path of the running Flatpak runtime.
+pub fn flatpak_runtime_path(instance_info: &str) -> Option<&str> {
+    instance_value(instance_info, "runtime-path=")
+}
+
+/// The architecture in the running Flatpak runtime's deployment path.
+pub fn flatpak_runtime_arch(runtime_path: &str) -> Option<&str> {
+    Path::new(runtime_path)
+        .parent()?
+        .parent()?
+        .parent()?
+        .file_name()?
+        .to_str()
+}
+
+fn instance_value<'a>(instance_info: &'a str, key: &str) -> Option<&'a str> {
     let mut in_instance = false;
     for line in instance_info.lines() {
         let line = line.trim();
@@ -111,29 +172,46 @@ pub fn nvidia_extension_commits(instance_info: &str) -> Vec<(String, String)> {
             in_instance = line == "[Instance]";
             continue;
         }
-        if !in_instance {
-            continue;
+        if in_instance {
+            if let Some(value) = line.strip_prefix(key) {
+                return Some(value);
+            }
         }
-        let Some(value) = line.strip_prefix("runtime-extensions=") else {
-            continue;
-        };
-        return value
-            .split(';')
-            .filter_map(|extension| {
-                let (id, commit) = extension.split_once('=')?;
-                id.starts_with("org.freedesktop.Platform.GL.nvidia-")
-                    .then(|| (id.to_string(), commit.to_string()))
-            })
-            .collect();
     }
-    Vec::new()
+    None
+}
+
+/// Flatpak's CLI selector for the installation that launched the runtime.
+pub fn flatpak_installation_option(runtime_path: &str) -> Option<&'static str> {
+    if runtime_path.contains("/.local/share/flatpak/") {
+        Some("--user")
+    } else if runtime_path.starts_with("/var/lib/flatpak/") {
+        Some("--system")
+    } else {
+        None
+    }
+}
+
+/// The NVIDIA GL extension ID selected by a host driver version.
+pub fn nvidia_extension_id(driver_version: &str) -> Option<String> {
+    let version = driver_version.trim();
+    let parts = version.split('.').collect::<Vec<_>>();
+    if parts.len() < 2
+        || parts.iter().any(|part| {
+            part.is_empty() || !part.chars().all(|character| character.is_ascii_digit())
+        })
+    {
+        return None;
+    }
+    Some(format!(
+        "org.freedesktop.Platform.GL.nvidia-{}",
+        parts.join("-")
+    ))
 }
 
 /// Whether a stream is live: the one-screen switch saves the outputs it turned off.
 pub fn streaming(files: &dyn Files, layout: &Layout) -> bool {
-    files
-        .read(&layout.stream_screen_saved())
-        .is_some_and(|saved| !saved.trim().is_empty())
+    crate::linux_install::stream_screen_active(files, layout)
 }
 
 /// One check. Restarts Sunshine when the watch says so, and returns what it decided.

@@ -256,6 +256,11 @@ async fn main() {
 
 #[cfg(any(target_os = "linux", windows))]
 fn config_dir() -> std::path::PathBuf {
+    // Sunshine may give its child commands a Flatpak-specific XDG_CONFIG_HOME.
+    // Keep stream hooks pointed at the companion's shared configuration instead.
+    if let Some(path) = std::env::var_os("EVENT_HORIZON_CONFIG_DIR") {
+        return std::path::PathBuf::from(path);
+    }
     #[cfg(windows)]
     let base = std::env::var_os("APPDATA")
         .map(std::path::PathBuf::from)

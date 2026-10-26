@@ -21,10 +21,20 @@ pub fn guard(
     live: &dyn Fn() -> bool,
     events: impl IntoIterator<Item = String>,
 ) {
-    enforce(cmd, live);
+    guard_with_recovery(cmd, live, &|| Ok(()), events);
+}
+
+/// Also retries deferred display restoration after startup and DRM changes.
+pub fn guard_with_recovery(
+    cmd: &dyn Commands,
+    live: &dyn Fn() -> bool,
+    recover: &dyn Fn() -> Result<(), String>,
+    events: impl IntoIterator<Item = String>,
+) {
+    enforce(cmd, live, recover);
     for line in events {
         if matches!(action(&line), Some("change" | "add")) {
-            enforce(cmd, live);
+            enforce(cmd, live, recover);
         }
     }
 }
@@ -32,15 +42,25 @@ pub fn guard(
 /// Runs the guard on `udevadm`'s DRM events. Returns an error when `udevadm`
 /// stops, so the unit restarts it.
 pub fn run(cmd: &dyn Commands, live: &dyn Fn() -> bool) -> Result<(), String> {
+    run_with_recovery(cmd, live, &|| Ok(()))
+}
+
+/// Runs the guard and attempts deferred restoration after each display event.
+pub fn run_with_recovery(
+    cmd: &dyn Commands,
+    live: &dyn Fn() -> bool,
+    recover: &dyn Fn() -> Result<(), String>,
+) -> Result<(), String> {
     let mut child = Command::new("udevadm")
         .args(["monitor", "--udev", "--subsystem-match=drm"])
         .stdout(Stdio::piped())
         .spawn()
         .map_err(|e| format!("udevadm: {e}"))?;
     let stdout = child.stdout.take().ok_or("udevadm gave no output")?;
-    guard(
+    guard_with_recovery(
         cmd,
         live,
+        recover,
         BufReader::new(stdout).lines().map_while(Result::ok),
     );
     let status = child.wait().map_err(|e| e.to_string())?;
@@ -52,8 +72,13 @@ fn action(line: &str) -> Option<&str> {
     line.split_whitespace().nth(1)
 }
 
-fn enforce(cmd: &dyn Commands, live: &dyn Fn() -> bool) {
+fn enforce(cmd: &dyn Commands, live: &dyn Fn() -> bool, recover: &dyn Fn() -> Result<(), String>) {
     cmd.pause(SETTLE);
+    if !live()
+        && let Err(e) = recover()
+    {
+        eprintln!("display guard: could not restore saved display settings: {e}");
+    }
     if let Err(e) = enforce_once(cmd, live) {
         eprintln!("display guard: {e}");
     }

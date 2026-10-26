@@ -103,7 +103,7 @@ extension AppModel {
     nonisolated static func streamEndedMessage(code: Int32, hostName: String) -> String {
         switch code {
         case StreamSession.noVideoTrafficTerminationCode:
-            "No video from \(hostName) reached this Mac on UDP port 47998. Check Sunshine's screen capture and the network/firewall path."
+            "No video from \(hostName) reached this Mac on UDP port 47998. Restart Sunshine on the PC, then try again."
         case StreamSession.noVideoFrameTerminationCode:
             "Video from \(hostName) arrived but couldn't be decoded. Try another codec from the PC's ⋯ menu."
         case StreamSession.deadPeerTerminationCode:
