@@ -172,10 +172,10 @@ fn instance_value<'a>(instance_info: &'a str, key: &str) -> Option<&'a str> {
             in_instance = line == "[Instance]";
             continue;
         }
-        if in_instance {
-            if let Some(value) = line.strip_prefix(key) {
-                return Some(value);
-            }
+        if in_instance
+            && let Some(value) = line.strip_prefix(key)
+        {
+            return Some(value);
         }
     }
     None

@@ -517,15 +517,15 @@ pub fn stream_screen(
             }
             return Err(error);
         }
-        if target == HDR_OUTPUT {
-            if let Err(error) = cmd.run("kscreen-doctor", &["output.HDMI-A-1.hdr.enable"]) {
-                return match recover_stream_screen(cmd, files, layout) {
-                    Ok(()) => Err(error),
-                    Err(restore_error) => Err(format!(
-                        "{error}; display restoration failed: {restore_error}"
-                    )),
-                };
-            }
+        if target == HDR_OUTPUT
+            && let Err(error) = cmd.run("kscreen-doctor", &["output.HDMI-A-1.hdr.enable"])
+        {
+            return match recover_stream_screen(cmd, files, layout) {
+                Ok(()) => Err(error),
+                Err(restore_error) => Err(format!(
+                    "{error}; display restoration failed: {restore_error}"
+                )),
+            };
         }
         return Ok(());
     }
@@ -557,7 +557,7 @@ fn restore_stream_screen(
     let journal = recovery_stream_state(&saved_target_state);
     let legacy_target_settings = serde_json::from_str::<Value>(&saved_target_state)
         .ok()
-        .filter(|value| is_target_settings(value));
+        .filter(is_target_settings);
     let mut state = saved_stream_state(&saved);
     if let Some(saved_state) = state.as_mut() {
         if let Some(journal) = journal
@@ -606,6 +606,15 @@ fn restore_stream_screen(
     }) = state
     else {
         if saved.trim().is_empty() && saved_target_state.trim().is_empty() {
+            // No saved state: turn off the virtual screen if it's on and
+            // other monitors exist, so the stream ends cleanly.
+            let text = cmd.capture("kscreen-doctor", &["--json"])?;
+            let json: Value = serde_json::from_str(&text).map_err(|e| e.to_string())?;
+            if virtual_screen::virtual_on(&json) && !virtual_screen::others_on(&json).is_empty()
+            {
+                let disable = format!("output.{OUTPUT}.disable");
+                cmd.run("kscreen-doctor", &[disable.as_str()])?;
+            }
             return Ok(());
         }
         // No trustworthy snapshot remains. Leave the user's current layout as
@@ -679,7 +688,7 @@ fn restore_stream_screen(
 
     let target_settings_pending = target_settings
         .as_ref()
-        .is_some_and(|settings| is_target_settings(settings))
+        .is_some_and(is_target_settings)
         && !target_connected;
     if target_settings_pending {
         // Record that the other screens are already restored before clearing
@@ -753,7 +762,7 @@ fn saved_stream_state(saved: &str) -> Option<SavedStreamState> {
     if restore.is_empty()
         || restore
             .iter()
-            .any(|name| !valid_output_name(name) || name == OUTPUT || name == HDR_OUTPUT)
+            .any(|name| !valid_output_name(name) || name == OUTPUT)
     {
         return None;
     }
@@ -885,30 +894,29 @@ fn screen_for_stream(cmd: &dyn Commands, target: &str) -> Result<StreamScreenSna
     for _ in 0..VIRTUAL_TRIES {
         let text = cmd.capture("kscreen-doctor", &["--json"])?;
         let json: Value = serde_json::from_str(&text).map_err(|e| e.to_string())?;
-        if let Some(outputs) = json["outputs"].as_array() {
-            if outputs
+        if let Some(outputs) = json["outputs"].as_array()
+            && outputs
                 .iter()
                 .any(|o| o["name"] == target && o["connected"] == true)
-            {
-                let target_output = outputs
-                    .iter()
-                    .find(|o| o["name"] == target && o["connected"] == true)
-                    .ok_or_else(|| format!("configured stream output {target} disappeared"))?;
-                let mut target_settings = serde_json::Map::new();
-                for key in ["enabled", "scale", "priority", "hdr", "wcg"] {
-                    if let Some(value) = target_output.get(key) {
-                        target_settings.insert(key.to_string(), value.clone());
-                    }
+        {
+            let target_output = outputs
+                .iter()
+                .find(|o| o["name"] == target && o["connected"] == true)
+                .ok_or_else(|| format!("configured stream output {target} disappeared"))?;
+            let mut target_settings = serde_json::Map::new();
+            for key in ["enabled", "scale", "priority", "hdr", "wcg"] {
+                if let Some(value) = target_output.get(key) {
+                    target_settings.insert(key.to_string(), value.clone());
                 }
-                return Ok(StreamScreenSnapshot {
-                    restore: outputs
-                        .iter()
-                        .filter(|o| o["name"] != target && o["enabled"] == true)
-                        .filter_map(|o| o["name"].as_str().map(str::to_string))
-                        .collect(),
-                    target_settings: Value::Object(target_settings),
-                });
             }
+            return Ok(StreamScreenSnapshot {
+                restore: outputs
+                    .iter()
+                    .filter(|o| o["name"] != target && o["enabled"] == true)
+                    .filter_map(|o| o["name"].as_str().map(str::to_string))
+                    .collect(),
+                target_settings: Value::Object(target_settings),
+            });
         }
         if target != OUTPUT {
             return Err(format!(
