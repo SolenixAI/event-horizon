@@ -4,7 +4,7 @@
 
 use event_horizon_companion::linux_install::{self, Commands, Files, Layout, screen_skip};
 use event_horizon_companion::sunshine_watchdog;
-use event_horizon_companion::virtual_screen::{DEFAULT_SIZE, Size};
+use event_horizon_companion::virtual_screen::{DEFAULT_SIZE, HDR_OUTPUT, Size};
 use serde_json::json;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::path::{Path, PathBuf};
@@ -28,6 +28,7 @@ struct FakeCommands {
     log: Log,
     sunshine_installed: bool,
     failing: HashSet<String>,
+    fail_once: Mutex<HashSet<String>>,
     /// Units that are running: `restart` starts one, `is-active` asks.
     active: Mutex<HashSet<String>>,
     /// Answers to `kscreen-doctor --json`, in order; the last one repeats.
@@ -41,7 +42,7 @@ impl Commands for FakeCommands {
             .lock()
             .unwrap()
             .push(format!("run {program} {}", args.join(" ")));
-        if self.failing.contains(program) {
+        if self.failing.contains(program) || self.fail_once.lock().unwrap().remove(program) {
             // As the real runner words it: the arguments are in the error.
             return Err(format!("{program} {} ended with 1", args.join(" ")));
         }
@@ -235,6 +236,14 @@ fn kscreen_with_virtual_off(desk_width: i64) -> String {
         { "name": OUTPUT, "enabled": false, "connected": true,
           "size": { "width": 2560, "height": 1600 },
           "scale": 1.75, "pos": { "x": desk_width, "y": 0 }, "priority": 2 }
+    ]})
+    .to_string()
+}
+
+fn kscreen_with_hdr(hdr_enabled: bool, desk_enabled: bool) -> String {
+    json!({"outputs": [
+        {"name": "DP-1", "enabled": desk_enabled, "connected": true, "priority": 1},
+        {"name": HDR_OUTPUT, "enabled": hdr_enabled, "connected": true, "priority": 2}
     ]})
     .to_string()
 }
@@ -555,6 +564,21 @@ fn sunshine_settings_that_are_not_ours_survive() {
 }
 
 #[test]
+fn a_configured_hdr_stream_sets_sunshine_to_the_hdmi_connector() {
+    let (cmd, files) = pc();
+    let layout = kde_layout();
+    files.put(layout.stream_output(), HDR_OUTPUT);
+
+    install(&cmd, &files, &layout).unwrap();
+
+    let conf = files.read(&layout.sunshine_conf()).unwrap();
+    assert!(
+        conf.lines()
+            .any(|line| line == format!("output_name = {HDR_OUTPUT}"))
+    );
+}
+
+#[test]
 fn the_size_given_is_the_size_the_screen_runs_at() {
     let (cmd, files) = pc();
     let layout = kde_layout();
@@ -726,9 +750,88 @@ fn a_stream_leaves_the_virtual_screen_as_the_only_screen() {
         )
     ));
     assert_eq!(
-        files.read(&saved_outputs(&layout)).as_deref(),
-        Some("DP-1\n")
+        files
+            .read(&saved_outputs(&layout))
+            .and_then(|saved| serde_json::from_str::<serde_json::Value>(&saved).ok()),
+        Some(json!({"target": OUTPUT, "restore": ["DP-1"]}))
     );
+}
+
+#[test]
+fn a_configured_hdr_stream_uses_hdmi_and_restores_the_desktop() {
+    let (cmd, files) = pc();
+    let layout = kde_layout();
+    files.put(layout.stream_output(), HDR_OUTPUT);
+    cmd.kscreen
+        .lock()
+        .unwrap()
+        .extend([kscreen_with_hdr(false, true), kscreen_with_hdr(true, false)]);
+
+    linux_install::stream_screen(&cmd, &files, &layout, true).unwrap();
+
+    assert!(ran(
+        &cmd.log,
+        "run kscreen-doctor output.HDMI-A-1.enable output.HDMI-A-1.priority.1 output.HDMI-A-1.scale.1.75 output.DP-1.disable"
+    ));
+    assert!(ran(
+        &cmd.log,
+        "run kscreen-doctor output.HDMI-A-1.hdr.enable"
+    ));
+    assert_eq!(
+        files
+            .read(&saved_outputs(&layout))
+            .and_then(|saved| serde_json::from_str::<serde_json::Value>(&saved).ok()),
+        Some(json!({"target": HDR_OUTPUT, "restore": ["DP-1"]}))
+    );
+
+    linux_install::stream_screen(&cmd, &files, &layout, false).unwrap();
+
+    assert!(ran(
+        &cmd.log,
+        "run kscreen-doctor output.DP-1.enable output.DP-1.priority.1 output.HDMI-A-1.disable"
+    ));
+    assert_eq!(files.read(&saved_outputs(&layout)).as_deref(), Some(""));
+}
+
+#[test]
+fn a_disconnected_hdr_output_does_not_turn_off_the_desktop() {
+    let (cmd, files) = pc();
+    let layout = kde_layout();
+    files.put(layout.stream_output(), HDR_OUTPUT);
+    cmd.kscreen
+        .lock()
+        .unwrap()
+        .push_back(kscreen_answer(1920, 1.0, true));
+
+    let result = linux_install::stream_screen(&cmd, &files, &layout, true);
+
+    assert!(result.unwrap_err().contains("HDMI-A-1 is not connected"));
+    assert!(!log_of(&cmd.log).iter().any(|line| line.contains("disable")));
+    assert_eq!(files.read(&saved_outputs(&layout)), None);
+}
+
+#[test]
+fn a_failed_screen_switch_restores_the_desktop_and_clears_stream_state() {
+    let (cmd, files) = pc();
+    let layout = kde_layout();
+    files.put(layout.stream_output(), HDR_OUTPUT);
+    cmd.kscreen
+        .lock()
+        .unwrap()
+        .push_back(kscreen_with_hdr(false, true));
+    cmd.fail_once
+        .lock()
+        .unwrap()
+        .insert("kscreen-doctor".into());
+
+    let result = linux_install::stream_screen(&cmd, &files, &layout, true);
+
+    assert!(result.unwrap_err().contains("kscreen-doctor"));
+    assert!(ran(
+        &cmd.log,
+        "run kscreen-doctor output.DP-1.enable output.DP-1.priority.1"
+    ));
+    assert_eq!(files.read(&saved_outputs(&layout)).as_deref(), Some(""));
 }
 
 #[test]
@@ -743,10 +846,12 @@ fn the_end_of_a_stream_brings_back_the_saved_screens_with_the_first_one_primary(
 
     linux_install::stream_screen(&cmd, &files, &layout, false).unwrap();
 
+    // Only DP-1 is connected in the current KScreen state; stale HDMI state is
+    // ignored, and the stream display is turned off once the desk display returns.
     assert!(ran(
         &cmd.log,
         &format!(
-            "run kscreen-doctor output.DP-1.enable output.HDMI-A-1.enable output.DP-1.priority.1 output.{OUTPUT}.disable"
+            "run kscreen-doctor output.DP-1.enable output.DP-1.priority.1 output.{OUTPUT}.disable"
         )
     ));
     // Restored once: a second `off` (Sunshine starting) changes nothing.
@@ -777,8 +882,10 @@ fn a_stream_starts_a_missing_virtual_screen_and_then_makes_it_the_only_screen() 
         l == &format!("run kscreen-doctor output.{OUTPUT}.enable output.{OUTPUT}.priority.1 output.DP-1.disable")
     }));
     assert_eq!(
-        files.read(&saved_outputs(&layout)).as_deref(),
-        Some("DP-1\n")
+        files
+            .read(&saved_outputs(&layout))
+            .and_then(|saved| serde_json::from_str::<serde_json::Value>(&saved).ok()),
+        Some(json!({"target": OUTPUT, "restore": ["DP-1"]}))
     );
 }
 
@@ -886,13 +993,14 @@ fn sunshine_runs_the_one_screen_switch_as_each_stream_starts_and_ends() {
         .expect("global_prep_cmd is set");
     let entries: Vec<serde_json::Value> = serde_json::from_str(value).unwrap();
     assert_eq!(entries.len(), 1);
+    let config_dir = layout.config_dir.display();
     assert_eq!(
         entries[0]["do"],
-        format!("flatpak-spawn --host {companion} stream-screen on")
+        format!("/usr/bin/env EVENT_HORIZON_CONFIG_DIR={config_dir} {companion} stream-screen on")
     );
     assert_eq!(
         entries[0]["undo"],
-        format!("flatpak-spawn --host {companion} stream-screen off")
+        format!("/usr/bin/env EVENT_HORIZON_CONFIG_DIR={config_dir} {companion} stream-screen off")
     );
     assert_eq!(entries[0]["elevated"], false);
 }
@@ -925,7 +1033,8 @@ fn sunshine_brings_the_screens_back_before_it_starts_so_a_crash_never_leaves_the
         )))
         .expect("the Sunshine drop-in is written");
     assert!(drop_in.contains(&format!(
-        "ExecStartPre=-{} stream-screen off",
+        "ExecStartPre=-/usr/bin/env EVENT_HORIZON_CONFIG_DIR={} {} stream-screen off",
+        layout.config_dir.display(),
         layout.installed_companion().display()
     )));
 }

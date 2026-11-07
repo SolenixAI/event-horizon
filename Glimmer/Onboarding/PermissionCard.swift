@@ -124,7 +124,7 @@ struct PermissionCard: View {
     /// The rail reads again when the app returns from the prompt, so the card stays Waiting until macOS answers.
     private func allowVolumeKeys() {
         UserDefaults.standard.set(true, forKey: LiveOnboardingSource.accessibilityAskedKey)
-        VolumeKeyAccess.requestAccess()
+        SystemVolumeKeyPermission.shared.requestAccess()
     }
 
     /// Registration settles on the main actor a moment after `enable()`, so read again then.

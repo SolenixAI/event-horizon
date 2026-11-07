@@ -7,6 +7,17 @@
 import Testing
 @testable import Glimmer
 
+@MainActor
+private final class FakeVolumeKeyPermission: VolumeKeyPermission {
+    var isGranted = false
+    private(set) var requestCount = 0
+
+    func requestAccess() -> Bool {
+        requestCount += 1
+        return false
+    }
+}
+
 struct VolumeKeyTests {
 
     /// The data1 word a system-defined media key carries: key type, state (0xA down, 0xB up), repeat bit.
@@ -33,6 +44,16 @@ struct VolumeKeyTests {
         #expect(VolumeKey.decode(subtype: 7, data1: data1(type: 0, down: true)) == nil)
     }
 
+    @MainActor @Test func aStreamWithoutAccessibilityDoesNotAskForIt() {
+        let permission = FakeVolumeKeyPermission()
+        let tap = VolumeKeyTap(permission: permission)
+
+        tap.setStreamIsKey(true)
+
+        #expect(permission.requestCount == 0)
+        tap.teardown()
+    }
+
     @Test func aVolumeKeyStepsTheStreamLevel() {
         var volume = StreamVolume(level: 0.5)
         volume.apply(.up)
@@ -49,12 +70,5 @@ struct VolumeKeyTests {
         volume.apply(.mute)
         #expect(!volume.isMuted)
         #expect(volume.level == 0.4)
-    }
-
-    /// A re-signed build loses its Accessibility grant: the stream asks once per launch, never while trusted.
-    @Test func anUntrustedStreamAsksForAccessOncePerLaunch() {
-        var ask = VolumeKeyAccessAsk()
-        let answers = [ask.shouldAsk(granted: true), ask.shouldAsk(granted: false), ask.shouldAsk(granted: false)]
-        #expect(answers == [false, true, false])
     }
 }

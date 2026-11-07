@@ -29,7 +29,7 @@ struct LiveOnboardingSource: OnboardingOSSource {
         }
     }
 
-    var accessibilityTrusted: Bool { VolumeKeyAccess.isGranted }
+    var accessibilityTrusted: Bool { SystemVolumeKeyPermission.shared.isGranted }
 
     var accessibilityAsked: Bool {
         UserDefaults.standard.bool(forKey: Self.accessibilityAskedKey)

@@ -64,7 +64,7 @@ Stage Manager and Mac shortcuts stay the user's, while the PC feels local.
   never a popup). No other third-party calls: otherwise the app talks only to
   the PC, to its local network for discovery and Wake on LAN, and to its update
   feed.
-- Stack: Vercel (deploys), GitHub (code), Linear (planning, source of truth),
+- Stack: Vercel (deploys), GitHub (code, issues, and planning source of truth),
   PostHog (analytics), Stripe (money: Checkout + Managed Payments, licence keys
   via a Vercel function). Their full feature sets cover every need before
   anything else is added.

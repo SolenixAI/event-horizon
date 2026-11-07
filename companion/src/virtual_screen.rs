@@ -10,6 +10,8 @@ use std::path::Path;
 pub const NAME: &str = "sunshine-vmon";
 /// The connector name, which Sunshine's `output_name` must match.
 pub const OUTPUT: &str = "Virtual-sunshine-vmon";
+/// The forced HDMI connector used for HDR streams when the host opts into it.
+pub const HDR_OUTPUT: &str = "HDMI-A-1";
 /// The VNC port krfb-virtualmonitor listens on (its default is 5900).
 pub const VNC_PORT: u16 = 5905;
 /// The Mac's usual display scale, 175 per cent.
@@ -130,12 +132,11 @@ pub fn restore_args(saved: &[String]) -> Option<Vec<String>> {
     Some(args)
 }
 
-/// Sunshine's `global_prep_cmd` with the one-screen switch in it: the companion
-/// turns it on as a stream starts and off as it ends (Sunshine is a flatpak, so it
-/// asks the host). The person's own commands stay; an earlier one-screen entry,
-/// ours or a hand-made `stream-screen` script, is replaced. `existing` is the
-/// current value, if any. None when it isn't a JSON list, so it is left alone.
-pub fn prep_cmd(existing: Option<&str>, companion: &Path) -> Option<String> {
+/// Sunshine's `global_prep_cmd` with the one-screen switch in it. The companion
+/// command stays plain: native Sunshine runs it directly, and Flatpak Sunshine
+/// forwards prep commands to the host itself. The person's commands stay; an
+/// earlier one-screen entry is replaced. None when the value is not a JSON list.
+pub fn prep_cmd(existing: Option<&str>, companion: &Path, config_dir: &Path) -> Option<String> {
     let mut entries: Vec<Value> = match existing.map(str::trim).filter(|v| !v.is_empty()) {
         Some(text) => serde_json::from_str::<Vec<Value>>(text).ok()?,
         None => Vec::new(),
@@ -145,13 +146,30 @@ pub fn prep_cmd(existing: Option<&str>, companion: &Path) -> Option<String> {
             .as_str()
             .is_some_and(|d| d.contains("stream-screen on"))
     });
-    let companion = companion.display();
+    let config_dir = command_arg(&format!(
+        "EVENT_HORIZON_CONFIG_DIR={}",
+        config_dir.display()
+    ));
+    let companion = command_arg(&companion.display().to_string());
     entries.push(serde_json::json!({
-        "do": format!("flatpak-spawn --host {companion} stream-screen on"),
-        "undo": format!("flatpak-spawn --host {companion} stream-screen off"),
+        "do": format!("/usr/bin/env {config_dir} {companion} stream-screen on"),
+        "undo": format!("/usr/bin/env {config_dir} {companion} stream-screen off"),
         "elevated": false,
     }));
     serde_json::to_string(&entries).ok()
+}
+
+/// Quote one argument for Sunshine's Unix command parser, without adding quotes
+/// to ordinary home paths. Sunshine starts commands directly, not through a shell.
+fn command_arg(value: &str) -> String {
+    if value
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || matches!(c, '/' | '.' | '_' | '-' | '='))
+    {
+        value.to_string()
+    } else {
+        format!("'{}'", value.replace('\'', "'\\''"))
+    }
 }
 
 /// The value of `key` in Sunshine's config text, if the key is set.
@@ -164,12 +182,16 @@ pub fn setting<'a>(text: &'a str, key: &str) -> Option<&'a str> {
 
 /// A drop-in for Sunshine's unit: the screens come back before Sunshine starts, so
 /// a stream that ended in a crash never leaves the desk monitors dark.
-pub fn sunshine_drop_in(companion: &Path) -> String {
+pub fn sunshine_drop_in(companion: &Path, config_dir: &Path) -> String {
+    let config_dir = systemd_arg(Path::new(&format!(
+        "EVENT_HORIZON_CONFIG_DIR={}",
+        config_dir.display()
+    )));
     format!(
         "[Service]\n\
          # A stream that ends in a crash never runs its undo command: bring the screens back first.\n\
-         ExecStartPre=-{} stream-screen off\n",
-        systemd_arg(companion)
+         ExecStartPre=-/usr/bin/env {config_dir} {} stream-screen off\n",
+        systemd_arg(companion),
     )
 }
 
