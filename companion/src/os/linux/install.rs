@@ -1,7 +1,8 @@
 //! `install` on Linux: the steps are in `linux_install`. This wires in the
 //! real PC: its environment, its files and its commands.
 
-use crate::linux_install::{self, Commands, Files, Layout, SystemCommands, SystemFiles};
+use super::{SystemCommands, SystemFiles};
+use crate::linux_install::{self, Commands, Files, Layout};
 use crate::virtual_screen::screen_size;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;

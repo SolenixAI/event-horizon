@@ -1,4 +1,4 @@
-//! The seams the Host reaches the PC through. Each OS supplies adapters.
+//! Interfaces between companion policy and platform or external host services.
 
 use std::future::Future;
 
