@@ -12,6 +12,20 @@ it back on Home while it keeps running. Your cursor moves freely on the PC's
 desktop and locks only when you click into a game. On the desktop, ⌘C and ⌘V
 work the way they work on your Mac.
 
+[![CI](https://github.com/SolenixAI/event-horizon/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/SolenixAI/event-horizon/actions/workflows/ci.yml)
+
+![Event Horizon shows a paired PC and its available games](docs/assets/launcher.png)
+
+```mermaid
+flowchart LR
+  Mac["Event Horizon for macOS<br/>SwiftUI and native streaming engine"]
+  Companion["PC companion<br/>Rust core and OS adapters"]
+  Sunshine["Sunshine<br/>PC streaming server"]
+  Mac <-->|"pairing, library, awake lease"| Companion
+  Companion <-->|"host setup and control"| Sunshine
+  Mac <-->|"video, audio, and input"| Sunshine
+```
+
 ## What you get
 
 - **The PC as a place in one window.** Home → PC → Home. Swipe or ⌘Tab away at
@@ -27,36 +41,25 @@ work the way they work on your Mac.
   Mac when you click Allow on the PC, and keeps the PC awake while you play.
 - **A fast engine.** Hardware-decoded H.264, HEVC and AV1 with HDR10. Stereo,
   5.1 and 7.1 audio. Xbox, DualSense and other controllers, with rumble and
-  gyro. Wake on LAN, and PCs by address or name (Tailscale works). Tested: HEVC
-  at 2560×1600 and 60 fps over home Wi-Fi for 5 hours with 0 dropped frames
-  (2026-10-08).
+  gyro. Wake on LAN, and PCs by address or name (Tailscale works).
 
-No accounts, and no usage data leaves your Mac unless you opt in. Turn on Share
-usage stats in Settings › General and Event Horizon sends usage and crash
-reports to PostHog, which keeps no IP address. Otherwise it talks to your own
-PC, your local network, and GitHub to check for updates once a day. GitHub
-counts those checks, which is how we know how many copies are in use.
-Diagnostics are off by default and stay on your Mac.
+Usage and crash reports are off by default. If you opt in under Settings ›
+General, the app sends them to PostHog. The app checks GitHub for updates once a
+day. GitHub records update requests and release downloads; the project imports
+aggregate download counts to estimate installs. Diagnostics stay on your Mac
+unless you choose to share them.
 
 ## Install
 
-**Mac:** macOS 26 or later on Apple Silicon.
+**Mac:** macOS 26 or later on Apple Silicon. The macOS download is temporarily
+unavailable: the latest app release (2026.10.12) has no DMG, and its ZIP
+contains an app whose Apple Development certificate is revoked and which has no
+notarization ticket. Gatekeeper rejects it. The older 2026.10.8 DMG also fails
+Gatekeeper, so the Homebrew cask is disabled. **Do not bypass Gatekeeper or use
+“Open Anyway” for these releases.** Distribution will resume after a replacement
+passes signature, notarization, and Gatekeeper checks.
 
-1. Download `Event-Horizon-<version>.dmg` from the newest pre-release on the
-   [releases page](https://github.com/SolenixAI/event-horizon/releases). Open
-   the disk image and drag Event Horizon to Applications.
-2. The app is not notarized yet, so macOS blocks its first open. Open System
-   Settings › Privacy & Security, find the message about Event Horizon, and
-   click Open Anyway.
-
-Or install it with Homebrew:
-
-```bash
-brew tap solenixai/event-horizon https://github.com/SolenixAI/event-horizon
-brew install --cask solenixai/event-horizon/event-horizon
-```
-
-Or build it from source (below).
+You can build from source for development (below).
 
 **PC:** Windows or Linux. Get the PC companion from the
 [releases page](https://github.com/SolenixAI/event-horizon/releases). Pick the

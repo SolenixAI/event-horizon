@@ -3,7 +3,7 @@
 name: scorecard
 on:
   push:
-    branches: [event-horizon]
+    branches: [main]
   schedule:
     - cron: "23 6 * * 1"
 permissions: {}

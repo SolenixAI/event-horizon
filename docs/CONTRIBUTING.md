@@ -36,7 +36,6 @@ needs, and [SECURITY.md](SECURITY.md) covers the root helper.
 | `GlimmerTests/`              | Unit tests, hosted in the Debug app                                                          |
 | `companion/`                 | The PC companion (Rust)                                                                      |
 | `scripts/`                   | Build, signing and release tooling the Makefile calls                                        |
-| `docs/agents/`               | Where agent skills find the issue tracker, triage labels and domain docs                     |
 
 ## Setup
 
@@ -79,7 +78,7 @@ pre-commit install --hook-type pre-push # `make test`, per push
 make app        # compile-only check (Debug), no signing
 make test       # unit tests
 make verify     # strict lint + unit tests: the gate
-make            # notarized Release build, installed to /Applications
+make            # Release build, installed to /Applications (notarized when credentials are configured)
 make open       # same, then open it
 ```
 
@@ -102,12 +101,10 @@ repo, in `~/Library/Keychains/developer-id.keychain-db` and
 `~/.config/developer-id/`; `make app`, `make test` and `make verify` never touch
 it. Never read, print, copy or change it.
 
-`make` and `make open` run the full shipping pipeline: Developer ID signing,
-notarization, strict library validation. That is deliberate: there is no ad hoc
-or Debug divergence in daemon registration, TCC or library validation to chase,
-because you always run what ships. Without a Developer ID certificate on the
-machine it falls back to an ad hoc Release build (not notarized, and TCC asks
-again).
+`make` and `make open` use the Release build path with strict library
+validation. When a Developer ID certificate and notary profile are available,
+they also sign and notarize the app. Without a Developer ID certificate the
+build falls back to ad hoc signing (not notarized, and TCC asks again).
 
 The canonical xcodebuild invocation (what `make app` runs) is:
 
@@ -510,10 +507,9 @@ Practically, before you call something done:
 - Start with an issue. Describe the problem or the change, and wait for the
   maintainer to agree on the approach before you write code. A pull request that
   doesn't link an agreed issue is closed.
-- `event-horizon` is the default branch; releases are tags on it.
-- Fork, push your branch to the fork, and open the PR from there against
-  `event-horizon`. Only the maintainer can push branches to this repository or
-  merge into `event-horizon`.
+- `main` is the default branch; releases are tags on it.
+- Fork, push your branch to the fork, and open the PR from there against `main`.
+  Only the maintainer can push branches to this repository or merge into `main`.
 - Keep a PR scoped to one area, so it can land independently. No drive-by
   reformatting, renames or unrelated cleanup riding along.
 - Leave `CHANGELOG.md` and `Glimmer/Version.xcconfig` alone: the maintainer
