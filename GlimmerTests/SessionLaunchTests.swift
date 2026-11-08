@@ -5,6 +5,13 @@ import Testing
 // Sessions construct real audio engines; keep setup from contending across these tests.
 @Suite(.serialized)
 struct SessionLaunchTests {
+    @Test func backendComesFromTheCompositionFactory() async {
+        let expectedBackend = NativeBackend()
+        let session = StreamSession(backendFactory: { expectedBackend })
+
+        #expect(await session.backend === expectedBackend)
+    }
+
     @Test func launchOwnershipSurvivesAnUncertainResponse() {
         #expect(!StreamSession.retainsLaunchOwnership(after: StreamError.hostRefused(message: "Busy", code: 503)))
         #expect(StreamSession.retainsLaunchOwnership(after: CancellationError()))
@@ -15,7 +22,7 @@ struct SessionLaunchTests {
 
     @Test(arguments: [false, true])
     func settledLaunchDeterminesWhetherToCancel(refused: Bool) async {
-        let session = StreamSession()
+        let session = makeTestStreamSession()
         let entered = SafetyTestGate()
         let response = SafetyTestGate()
         let cancelled = SafetyTestCounter()
@@ -40,7 +47,7 @@ struct SessionLaunchTests {
     }
 
     @Test func cancelledConnectReturnsBeforeReplyAndLateSuccessIsCancelledAgain() async {
-        let session = StreamSession()
+        let session = makeTestStreamSession()
         let entered = SafetyTestGate()
         let response = SafetyTestGate()
         let cancelled = SafetyTestCounter()
@@ -79,7 +86,7 @@ struct SessionLaunchTests {
     }
 
     @Test func lateSuccessLeavesAReconnectAlone() async {
-        let session = StreamSession()
+        let session = makeTestStreamSession()
         let entered = SafetyTestGate()
         let response = SafetyTestGate()
         let cancelled = SafetyTestCounter()
@@ -94,7 +101,7 @@ struct SessionLaunchTests {
         await session.settlePendingLaunch { await cancelled.increment() }
         #expect(await cancelled.value == 1)
         // The user reconnects to the same PC before the abandoned /launch replies.
-        let reconnect = StreamSession()
+        let reconnect = makeTestStreamSession()
         _ = try? await reconnect.launchAndRecordOwnership(client: "client", appID: 1) { Self.response }
         await response.open()
         _ = await launch.result
@@ -109,7 +116,7 @@ struct SessionLaunchTests {
     /// A launch on another PC doesn't stand in for this one: the abandoned launch's late success
     /// still gets its second /cancel, so the first PC isn't left running the game.
     @Test func lateSuccessIsCancelledWhenAnotherPcLaunches() async {
-        let session = StreamSession()
+        let session = makeTestStreamSession()
         await session.useServer(ServerInfo(address: "192.0.2.1", uniqueId: "pc-a", serverName: "Den PC"))
         let entered = SafetyTestGate()
         let response = SafetyTestGate()
@@ -123,7 +130,7 @@ struct SessionLaunchTests {
         }
         await entered.wait()
         await session.settlePendingLaunch { await cancelled.increment() }
-        let other = StreamSession()
+        let other = makeTestStreamSession()
         await other.useServer(ServerInfo(address: "192.0.2.2", uniqueId: "pc-b", serverName: "Tower"))
         _ = try? await other.launchAndRecordOwnership(client: "client", appID: 1) { Self.response }
         await response.open()
@@ -137,7 +144,7 @@ struct SessionLaunchTests {
     /// A pipeline's events go to the session it started for, whichever is current when they fire,
     /// so a late callback from a timed-out pipeline can't land in the next session.
     @Test func eventsGoToTheSessionTheirPipelineStartedFor() async {
-        let session = StreamSession()
+        let session = makeTestStreamSession()
         let bridge = StreamBridgeContext(session: session, videoDecoder: await VideoDecoder(),
                                          audioDecoder: AudioDecoder(), inputForwarder: await InputForwarder())
         let (stream, continuation) = AsyncStream<StreamEvent>.makeStream()
@@ -152,14 +159,14 @@ struct SessionLaunchTests {
     /// Quitting during "Reconnecting…" after an attempt failed: stop still has a client for the PC
     /// it launched on, so the owned session gets its /cancel instead of leaving the game running.
     @Test func stopCanCancelAfterAFailedReconnectAttempt() async {
-        let session = StreamSession()
+        let session = makeTestStreamSession()
         await session.loseNetworkAfterReconnect(to: ServerInfo(address: "192.0.2.1", uniqueId: "pc", serverName: "Den PC"))
         let cleanup = await session.cleanupNetwork
         #expect(await cleanup?.server.uniqueId == "pc")
     }
 
     @Test func stopFinishesWhileLaunchRemainsPending() async {
-        let session = StreamSession()
+        let session = makeTestStreamSession()
         await session.prepareLaunchTestSession()
         await session.publishLaunchTestBridge()
         let entered = SafetyTestGate()
@@ -186,7 +193,7 @@ struct SessionLaunchTests {
 
     @Test(arguments: [StreamError.hostTimedOut, StreamError.hostUnreachable("Connection closed")])
     func busyRecoveryKeepsOwnershipAfterTransportFailure(error: StreamError) async throws {
-        let session = StreamSession()
+        let session = makeTestStreamSession()
         await session.prepareLaunchTestSession()
         var info = ServerInfo(address: "", uniqueId: "", serverName: "")
         info.currentGameID = 1
@@ -204,7 +211,7 @@ struct SessionLaunchTests {
     }
 
     @Test func differentAppAfterUncertainLaunchRequiresTakeover() async throws {
-        let session = StreamSession()
+        let session = makeTestStreamSession()
         await session.prepareLaunchTestSession()
         var info = ServerInfo(address: "", uniqueId: "", serverName: "")
         info.currentGameID = 2
@@ -227,7 +234,7 @@ struct SessionLaunchTests {
 
     @Test(arguments: [false, true])
     func olderLaunchCannotClearNewerLaunch(refused: Bool) async throws {
-        let session = StreamSession()
+        let session = makeTestStreamSession()
         let firstEntered = SafetyTestGate()
         let firstResponse = SafetyTestGate()
         let secondEntered = SafetyTestGate()
@@ -346,4 +353,8 @@ private extension StreamSession {
 
 private extension NetworkClient {
     func prepareLaunchTestClient() { clientUniqueID = "client" }
+}
+
+private func makeTestStreamSession() -> StreamSession {
+    StreamSession(backendFactory: { NativeBackend() })
 }

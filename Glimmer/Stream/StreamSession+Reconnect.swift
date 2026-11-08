@@ -248,11 +248,10 @@ extension StreamSession {
         // slipped in. Bail BEFORE building a fresh backend - nothing to clean up.
         guard !Task.isCancelled, isStreaming, !stopInProgress, Date() < deadline else { return false }
 
-        // 2. Swap in a fresh backend (NativeBackend is one-shot: its connection
-        //    state can't be reused and interrupt() latches permanently). Re-point
-        //    input + decoder on the MainActor so uplink + IDR requests go to the
-        //    new backend, not the dead one.
-        let fresh = NativeBackend()
+        // 2. Ask the composition-supplied factory for a new connection lifetime.
+        //    Re-point input + decoder on the MainActor so uplink + IDR requests
+        //    go to the new backend, not the dead one.
+        let fresh = backendFactory()
         self.backend = fresh
         await MainActor.run {
             inp.setBackend(fresh)
@@ -366,7 +365,7 @@ extension StreamSession {
     /// so no callback can fire after) and shut the client so the host drops its
     /// session record. Only nil `self.network` if it's still the one we built - a
     /// concurrent stop() may have already nil'd it.
-    private func tearDownSlippedInReconnect(fresh: NativeBackend, net: NetworkClient) async {
+    private func tearDownSlippedInReconnect(fresh: any StreamingBackend, net: NetworkClient) async {
         fresh.interruptConnection()
         await net.shutdown()
         if self.network === net { self.network = nil }

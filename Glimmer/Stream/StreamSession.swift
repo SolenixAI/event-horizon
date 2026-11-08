@@ -110,15 +110,17 @@ public actor StreamSession {
     /// site doesn't carry `serverInfo`).
     var telemetryServerName: String = ""
 
-    /// The streaming engine this session drives. Injected at construction
-    /// behind the `StreamingBackend` protocol so StreamSession, the decoders,
-    /// and the input forwarders only ever talk to `self.backend`. The Swift-
-    /// native engine (`NativeBackend`) is the only implementation.
+    /// Creates the engine for each connection lifetime. The app supplies the
+    /// native implementation at its composition point; this orchestrator
+    /// depends only on the engine contract and factory.
+    let backendFactory: StreamingBackendFactory
+
+    /// The streaming engine this session currently drives. Decoders and input
+    /// forwarders only talk to this protocol value.
     ///
     /// `var`, not `let`: a SILENT RECONNECT (see StreamSession+Reconnect.swift)
-    /// swaps in a FRESH `NativeBackend` after the old one's connection died -
-    /// `NativeBackend` carries one-shot connection state (and `interrupt()`
-    /// latches permanently), so re-`startConnection` requires a new instance.
+    /// swaps in a fresh backend after the old connection died. The current
+    /// backend's interrupt state is terminal, so reconnect needs a new instance.
     /// The swap is actor-isolated; the InputForwarder + VideoDecoder are
     /// re-pointed at the new backend on the MainActor immediately after, so
     /// nothing keeps sending to the dead one.
@@ -404,9 +406,10 @@ public actor StreamSession {
     var launchTask: Task<LaunchResponse, Error>?
     var pendingLaunch: Task<LaunchResponse, Error>?
 
-    /// - Parameter backend: the streaming engine. Defaults to the Swift-native
-    ///   engine, the only implementation.
-    public init(backend: StreamingBackend = NativeBackend()) {
-        self.backend = backend
+    /// - Parameter backendFactory: produces an independent backend for each
+    ///   connection lifetime. The app injects its native engine here.
+    public init(backendFactory: @escaping StreamingBackendFactory) {
+        self.backendFactory = backendFactory
+        self.backend = backendFactory()
     }
 }

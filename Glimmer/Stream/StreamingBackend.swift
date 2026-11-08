@@ -344,6 +344,11 @@ public protocol AudioSink: AnyObject, Sendable {
 
 // MARK: - StreamingBackend
 
+/// Creates an independent backend instance for a new connection lifetime.
+/// StreamSession retains this factory so a silent reconnect never reuses a
+/// backend whose connection teardown has latched it permanently.
+public typealias StreamingBackendFactory = @Sendable () -> any StreamingBackend
+
 /// The contract every streaming engine satisfies. `NativeBackend` is the sole
 /// conformer - the pure-Swift GameStream / Sunshine engine.
 ///
