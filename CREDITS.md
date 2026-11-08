@@ -31,6 +31,13 @@ permission notices are preserved here, as the MIT license requires:
   `nanors/rs.c` plus the scalar GF(256) math from nanors' vendored
   `deps/obl/oblas_lite.c` (covered by the same nanors license).
 
+## Update framework
+
+- **[Sparkle 2.10.0](https://github.com/sparkle-project/Sparkle/tree/2.10.0)**
+  is bundled for signed app updates. Its MIT license and bundled third-party
+  notices are reproduced in
+  [`docs/licenses/Sparkle-2.10.0-LICENSE.txt`](docs/licenses/Sparkle-2.10.0-LICENSE.txt).
+
 ## Controller mappings
 
 - **[SDL_GameControllerDB](https://github.com/mdqinc/SDL_GameControllerDB)**:
