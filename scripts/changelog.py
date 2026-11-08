@@ -7,7 +7,7 @@ needs - Markdown for the GitHub release body, and HTML for the Sparkle appcast
 `<description>` (Sparkle renders it in a WebView).
 
 Usage:
-  changelog.py --version 2026.8.14 [--format html|markdown] [--changelog PATH]
+  changelog.py --version 2026.11.08 [--format html|markdown] [--changelog PATH]
                [--optional]
 
 Exits 1 if the version has no section, unless --optional is given (then it
@@ -142,7 +142,7 @@ def default_path() -> str:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--version", required=True, help="marketing version, e.g. 2026.8.14")
+    ap.add_argument("--version", required=True, help="marketing version, e.g. 2026.11.08")
     ap.add_argument("--format", choices=("html", "markdown"), default="markdown")
     ap.add_argument("--changelog", default=None, help="path to CHANGELOG.md")
     ap.add_argument("--optional", action="store_true", help="print nothing and exit 0 if absent")

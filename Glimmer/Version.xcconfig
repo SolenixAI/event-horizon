@@ -1,6 +1,6 @@
 // SINGLE SOURCE OF TRUTH for the app version. Bump here only.
 //
-// CalVer: YYYY.M.MICRO - no zero-pad on month, MICRO resets to 0 each month.
+// CalVer: YYYY.MM.DD - the release date, with zero-padded month and day.
 //   2026.6.0 = first June 2026 release; 2026.6.1 = same-month hotfix.
 // CURRENT_PROJECT_VERSION (build number) is a monotonic YYYYMMDDNN stamp: the
 // release day plus a 2-digit counter, so several builds a day stay ordered.
@@ -11,5 +11,5 @@
 // because the build is driven by `make` (which passes -xcconfig), the
 // version is NOT set in project.pbxproj - bump it HERE, build with `make`.
 
-MARKETING_VERSION = 2026.11.0
-CURRENT_PROJECT_VERSION = 2026110800
+MARKETING_VERSION = 2026.11.08
+CURRENT_PROJECT_VERSION = 2026110801

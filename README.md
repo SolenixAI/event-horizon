@@ -51,12 +51,13 @@ unless you choose to share them.
 
 ## Install
 
-**Mac:** macOS 26 or later on Apple Silicon. The 2026.11.0 app is signed with
+**Mac:** macOS 26 or later on Apple Silicon. The 2026.11.08 app is signed with
 Apple Development, but is not notarized. Gatekeeper may block a fresh download;
 only install it if you trust the project and are comfortable approving it in
-System Settings. Earlier app downloads (2026.10.12 and 2026.10.8) have invalid
-signatures or fail Gatekeeper; do not install those. The Homebrew cask remains
-disabled until a notarized release passes Gatekeeper checks.
+System Settings. Release 2026.11.0 was superseded by 2026.11.08. Earlier app
+downloads (2026.10.12 and 2026.10.8) have invalid signatures or fail Gatekeeper;
+do not install those. The Homebrew cask remains disabled until a notarized
+release passes Gatekeeper checks.
 
 You can build from source for development (below).
 

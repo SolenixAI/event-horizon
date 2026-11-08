@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026.11.08 - 2026-11-08
+
+- Uses the release date as the app version, so the version matches the date
+  shown on GitHub.
+- Includes the Sunshine recovery and Accessibility-prompt fixes from 2026.11.0.
+- This corrects the version label only; it does not add app behavior beyond
+  2026.11.0.
+- Signed with Apple Development and not notarized. Gatekeeper may block a fresh
+  download; the GitHub release notes explain the limitation.
+
 ## 2026.11.0 - 2026-11-08
 
 - The PC companion recovers Sunshine and virtual-display state after NVIDIA
