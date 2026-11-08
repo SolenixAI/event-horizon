@@ -28,14 +28,22 @@ git push origin --tags
 ```
 
 The `macOS app release` workflow accepts only CalVer tags matching the version
-in `Glimmer/Version.xcconfig`, and verifies the tagged commit is on `main`. It
-runs in GitHub's `release` environment and calls the same `make release-publish`
-pipeline used locally. The pipeline builds and signs the app, notarizes and
-staples both the app and DMG, checks Gatekeeper acceptance, creates SHA-256
-checksums, EdDSA-signs the Sparkle ZIP, and publishes the release plus update
-metadata. The release environment must be configured with the protected secrets
-listed below before tags can publish. Until the signing secrets and a real
-release candidate have been validated, do not publish a tag.
+in `Glimmer/Version.xcconfig`, and verifies the tagged commit is on `main`. Set
+the repository variable `NOTARIZED_RELEASE_ENABLED=true` only after the
+protected `release` environment contains the secrets below. The workflow then
+builds and signs the app, notarizes and staples both the app and DMG, checks
+Gatekeeper acceptance, creates SHA-256 checksums, EdDSA-signs the Sparkle ZIP,
+and publishes the release plus update metadata.
+
+When the maintainer has only an Apple Development certificate, use
+`make release-publish-dev` from a clean checkout on the maintainer Mac. It signs
+the app, builds a DMG, validates the code signature and Sparkle update
+signature, and publishes the GitHub release and update feed. **This does not
+notarize the app. Gatekeeper may block fresh downloads; users may need to
+approve the app in System Settings.** The GitHub release body discloses this.
+This is the same limited signing path used by earlier releases; prefer the
+notarized workflow for public distribution when Developer ID credentials are
+available.
 
 Installs read `releases/latest/download/appcast.xml` (`SUFeedURL` in
 `Glimmer/Info.plist`), so an installed copy sees the update at its next daily
@@ -45,7 +53,9 @@ Pages is not used.
 For local release validation, `make dist` builds the signed, notarized app and
 DMG without publishing. `scripts/check-release-app.sh` and
 `scripts/check-release-dmg.sh` verify the signatures, tickets, and Gatekeeper
-results on those actual artifacts.
+results on those actual artifacts. `make dist-dev` builds and checks the
+Apple-Development-signed, non-notarized alternative and reports Gatekeeper's
+actual result without treating its expected rejection as success.
 
 The Homebrew cask is disabled because the currently published app artifacts fail
 Gatekeeper. After a replacement release passes the artifact checks,

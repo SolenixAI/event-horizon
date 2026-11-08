@@ -31,8 +31,13 @@ NOTES="$WORK/notes.md"
 
 [ -d "$APP" ] || { echo "ERR: app bundle not found at $APP - run via 'make release-publish'" >&2; exit 1; }
 [ -f "$DMG" ] || { echo "ERR: DMG not found at $DMG - run via 'make release-publish'" >&2; exit 1; }
-"$HERE/scripts/check-release-app.sh" "$APP"
-"$HERE/scripts/check-release-dmg.sh" "$DMG"
+if [ "${EVENT_HORIZON_UNNOTARIZED_RELEASE:-0}" = 1 ]; then
+	"$HERE/scripts/check-development-release-app.sh" "$APP"
+	"$HERE/scripts/check-development-release-dmg.sh" "$DMG"
+else
+	"$HERE/scripts/check-release-app.sh" "$APP"
+	"$HERE/scripts/check-release-dmg.sh" "$DMG"
+fi
 if [ -z "${SPARKLE_ED_PRIVATE_KEY:-}" ] && ! "$TOOLS/generate_keys" -p >/dev/null 2>&1; then
 	echo "ERR: no EdDSA key in the login keychain - run 'make sparkle-keys' once" >&2; exit 1
 fi
@@ -85,6 +90,8 @@ ED_SIG="$(printf '%s' "$SIG_LINE" | sed -n 's/.*sparkle:edSignature="\([^"]*\)".
 LENGTH="$(printf '%s' "$SIG_LINE" | sed -n 's/.*length="\([^"]*\)".*/\1/p')"
 [ -n "$ED_SIG" ] && [ -n "$LENGTH" ] || { echo "ERR: sign_update produced no signature" >&2; exit 1; }
 echo "  ✓ signed ($LENGTH bytes)"
+PUBLIC_KEY="$(/usr/libexec/PlistBuddy -c 'Print :SUPublicEDKey' "$APP/Contents/Info.plist")"
+"$HERE/scripts/check-sparkle-signature.sh" "$PUBLIC_KEY" "$ED_SIG" "$ZIP"
 
 # Start from the appcast the latest release serves, so older items stay in the feed.
 # A feed that has never been published starts as an empty channel.

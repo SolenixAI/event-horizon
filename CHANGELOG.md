@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.11.0 - 2026-11-08
+
+- The PC companion recovers Sunshine and virtual-display state after NVIDIA
+  Flatpak runtime updates restart the graphics driver or leave display state
+  stale.
+- Starting a stream no longer repeatedly prompts for macOS Accessibility
+  permission just because the volume-key handler is installed. Grant access
+  explicitly in Settings or onboarding when you want volume hotkeys.
+- This release is signed with Apple Development and is not notarized. Gatekeeper
+  may block a fresh download; the GitHub release notes explain the limitation.
+
 ## 2026.10.8 - 2026-10-13
 
 - Settings › General has a Privacy switch, Share usage stats. It's off until you
