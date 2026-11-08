@@ -16,6 +16,8 @@ prints nothing and exits 0, so a caller can fall back to boilerplate).
 Importable: `section(text, version)`, `to_html(markdown)`.
 """
 
+from __future__ import annotations
+
 import argparse
 import os
 import re

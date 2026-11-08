@@ -81,8 +81,7 @@ DMG_NAME        := Event-Horizon-$(MARKETING_VERSION).dmg
 DIST_DIR        := $(DERIVED)/dist
 # Build number (CFBundleVersion) - the monotonic stamp Sparkle keys updates on.
 BUILD_NUMBER    := $(shell sed -n 's/^CURRENT_PROJECT_VERSION = \(.*\)/\1/p' Glimmer/Version.xcconfig | tr -d ' ')
-# Repo that hosts the Sparkle appcast (GitHub Pages) + release assets - the
-# public source repo itself.
+# Repository that hosts the Sparkle appcast and release assets.
 RELEASES_REPO   ?= SolenixAI/event-horizon
 export RELEASES_REPO
 # Which release `make brew-bump` points the cask at - the one being built by default.
@@ -107,10 +106,11 @@ HELPER_TARGET := arm64-apple-macos26.0
 
 .PHONY: all release install reinstall uninstall clean app sign open \
         helper-build embed-helper \
-        profile profile-signposts setup-notary notarize dmg dmg-background dist preflight \
+        profile profile-signposts setup-notary notarize dmg notarize-dmg \
+        check-release-dmg dmg-background dist preflight \
         codesign-setup codesign-teardown local-signing-setup ensure-signing dev test \
         creds-init enable-telem disable-telem release-publish sparkle-keys \
-        guard-clean-tree brew-bump
+        guard-clean-tree release-notes-check brew-bump
 
 # TIER 1 - "everything but publish": the full release pipeline at Release
 # (xcodebuild -> inside-out sign -> notarize -> staple),
@@ -421,7 +421,7 @@ notarize: sign
 	xcrun stapler staple "$(GLIMMER_APP_SRC)"
 	@rm -f "$(DERIVED)/Event-Horizon-notarize.zip"
 	@echo "  ✓ notarized + stapled"
-	@spctl --assess --type execute --verbose=2 "$(GLIMMER_APP_SRC)" || true
+	@scripts/check-release-app.sh "$(GLIMMER_APP_SRC)"
 
 # Build a distributable DMG from the signed (and ideally notarized) bundle.
 # scripts/make-dmg.sh does the hdiutil + Finder-AppleScript dance (background
@@ -436,6 +436,18 @@ dmg:
 	@scripts/make-dmg.sh "$(GLIMMER_APP_SRC)" "$(DIST_DIR)/$(DMG_NAME)" "Event Horizon $(MARKETING_VERSION)"
 	@echo "  ✓ $(DIST_DIR)/$(DMG_NAME)"
 	@shasum -a 256 "$(DIST_DIR)/$(DMG_NAME)"
+
+notarize-dmg:
+	@test -f "$(DIST_DIR)/$(DMG_NAME)" || { echo "ERR: build the DMG first (make dmg)" >&2; exit 1; }
+	@echo "▶ Notarizing $(DMG_NAME)..."
+	xcrun notarytool submit "$(DIST_DIR)/$(DMG_NAME)" \
+		--keychain-profile "$(NOTARY_PROFILE)" --keychain "$(SIGN_KEYCHAIN)" --wait
+	xcrun stapler staple "$(DIST_DIR)/$(DMG_NAME)"
+	xcrun stapler validate "$(DIST_DIR)/$(DMG_NAME)"
+	@echo "  ✓ notarized + stapled"
+
+check-release-dmg:
+	@scripts/check-release-dmg.sh "$(DIST_DIR)/$(DMG_NAME)"
 
 # Regenerate the DMG window background art (scripts/dmg/*.png). Committed, so
 # this only needs re-running when the layout or palette changes - keep it in
@@ -489,19 +501,23 @@ guard-clean-tree:
 	@git diff --quiet HEAD || { echo "ERROR: refusing to build a release from a dirty worktree (commit or stash first)"; exit 1; }
 	@git diff --cached --quiet || { echo "ERROR: refusing to build a release with staged changes (commit or stash first)"; exit 1; }
 
-# Full distribution pipeline: clean-tree gate → preflight (fail fast, see above)
-# → clean Release → Developer ID sign → notarize + staple → DMG. The
-# DMG's app is stapled, so it passes Gatekeeper offline on any Mac.
+# Full distribution pipeline: clean-tree gate → preflight → clean Release →
+# Developer ID sign → notarize and staple the app and DMG, then check Gatekeeper
+# on the actual mounted artifacts.
 # Non-interactive from any session once the one-time setup is done (creds file +
 # codesign-setup + setup-notary - docs/RELEASE.md).
 dist: guard-clean-tree verify
-	$(MAKE) CONFIG=Release preflight clean app notarize dmg
+	$(MAKE) CONFIG=Release preflight clean app notarize dmg notarize-dmg check-release-dmg
 
 # Release gate: lint clean (strict) and the unit suite green before anything
 # is packaged. `make dist` / `make release-publish` cannot skip it.
 verify:
 	@echo "▶ Verify (lint --strict + tests)..."
 	@swiftlint lint --strict --quiet
+	@bash scripts/test-release-app-guard.sh
+	@bash scripts/test-release-dmg-guard.sh
+	@bash scripts/test-release-tools.sh
+	@bash scripts/test-prepare-ci-signing.sh
 	@$(MAKE) test
 
 # --- Auto-update publication (Sparkle) -------------------------------------
@@ -518,15 +534,16 @@ sparkle-keys:
 	echo "  SUPublicEDKey for Info.plist:"; \
 	"$$TOOLS/generate_keys" -p
 
-# Build the Release bundle (no notarization until a Developer ID exists), then publish
-# a Sparkle update: ZIP it, EdDSA-sign it with the keychain key, create the GitHub
-# release and upload appcast.xml, which releases/latest/download serves to installs.
-# Bump Glimmer/Version.xcconfig + commit and push FIRST: the release tag is the GPL source.
-release-publish: guard-clean-tree verify release
+# Publish only after the app and DMG are notarized, stapled, and accepted by
+# Gatekeeper. The release tag is the GPL source for the exact published bundle.
+release-publish: release-notes-check dist
 	@scripts/publish-release.sh \
 		"$(MARKETING_VERSION)" "$(BUILD_NUMBER)" \
 		"$(DERIVED)/Build/Products/Release/Event Horizon.app" \
 		"$(DIST_DIR)" "$(RELEASES_REPO)"
+
+release-notes-check:
+	@scripts/changelog.py --version "$(MARKETING_VERSION)" --changelog CHANGELOG.md >/dev/null
 
 # Point Casks/event-horizon.rb at the published release: download the DMG,
 # checksum it, and write version + sha256 into the file. It changes no other
