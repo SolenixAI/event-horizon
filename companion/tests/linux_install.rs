@@ -978,6 +978,7 @@ fn a_stream_that_ends_never_turns_off_the_last_screen() {
 }
 
 #[test]
+#[cfg(target_os = "linux")]
 fn sunshine_runs_the_one_screen_switch_as_each_stream_starts_and_ends() {
     let (cmd, files) = pc();
     let layout = kde_layout();

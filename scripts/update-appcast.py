@@ -23,6 +23,7 @@ falls back to the release-notes link, or to nothing) rather than a placeholder.
 else - so the notes land for users on older builds too. --dry-run prints the
 result to stdout and leaves the file alone.
 """
+from __future__ import annotations
 import argparse
 import os
 import sys

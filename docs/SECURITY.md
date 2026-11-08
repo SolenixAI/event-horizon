@@ -250,9 +250,11 @@ up.
   validation, no library injection. Xcode emits a note that the runtime is
   disabled under ad hoc signing. That's expected for development; the setting
   persists so Developer ID signed Release builds get the full enforcement.
-- **Developer ID signing + notarization + stapling.** Release builds are signed
-  with the team Developer ID and notarized by Apple, and the ticket is stapled
-  to the app that the DMG carries.
+- **Release signing + notarization + stapling.** The protected macOS release
+  workflow requires a Developer ID identity and App Store Connect credentials.
+  It signs and notarizes the app and DMG, staples their tickets, and checks
+  Gatekeeper acceptance before publication. Local builds without those
+  credentials fall back to ad hoc signing and are not notarized.
 - **Minimal-attack-surface helper.** The root daemon's XPC protocol is four
   methods (`helper/Protocol.swift`), and exactly one of them changes anything:
   `setAWDLDown(_:reason:)`. The other three (`currentStatus`, `ping`,

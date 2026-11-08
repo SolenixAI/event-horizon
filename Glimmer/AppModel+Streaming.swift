@@ -145,7 +145,7 @@ extension AppModel {
         Task { [weak self] in
             guard let self else { return }
             // The Swift-native engine is the only path.
-            let session = StreamSession(backend: NativeBackend())
+            let session = StreamSession(backendFactory: { NativeBackend() })
             await MainActor.run { self.nativeSession = session }
             await session.authorizeTakeover(takeoverAuthorized)
             if let launch = cfg.bitrateDecision {

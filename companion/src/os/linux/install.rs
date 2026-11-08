@@ -1,7 +1,8 @@
 //! `install` on Linux: the steps are in `linux_install`. This wires in the
 //! real PC: its environment, its files and its commands.
 
-use crate::linux_install::{self, Commands, Files, Layout, SystemCommands, SystemFiles};
+use super::{SystemCommands, SystemFiles};
+use crate::linux_install::{self, Commands, Files, Layout};
 use crate::virtual_screen::screen_size;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
@@ -102,15 +103,15 @@ fn stale_nvidia_flatpak_extension() -> bool {
             else {
                 return false;
             };
-            let Some((installed_ids, installed_commits)) =
+            let Some(state) =
                 active_nvidia_extension_state(&SystemCommands, installation, runtime_arch)
             else {
                 return false;
             };
             crate::sunshine_watchdog::has_stale_nvidia_extension_with_installed_ids(
                 &instance_info,
-                &installed_ids,
-                &installed_commits,
+                &state.installed_ids,
+                &state.commits_by_id,
                 expected_extension_id.as_deref(),
             )
         })
@@ -145,11 +146,16 @@ fn active_nvidia_extension_commits(
 }
 
 /// Reads commits for exact installed refs in Sunshine's architecture.
+struct ActiveNvidiaExtensionState {
+    installed_ids: HashSet<String>,
+    commits_by_id: HashMap<String, HashSet<String>>,
+}
+
 fn active_nvidia_extension_state(
     commands: &dyn Commands,
     installation: &str,
     runtime_arch: &str,
-) -> Option<(HashSet<String>, HashMap<String, HashSet<String>>)> {
+) -> Option<ActiveNvidiaExtensionState> {
     let refs = commands
         .capture(
             "flatpak",
@@ -186,7 +192,10 @@ fn active_nvidia_extension_state(
                 .insert(commit.trim().to_owned());
         }
     }
-    Some((installed_ids, commits))
+    Some(ActiveNvidiaExtensionState {
+        installed_ids,
+        commits_by_id: commits,
+    })
 }
 
 fn nvidia_extension_ref_id<'a>(full_ref: &'a str, runtime_arch: &str) -> Option<&'a str> {

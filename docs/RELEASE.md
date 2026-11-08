@@ -1,15 +1,15 @@
 # Release
 
-Continuous off `main`, CalVer `YYYY.M.MICRO`. Bump both lines of
-`Glimmer/Version.xcconfig` and nothing else; the version is not set in
-`project.pbxproj`. Every change ships through a PR.
+Versioned macOS releases are built from `main`, using CalVer `YYYY.M.MICRO`.
+Bump both version lines in `Glimmer/Version.xcconfig` and nothing else; the
+version is not set in `project.pbxproj`. Every change ships through a PR.
 
 ## 1. Branch and build
 
 ```bash
 git switch main && git pull && git switch -c my-change
 # edit; bump Glimmer/Version.xcconfig and add a CHANGELOG entry
-make dev     # tests, then build + install + relaunch (notarized = what ships)
+make dev     # tests, then build + install + relaunch (notarized when credentials are configured)
 ```
 
 `make app` is the fast compile-only check. `make dist` builds the notarized DMG
@@ -21,23 +21,36 @@ changes would not reproduce from the source at the tag.
 
 ```bash
 git push -u origin my-change && gh pr create --fill
-# merge the PR on GitHub, then:
-git switch main && git pull && make release-publish
+# merge the PR on GitHub, then tag that version on main:
+git switch main && git pull
+git tag "$(sed -n 's/^MARKETING_VERSION = //p' Glimmer/Version.xcconfig | tr -d ' ')"
+git push origin --tags
 ```
 
-`release-publish` builds the Release bundle, EdDSA-signs a ZIP of it with the
-keychain key, creates the GitHub release with the ZIP, and uploads `appcast.xml`
-as a release asset. Installs read `releases/latest/download/appcast.xml`
-(`SUFeedURL` in `Glimmer/Info.plist`), so an installed copy sees the update at its
-next daily check and asks before it installs. Nothing is pushed to a branch, and
-GitHub Pages is not used.
+The `macOS app release` workflow accepts only CalVer tags matching the version
+in `Glimmer/Version.xcconfig`, and verifies the tagged commit is on `main`. It
+runs in GitHub's `release` environment and calls the same `make release-publish`
+pipeline used locally. The pipeline builds and signs the app, notarizes and
+staples both the app and DMG, checks Gatekeeper acceptance, creates SHA-256
+checksums, EdDSA-signs the Sparkle ZIP, and publishes the release plus update
+metadata. The release environment must be configured with the protected secrets
+listed below before tags can publish. Until the signing secrets and a real
+release candidate have been validated, do not publish a tag.
 
-Until a Developer ID exists, release builds are not notarized. Gatekeeper treats
-the first install from a browser as an unidentified app; the tester approves it
-once in System Settings › Privacy & Security › Open Anyway.
+Installs read `releases/latest/download/appcast.xml` (`SUFeedURL` in
+`Glimmer/Info.plist`), so an installed copy sees the update at its next daily
+check and asks before it installs. Nothing is pushed to a branch, and GitHub
+Pages is not used.
 
-The Homebrew cask bump is not part of `release-publish` yet: it needs the DMG,
-which only the notarized `make dist` path makes. Run `make brew-bump` after that.
+For local release validation, `make dist` builds the signed, notarized app and
+DMG without publishing. `scripts/check-release-app.sh` and
+`scripts/check-release-dmg.sh` verify the signatures, tickets, and Gatekeeper
+results on those actual artifacts.
+
+The Homebrew cask is disabled because the currently published app artifacts fail
+Gatekeeper. After a replacement release passes the artifact checks,
+`make brew-bump` updates the cask locally; remove its `disable!` stanza in the
+same reviewed change.
 
 Release notes come from `CHANGELOG.md`, so write that section before publishing.
 Each release is a `## <version> - <date>` heading followed by a flat list of
@@ -53,6 +66,26 @@ HTML, into the appcast `<description>` Sparkle shows as “what's new”
 Fresh machine, one-time: `make creds-init`, fill in the file it prints (or set
 its `OP_SOURCE`), then `make codesign-setup setup-notary sparkle-keys`. Secrets
 live in that 0600 file and its 1Password item, never in the repo.
+
+### GitHub release environment
+
+Configure the repository's `release` environment with these Actions secrets. The
+workflow writes temporary key files and its credentials file under the runner's
+private temporary directory, then removes them when the runner exits. Do not
+copy these values into repository variables or files.
+
+| Secret                      | Value                                               |
+| --------------------------- | --------------------------------------------------- |
+| `DEVELOPER_ID_NAME`         | Exact `Developer ID Application: ...` identity name |
+| `DEVELOPER_ID_P12_BASE64`   | Base64-encoded Developer ID `.p12` export           |
+| `DEVELOPER_ID_P12_PASSWORD` | `.p12` export password                              |
+| `NOTARY_KEY_BASE64`         | Base64-encoded App Store Connect `.p8` key          |
+| `NOTARY_KEY_ID`             | App Store Connect key ID                            |
+| `NOTARY_ISSUER_ID`          | App Store Connect issuer ID                         |
+| `SPARKLE_ED_PRIVATE_KEY`    | Sparkle EdDSA private key text                      |
+
+Restrict the environment's deployment tags to version tags. Enable publication
+only after a release candidate has passed the local artifact checks above.
 
 These belong to your Developer ID, not to Glimmer: `~/.config/developer-id/` and
 `~/Library/Keychains/developer-id.keychain-db` hold one identity and one

@@ -122,7 +122,3 @@ companion/target/
 
 # Impeccable engine binaries: its launcher downloads them on first run
 **/skills/impeccable/scripts/bin/
-
-# Agent handoff / troubleshooting docs: local working notes, never for the
-# public repo. Keep agent context out of the open-source tree.
-EVENT_HORIZON_CODEX_HANDOFF.md

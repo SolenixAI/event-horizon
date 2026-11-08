@@ -12,6 +12,8 @@ cask "event-horizon" do
     strategy :github_latest
   end
 
+  disable! date: "2026-11-07", because: "fails Gatekeeper assessment"
+
   auto_updates true
   depends_on arch: :arm64
   depends_on macos: :tahoe

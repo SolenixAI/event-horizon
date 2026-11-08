@@ -1,6 +1,6 @@
 //! Sunshine's local config API on this PC (https://127.0.0.1:47990), the
 //! same on Windows and Linux. Routes and shapes are from Sunshine
-//! v2026.914 `src/confighttp.cpp` (see docs/research/companion.md, section 2).
+//! v2026.914 `src/confighttp.cpp`.
 
 use crate::ports::{SunshineApi, SunshineError};
 use crate::sunshine_tls::{load_pinned_der, pinned_client};

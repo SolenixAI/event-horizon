@@ -21,6 +21,7 @@ TOOLS="$("$HERE/scripts/sparkle-tools.sh")"
 # the name we match and the URL the appcast points at must be the same.
 ZIP="$DIST/Event-Horizon-$SHORT.zip"
 DMG="$DIST/Event-Horizon-$SHORT.dmg"
+CHECKSUMS="$DIST/SHA256SUMS"
 TAG="$SHORT"
 ASSET_URL="https://github.com/$REPO/releases/download/$TAG/Event-Horizon-$SHORT.zip"
 WORK="$(mktemp -d -t event-horizon-publish)"
@@ -29,21 +30,22 @@ APPCAST="$WORK/appcast.xml"
 NOTES="$WORK/notes.md"
 
 [ -d "$APP" ] || { echo "ERR: app bundle not found at $APP - run via 'make release-publish'" >&2; exit 1; }
+[ -f "$DMG" ] || { echo "ERR: DMG not found at $DMG - run via 'make release-publish'" >&2; exit 1; }
+"$HERE/scripts/check-release-app.sh" "$APP"
+"$HERE/scripts/check-release-dmg.sh" "$DMG"
 if [ -z "${SPARKLE_ED_PRIVATE_KEY:-}" ] && ! "$TOOLS/generate_keys" -p >/dev/null 2>&1; then
 	echo "ERR: no EdDSA key in the login keychain - run 'make sparkle-keys' once" >&2; exit 1
 fi
 
-# The release tag is the GPL source of this build, so it must be the commit we built:
-# require local HEAD == origin/event-horizon (the default branch) before tagging.
-git -C "$HERE" fetch --quiet origin event-horizon
+# The release tag is the GPL source of this build. Require its commit to be on
+# the canonical branch before creating or changing a GitHub release.
+git -C "$HERE" fetch --quiet origin main
 HEAD_SHA="$(git -C "$HERE" rev-parse HEAD)"
-BASE_SHA="$(git -C "$HERE" rev-parse origin/event-horizon)"
-[ "$HEAD_SHA" = "$BASE_SHA" ] || {
-	echo "ERR: local HEAD ($HEAD_SHA) != origin/event-horizon ($BASE_SHA)." >&2
-	echo "  Merge the change, then 'git pull --ff-only' before publishing - the release tag" >&2
-	echo "  is the GPLv3 source and must match the built commit." >&2
+if ! git -C "$HERE" merge-base --is-ancestor "$HEAD_SHA" origin/main; then
+	echo "ERR: HEAD ($HEAD_SHA) is not on origin/main." >&2
+	echo "  Merge the release source into main before publishing." >&2
 	exit 1
-}
+fi
 
 # Version assertion: the committed version at the tag, the built bundle, and the
 # advertised version ($SHORT) must all agree, so the tag's source reproduces the binary.
@@ -66,6 +68,12 @@ echo "  ✓ version $SHORT matches committed source AND the built bundle"
 echo "▶ Zipping the bundle for Sparkle..."
 rm -f "$ZIP"
 ditto -c -k --sequesterRsrc --keepParent "$APP" "$ZIP"
+(
+	cd "$DIST"
+	shasum -a 256 "$(basename "$ZIP")" "$(basename "$DMG")" > "$(basename "$CHECKSUMS")"
+	shasum -a 256 -c "$(basename "$CHECKSUMS")"
+)
+echo "  ✓ checksums written to $CHECKSUMS"
 
 echo "▶ EdDSA-signing the update..."
 if [ -n "${SPARKLE_ED_PRIVATE_KEY:-}" ]; then
@@ -100,20 +108,25 @@ XML
 	echo "  ✓ new appcast (no earlier release carries one)"
 fi
 
-# Release notes: this version's CHANGELOG.md section, the same text the appcast
-# <description> carries, so the GitHub release and Sparkle's "what's new" never disagree.
-if "$HERE/scripts/changelog.py" --version "$SHORT" --changelog "$HERE/CHANGELOG.md" >"$NOTES" 2>/dev/null \
-	&& [ -s "$NOTES" ]; then
-	echo "  ✓ release notes from CHANGELOG.md ($(wc -l <"$NOTES" | tr -d ' ') lines)"
-else
-	echo "  ! no '## $SHORT' section in CHANGELOG.md - using boilerplate release notes" >&2
-	printf 'Event Horizon %s. Auto-updates via Sparkle.\n' "$SHORT" >"$NOTES"
+# Release notes and Sparkle's update description use the same changelog section.
+if ! "$HERE/scripts/changelog.py" --version "$SHORT" --changelog "$HERE/CHANGELOG.md" >"$NOTES"; then
+	echo "ERR: add a non-empty '## $SHORT' section to CHANGELOG.md before publishing." >&2
+	exit 1
 fi
+echo "  ✓ release notes from CHANGELOG.md ($(wc -l <"$NOTES" | tr -d ' ') lines)"
 printf '\nSource: this repo at tag %s (GPLv3).\n' "$TAG" >>"$NOTES"
 
+echo "▶ Building and validating appcast.xml..."
+"$HERE/scripts/update-appcast.py" "$APPCAST" \
+	--short-version "$SHORT" --version "$BUILD" \
+	--url "$ASSET_URL" --ed-signature "$ED_SIG" --length "$LENGTH" --min-system 26.0 \
+	--changelog "$HERE/CHANGELOG.md"
+"$HERE/scripts/check-appcast.py" "$APPCAST" \
+	--short-version "$SHORT" --version "$BUILD" \
+	--url "$ASSET_URL" --ed-signature "$ED_SIG" --length "$LENGTH" --min-system 26.0
+
 echo "Publishing GitHub release ${TAG} to ${REPO}"
-ASSETS=("$ZIP")
-[ -f "$DMG" ] && ASSETS+=("$DMG")
+ASSETS=("$ZIP" "$DMG" "$CHECKSUMS")
 if gh release view "$TAG" -R "$REPO" >/dev/null 2>&1; then
 	# A published version is immutable: Sparkle signatures already point at these bytes.
 	# A retry may only add a missing asset or confirm an identical one.
@@ -143,11 +156,7 @@ else
 		--title "Event Horizon $SHORT" --notes-file "$NOTES"
 fi
 
-echo "▶ Adding the item to appcast.xml..."
-"$HERE/scripts/update-appcast.py" "$APPCAST" \
-	--short-version "$SHORT" --version "$BUILD" \
-	--url "$ASSET_URL" --ed-signature "$ED_SIG" --length "$LENGTH" --min-system 26.0 \
-	--changelog "$HERE/CHANGELOG.md"
+echo "▶ Uploading validated appcast.xml..."
 gh release upload "$TAG" "$APPCAST" -R "$REPO" --clobber
 gh release edit "$TAG" -R "$REPO" --draft=false
 echo "  ✓ release published with appcast.xml"

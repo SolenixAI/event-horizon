@@ -53,6 +53,22 @@ Top-level pieces:
 | `StatsCollector`      | `final class`, `@unchecked Sendable`                     | `Glimmer/Stream/StatsCollector.swift`                   |
 | Telemetry (opt-in)    | exporter + counters                                      | `Glimmer/Stream/TelemetryExporter.swift` (+ extensions) |
 
+## PC companion boundaries
+
+The Rust companion is a modular monolith. `Host` owns pairing, leases, library
+synchronization, and status policy. Its ports are declared in
+`companion/src/ports.rs`; OS-specific implementations are composed under
+`companion/src/os/` at the platform entry points. The Linux installer keeps its
+installation policy and `Commands` / `Files` ports in
+`companion/src/linux_install.rs`. Stream display recovery is a focused module at
+`companion/src/linux_install/display.rs`; real process and filesystem access
+lives in `companion/src/os/linux/system.rs`. Tests use fakes at these seams.
+
+CI runs `scripts/check-architecture.sh` to prevent the host and port modules
+from importing operating-system or network adapters directly. The check is a
+guard for dependency direction, not a complete substitute for reviewing module
+ownership when the architecture changes.
+
 > The control and HTTP path runs over `ControlTransport`
 > (`ControlTransport.swift`): mutual TLS on Network.framework, deliberately
 > **not** `URLSession`. The client identity is built in memory from its PEM
@@ -96,6 +112,12 @@ The method set deliberately mirrors the protocol's own surface: the outbound
 input methods map 1:1 to its `LiSend*` family, and doc comments keep the `Li*`
 names as spec citations, so the protocol itself documents the wire contract the
 engine satisfies.
+
+`AppModel+Streaming.swift` is the production composition point: it supplies a
+`StreamingBackendFactory` that creates `NativeBackend` instances.
+`StreamSession` keeps only the factory and the current protocol value, then
+requests a fresh backend for silent reconnects. CI checks that production
+constructs `NativeBackend` only at that composition point.
 
 Protocol constants live in a Swift mirror (`StreamProtocolConstants.swift`,
 `enum StreamProtocol`); nothing imports a `Limelight.h`.
