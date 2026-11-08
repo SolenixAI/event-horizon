@@ -545,11 +545,12 @@ release-publish: release-notes-check dist
 release-notes-check:
 	@scripts/changelog.py --version "$(MARKETING_VERSION)" --changelog CHANGELOG.md >/dev/null
 
-# Point Casks/event-horizon.rb at the published release: download the DMG,
-# checksum it, and write version + sha256 into the file. It changes no other
-# repository; commit the file on a branch and open a pull request. `release-publish`
-# runs this last; run it by hand to recover, or to re-point the cask at an older
-# tag with `make brew-bump VERSION=2026.8.13`. An unchanged cask writes nothing.
+# Point Casks/event-horizon.rb at a published release: download its DMG, checksum
+# it, and write version + sha256 into the file. This updates only the local cask;
+# commit it on a branch and open a pull request. Run after `release-publish`, or
+# by hand to recover or point at an older tag with `make brew-bump VERSION=...`.
+# An unchanged cask writes nothing. Remove its `disable!` stanza only after the
+# replacement artifact passes the release checks.
 brew-bump:
 	@scripts/homebrew-bump.sh "$(VERSION)"
 

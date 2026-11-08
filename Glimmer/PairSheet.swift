@@ -341,7 +341,7 @@ private struct HostChooser: View {
     private static let localNetworkSettings =
         URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_LocalNetwork")
     private static let hostSetupGuide =
-        URL(string: "https://github.com/Se7enbrc/glimmer/blob/main/docs/HOST_SETUP.md")
+        URL(string: "https://github.com/SolenixAI/event-horizon/blob/main/docs/HOST_SETUP.md")
 
     private var manualAddress: String? { AppModel.normalizedPCAddress(manual) }
 
