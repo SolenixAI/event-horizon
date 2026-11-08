@@ -15,7 +15,7 @@ import SwiftUI
 private enum AboutLink {
     static let solenix = "https://solenix.dev"
     static let glimmer = "https://github.com/Se7enbrc/glimmer"
-    static let credits = "https://github.com/Se7enbrc/glimmer/blob/main/CREDITS.md"
+    static let credits = "https://github.com/SolenixAI/event-horizon/blob/main/CREDITS.md"
     static let license = "https://www.gnu.org/licenses/gpl-3.0.html"
     static let sunshine = "https://github.com/LizardByte/Sunshine"
     static let moonlight = "https://github.com/moonlight-stream"
