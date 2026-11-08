@@ -1,8 +1,9 @@
 # Release
 
-Versioned macOS releases are built from `main`, using CalVer `YYYY.M.MICRO`.
-Bump both version lines in `Glimmer/Version.xcconfig` and nothing else; the
-version is not set in `project.pbxproj`. Every change ships through a PR.
+Versioned macOS releases are built from `main`, using the release date as CalVer
+`YYYY.MM.DD` (for example, `2026.11.08`). Bump both version lines in
+`Glimmer/Version.xcconfig` and nothing else; the version is not set in
+`project.pbxproj`. Every change ships through a PR.
 
 ## 1. Branch and build
 

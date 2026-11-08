@@ -431,7 +431,7 @@ conditions: never log per-frame at `.info`.
 
 ## Commits
 
-CalVer for releases (`YYYY.M.MICRO`). See [RELEASE.md](RELEASE.md).
+CalVer for releases (`YYYY.MM.DD`). See [RELEASE.md](RELEASE.md).
 
 Conventional-commit-style prefixes are used in the repo's history; match what's
 there. Common prefixes:
