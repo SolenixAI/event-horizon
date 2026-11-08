@@ -18,6 +18,9 @@
 # RELEASE (one published, auto-updatable build - everything flows here):
 #   make release-publish   THE release. dist → ZIP + EdDSA-sign → GitHub release +
 #                          appcast; existing installs auto-update (Sparkle).
+#   make release-publish-dev
+#                          Apple Development signed, NOT notarized; manual
+#                          Gatekeeper approval is required on first install.
 #   make dist              Build-only checkpoint: Release → Developer ID sign →
 #                          notarize → staple → DMG (no publish). This is
 #                          release-publish's first step; run it alone only to
@@ -225,6 +228,15 @@ local-signing-setup:
 	scripts/local-signing-setup.sh
 
 sign: app embed-helper ensure-signing
+ifeq ($(APPLE_DEVELOPMENT_RELEASE),1)
+ifneq ($(strip $(LOCAL_ID)),)
+	@echo "▶ Signing Release bundle with Apple Development identity and Release entitlements: $(LOCAL_ID)"
+	scripts/sign-bundle.sh "$(GLIMMER_APP_SRC)" "$(LOCAL_ID)" "" Glimmer/Glimmer.entitlements
+else
+	@echo "ERR: Apple Development release requested but no Apple Development identity is available" >&2
+	@exit 1
+endif
+else
 ifeq ($(strip $(DEVELOPER_ID)),)
 ifneq ($(strip $(LOCAL_ID)),)
 	@echo "▶ Signing bundle inside-out with the local identity: $(LOCAL_ID)"
@@ -236,6 +248,7 @@ endif
 else
 	@echo "▶ Signing bundle inside-out with: $(DEVELOPER_ID)"
 	scripts/sign-bundle.sh "$(GLIMMER_APP_SRC)" "$(DEVELOPER_ID)" "$(SIGN_KEYCHAIN)" $(if $(filter Release,$(CONFIG)),Glimmer/Glimmer.entitlements,Glimmer/Glimmer-Debug.entitlements)
+endif
 endif
 
 # Install the everything-but-publish build (see `release`) to /Applications.
@@ -509,6 +522,16 @@ guard-clean-tree:
 dist: guard-clean-tree verify
 	$(MAKE) CONFIG=Release preflight clean app notarize dmg notarize-dmg check-release-dmg
 
+# Temporary distribution path for maintainers without Apple Developer Program
+# access. Keep the distinction explicit: this preserves the existing Sparkle
+# update chain, but macOS Gatekeeper rejects fresh downloads because they are
+# not notarized. The release notes and GitHub release body disclose this.
+dist-dev: guard-clean-tree verify
+	@case "$(LOCAL_ID)" in Apple\ Development:*) ;; *) echo "ERR: no Apple Development identity - sign into Xcode with the free Apple developer account first" >&2; exit 1 ;; esac
+	$(MAKE) CONFIG=Release APPLE_DEVELOPMENT_RELEASE=1 clean sign dmg
+	scripts/check-development-release-app.sh "$(DERIVED)/Build/Products/Release/Event Horizon.app"
+	scripts/check-development-release-dmg.sh "$(DIST_DIR)/$(DMG_NAME)"
+
 # Release gate: lint clean (strict) and the unit suite green before anything
 # is packaged. `make dist` / `make release-publish` cannot skip it.
 verify:
@@ -538,6 +561,12 @@ sparkle-keys:
 # Gatekeeper. The release tag is the GPL source for the exact published bundle.
 release-publish: release-notes-check dist
 	@scripts/publish-release.sh \
+		"$(MARKETING_VERSION)" "$(BUILD_NUMBER)" \
+		"$(DERIVED)/Build/Products/Release/Event Horizon.app" \
+		"$(DIST_DIR)" "$(RELEASES_REPO)"
+
+release-publish-dev: release-notes-check dist-dev
+	@EVENT_HORIZON_UNNOTARIZED_RELEASE=1 scripts/publish-release.sh \
 		"$(MARKETING_VERSION)" "$(BUILD_NUMBER)" \
 		"$(DERIVED)/Build/Products/Release/Event Horizon.app" \
 		"$(DIST_DIR)" "$(RELEASES_REPO)"

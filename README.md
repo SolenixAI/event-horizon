@@ -51,13 +51,12 @@ unless you choose to share them.
 
 ## Install
 
-**Mac:** macOS 26 or later on Apple Silicon. The macOS download is temporarily
-unavailable: the latest app release (2026.10.12) has no DMG, and its ZIP
-contains an app whose Apple Development certificate is revoked and which has no
-notarization ticket. Gatekeeper rejects it. The older 2026.10.8 DMG also fails
-Gatekeeper, so the Homebrew cask is disabled. **Do not bypass Gatekeeper or use
-“Open Anyway” for these releases.** Distribution will resume after a replacement
-passes signature, notarization, and Gatekeeper checks.
+**Mac:** macOS 26 or later on Apple Silicon. The 2026.11.0 app is signed with
+Apple Development, but is not notarized. Gatekeeper may block a fresh download;
+only install it if you trust the project and are comfortable approving it in
+System Settings. Earlier app downloads (2026.10.12 and 2026.10.8) have invalid
+signatures or fail Gatekeeper; do not install those. The Homebrew cask remains
+disabled until a notarized release passes Gatekeeper checks.
 
 You can build from source for development (below).
 

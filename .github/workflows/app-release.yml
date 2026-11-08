@@ -14,7 +14,9 @@ concurrency:
 
 jobs:
   release:
-    if: github.repository == 'SolenixAI/event-horizon'
+    if:
+      ${{ github.repository == 'SolenixAI/event-horizon' &&
+      vars.NOTARIZED_RELEASE_ENABLED == 'true' }}
     runs-on: xcode-27
     timeout-minutes: 90
     environment: release
@@ -53,3 +55,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASES_REPO: SolenixAI/event-horizon
         run: make release-publish
+
+  notarized-release-disabled:
+    if:
+      ${{ github.repository == 'SolenixAI/event-horizon' &&
+      vars.NOTARIZED_RELEASE_ENABLED != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Explain local Apple Development release mode
+        run:
+          echo "Notarized app publishing is disabled until the release
+          environment has Developer ID and notarization credentials. Use make
+          release-publish-dev for an explicitly unnotarized release from the
+          maintainer Mac."
