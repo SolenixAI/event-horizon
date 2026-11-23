@@ -38,6 +38,21 @@ jobs:
         run: |
           brew install swiftlint
           swiftlint lint --strict
+  pre-commit:
+    # Run formatting, yaml, markdown, json, and repository file checks on Ubuntu.
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pre-commit
+        run: pip install pre-commit
+      - name: Run pre-commit checks
+        run: SKIP=swiftlint,trufflehog pre-commit run --all-files
   companion:
     # The PC companion: its core and both OS adapters, on the PCs it runs on.
     strategy:
@@ -53,6 +68,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Format
+        run: cargo fmt --check
       - name: Lint
         run: cargo clippy --all-targets -- -D warnings
       - name: Test
@@ -128,7 +145,15 @@ jobs:
     # The one check the branch ruleset requires. It passes only when every job above
     # passed, so adding or renaming a job never leaves the ruleset stale.
     if: always()
-    needs: [test, lint, companion, companion-install-windows, architecture]
+    needs:
+      [
+        test,
+        lint,
+        pre-commit,
+        companion,
+        companion-install-windows,
+        architecture,
+      ]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
