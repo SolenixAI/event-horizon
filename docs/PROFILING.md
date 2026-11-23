@@ -28,9 +28,10 @@ view and filter by subsystem `dev.solenix.eventhorizon` (capital G).
 
 ## Unified log
 
-The app logs under one subsystem: **`dev.solenix.eventhorizon`**. Per-file `Logger`
-categories partition the output (grep `subsystem: "dev.solenix.eventhorizon"` to
-verify; some `Logger(` calls put the category on the next line):
+The app logs under one subsystem: **`dev.solenix.eventhorizon`**. Per-file
+`Logger` categories partition the output (grep
+`subsystem: "dev.solenix.eventhorizon"` to verify; some `Logger(` calls put the
+category on the next line):
 
 | Category               | File                                                                              |
 | ---------------------- | --------------------------------------------------------------------------------- |
@@ -61,8 +62,8 @@ categories, such as `Stream`, `NativeConnection`, `NativeVideo` and
 `Controller`.
 
 The privileged AWDL helper is a separate process and logs under its own
-subsystem, `dev.solenix.eventhorizon.helper` (lowercase `g`), with categories `main`
-and `AWDL`.
+subsystem, `dev.solenix.eventhorizon.helper` (lowercase `g`), with categories
+`main` and `AWDL`.
 
 OSSignpost categories are a separate axis on the same subsystem (see
 `Glimmer/Stream/Signposts.swift`):
@@ -284,8 +285,8 @@ When enabled, a stream writes to `~/Library/Logs/Event Horizon/`:
   (`input_motion`, sampled at 20 Hz per sensor) and scroll (`input_scroll`).
   Keys, mouse buttons, pasted text and DualSense touchpad touches are not
   recorded;
-- `event-horizon-<timestamp>.log`: a richer per-session diagnostic log, with PC names,
-  addresses and error text shown as `<private>`.
+- `event-horizon-<timestamp>.log`: a richer per-session diagnostic log, with PC
+  names, addresses and error text shown as `<private>`.
 
 The exporter also serves the per-second metrics on a local Prometheus endpoint,
 which is what a maintainer-local dashboard rig would scrape. No such rig is in
@@ -396,22 +397,23 @@ each gap.
 
 These have no Settings row. Each lives in the app's defaults domain
 (`defaults write dev.solenix.eventhorizon <key> -bool YES` or `-float N`;
-`defaults delete dev.solenix.eventhorizon <key>` restores the default) and, unless its
-row says otherwise, applies from the next stream. The `pacerTick*` and `cruise*`
-keys are escape hatches for chasing a regression, not tuning advice.
+`defaults delete dev.solenix.eventhorizon <key>` restores the default) and,
+unless its row says otherwise, applies from the next stream. The `pacerTick*`
+and `cruise*` keys are escape hatches for chasing a regression, not tuning
+advice.
 
-| Key                      | Type, default | Effect                                                                                                                                      |
-| ------------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `bitrateBoostWifi`       | float, 1.5    | Highest quality's multiplier on the Wi-Fi bitrate ask. The Wi-Fi cap and the radio gate still apply.                                        |
-| `hidGamepadClaimAll`     | bool, NO      | The raw-HID path also takes pads GameController owns, for testing without odd hardware. Reconnect the pad or relaunch to apply.             |
-| `telemetryListenLAN`     | bool, NO      | Serves the Prometheus endpoint (port 9847) on every interface instead of loopback, so anyone on your network can read it.                   |
+| Key                      | Type, default | Effect                                                                                                                                            |
+| ------------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bitrateBoostWifi`       | float, 1.5    | Highest quality's multiplier on the Wi-Fi bitrate ask. The Wi-Fi cap and the radio gate still apply.                                              |
+| `hidGamepadClaimAll`     | bool, NO      | The raw-HID path also takes pads GameController owns, for testing without odd hardware. Reconnect the pad or relaunch to apply.                   |
+| `telemetryListenLAN`     | bool, NO      | Serves the Prometheus endpoint (port 9847) on every interface instead of loopback, so anyone on your network can read it.                         |
 | `diagFileLogDebug`       | bool, NO      | Debug lines in the in-app log and `event-horizon-<timestamp>.log`. Same as the “Verbose session log file” toggle in the hidden Telemetry section. |
-| `pacerTickOffMain`       | bool, YES     | NO moves the present tick back onto the main run loop.                                                                                      |
-| `pacerTickRealtime`      | bool, YES     | NO drops the tick thread's real-time scheduling.                                                                                            |
-| `cruiseTraversalEnabled` | bool, NO      | Boosts fast mouse flicks on streams wider than 1920 pixels. Off because aim and flicks overlap in speed.                                    |
-| `cruiseVKnee`            | float, 1100   | Cruise: below this speed (HID counts per second) the gain is exactly 1.                                                                     |
-| `cruiseVFull`            | float, 1800   | Cruise: from this speed the full gain (stream width ÷ 1920) applies.                                                                        |
-| `cruiseDragDeltaScale`   | float, 1.35   | Scales dragged-mouse deltas while raw aim is on, since macOS damps them. 1.0 turns it off; clamped to 0.5 to 3.0. Applies without cruise.   |
+| `pacerTickOffMain`       | bool, YES     | NO moves the present tick back onto the main run loop.                                                                                            |
+| `pacerTickRealtime`      | bool, YES     | NO drops the tick thread's real-time scheduling.                                                                                                  |
+| `cruiseTraversalEnabled` | bool, NO      | Boosts fast mouse flicks on streams wider than 1920 pixels. Off because aim and flicks overlap in speed.                                          |
+| `cruiseVKnee`            | float, 1100   | Cruise: below this speed (HID counts per second) the gain is exactly 1.                                                                           |
+| `cruiseVFull`            | float, 1800   | Cruise: from this speed the full gain (stream width ÷ 1920) applies.                                                                              |
+| `cruiseDragDeltaScale`   | float, 1.35   | Scales dragged-mouse deltas while raw aim is on, since macOS damps them. 1.0 turns it off; clamped to 0.5 to 3.0. Applies without cruise.         |
 
 ## Other Instruments templates worth knowing
 
@@ -503,9 +505,9 @@ declare a dead connection.
   Profiler symbolicates without manual dSYM linking.
 
 `make profile` and `make profile-signposts` both depend on `install`, which
-builds Release and copies the signed bundle to `/Applications/Event Horizon.app`, the
-path `xctrace --launch` points at. So `make profile-signposts` on its own is the
-whole command.
+builds Release and copies the signed bundle to
+`/Applications/Event Horizon.app`, the path `xctrace --launch` points at. So
+`make profile-signposts` on its own is the whole command.
 
 ## Common pitfalls
 

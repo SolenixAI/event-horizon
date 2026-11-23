@@ -4,7 +4,7 @@
 
 ## Platform
 
-ios
+macos
 
 ## Users
 

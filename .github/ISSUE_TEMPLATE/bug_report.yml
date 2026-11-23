@@ -19,8 +19,8 @@ body:
     attributes:
       label: Event Horizon version
       description:
-        Menu bar → About, or `defaults read
-        "/Applications/Event Horizon.app/Contents/Info" CFBundleShortVersionString`
+        Menu bar → About, or `defaults read "/Applications/Event
+        Horizon.app/Contents/Info" CFBundleShortVersionString`
       placeholder: "2026.8.15 (20260830)"
     validations:
       required: true
