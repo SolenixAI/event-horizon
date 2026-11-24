@@ -74,7 +74,10 @@ pub fn resolve_active_id(active_connector: Option<&str>, outputs: &[HostOutput])
         if target == VIRTUAL_ID || target == VIRTUAL_CONNECTOR {
             return VIRTUAL_ID.to_string();
         }
-        if let Some(found) = outputs.iter().find(|o| o.id == target || o.connector == target) {
+        if let Some(found) = outputs
+            .iter()
+            .find(|o| o.id == target || o.connector == target)
+        {
             return found.id.clone();
         }
     }
@@ -186,12 +189,13 @@ pub fn sort_and_deduplicate_modes(mut modes: Vec<DisplayMode>) -> Vec<DisplayMod
 /// Extracts current display mode from the active mode or current size/refresh.
 fn extract_current_mode(o: &Value, modes: &[DisplayMode]) -> Option<DisplayMode> {
     // 1. Check direct object in current_mode or currentMode
-    if let Some(direct) = o.get("current_mode").or_else(|| o.get("currentMode")) {
-        if direct.is_object() {
-            if let Some(mode) = parse_mode(direct) {
-                return Some(mode);
-            }
-        }
+    if let Some(direct) = o
+        .get("current_mode")
+        .or_else(|| o.get("currentMode"))
+        .filter(|d| d.is_object())
+        && let Some(mode) = parse_mode(direct)
+    {
+        return Some(mode);
     }
 
     // 2. Check currentModeId in raw modes array
@@ -199,30 +203,28 @@ fn extract_current_mode(o: &Value, modes: &[DisplayMode]) -> Option<DisplayMode>
         .get("currentModeId")
         .or_else(|| o.get("current_mode_id"))
         .or_else(|| o.get("mode_id"));
-    if let Some(id_val) = current_mode_id {
-        let target_id = id_val
-            .as_str()
-            .map(str::to_string)
-            .or_else(|| id_val.as_u64().map(|n| n.to_string()))
-            .or_else(|| id_val.as_i64().map(|n| n.to_string()));
-        if let Some(target) = target_id {
-            if !target.is_empty() {
-                if let Some(raw_modes) = o.get("modes").and_then(Value::as_array) {
-                    for m in raw_modes {
-                        let m_id = m
-                            .get("id")
-                            .and_then(Value::as_str)
-                            .map(str::to_string)
-                            .or_else(|| m.get("id").and_then(Value::as_u64).map(|n| n.to_string()))
-                            .or_else(|| {
-                                m.get("id").and_then(Value::as_i64).map(|n| n.to_string())
-                            });
-                        if m_id.as_deref() == Some(&target) {
-                            if let Some(mode) = parse_mode(m) {
-                                return Some(mode);
-                            }
-                        }
-                    }
+    if let Some(target) = current_mode_id
+        .and_then(|id_val| {
+            id_val
+                .as_str()
+                .map(str::to_string)
+                .or_else(|| id_val.as_u64().map(|n| n.to_string()))
+                .or_else(|| id_val.as_i64().map(|n| n.to_string()))
+        })
+        .filter(|t| !t.is_empty())
+        && let Some(raw_modes) = o.get("modes").and_then(Value::as_array)
+    {
+        for m in raw_modes {
+            let m_id = m
+                .get("id")
+                .and_then(Value::as_str)
+                .map(str::to_string)
+                .or_else(|| m.get("id").and_then(Value::as_u64).map(|n| n.to_string()))
+                .or_else(|| m.get("id").and_then(Value::as_i64).map(|n| n.to_string()));
+            if m_id.as_deref() == Some(&target) {
+                let parsed = parse_mode(m);
+                if parsed.is_some() {
+                    return parsed;
                 }
             }
         }
@@ -257,7 +259,10 @@ fn extract_current_mode(o: &Value, modes: &[DisplayMode]) -> Option<DisplayMode>
         }
 
         // Try to match mode in parsed modes
-        if let Some(matched) = modes.iter().find(|m| m.width == width && m.height == height) {
+        if let Some(matched) = modes
+            .iter()
+            .find(|m| m.width == width && m.height == height)
+        {
             return Some(matched.clone());
         }
 
@@ -411,10 +416,7 @@ pub fn parse_kscreen_json(
 
     let active_id = resolve_active_id(active_connector, &outputs);
 
-    Ok(OutputsPayload {
-        active_id,
-        outputs,
-    })
+    Ok(OutputsPayload { active_id, outputs })
 }
 
 /// Parses outputs from KScreen JSON string.
@@ -422,8 +424,8 @@ pub fn parse_kscreen_outputs(
     json_str: &str,
     active_connector: Option<&str>,
 ) -> Result<OutputsPayload, String> {
-    let value: Value = serde_json::from_str(json_str)
-        .map_err(|e| format!("Failed to parse KScreen JSON: {e}"))?;
+    let value: Value =
+        serde_json::from_str(json_str).map_err(|e| format!("Failed to parse KScreen JSON: {e}"))?;
     parse_kscreen_json(&value, active_connector)
 }
 

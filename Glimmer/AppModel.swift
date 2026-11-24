@@ -557,19 +557,8 @@ final class AppModel {
         miniPlayerHotkey = Self.persistedDecoded("miniPlayerHotkey", HotkeyChord.self) ?? miniPlayerHotkey
         showStreamStats = Self.persistedBool("showStreamStats") ?? showStreamStats
         streamStatsCorner = Self.persistedRawValue("streamStatsCorner", StatsOverlayCorner.self) ?? streamStatsCorner
-        // Stats overlay preset. Key-absence means the user never touched
-        // the Settings picker (didSet is suppressed here and the picker is
-        // the only post-init writer), so absent keeps the .minimal default
-        // declared above - deliberately no migration shim. Existing
-        // installs decode their saved choice; an unrecognised raw value
-        // (downgrade from a build that added a preset) falls back to
-        // .minimal silently.
+        // Stats overlay preset and custom-row set persistence.
         statsOverlayPreset = Self.persistedRawValue("statsOverlayPreset", StatsOverlayPreset.self) ?? statsOverlayPreset
-        // Custom-row set. Decode each persisted string back to a
-        // StatsRow.Kind; an unknown kind (downgrade from a future build)
-        // gets silently dropped rather than aborting the load. Empty /
-        // missing → keep the default initial set already set on the
-        // property.
         statsOverlayCustomRows = Self.persistedCustomRows() ?? statsOverlayCustomRows
         statsThresholds = Self.persistedDecoded("statsThresholds", StatsThresholds.self) ?? statsThresholds
         quitHotkey = Self.persistedDecoded("quitHotkey", HotkeyChord.self) ?? quitHotkey
@@ -600,4 +589,5 @@ final class AppModel {
     var hostOutputs: [String: [HostOutput]] = [:]
     var activeHostOutputId: [String: String] = [:]
     var selectedHostMode: [String: DisplayMode] = [:]
+    var companionOutputStatus: [String: CompanionOutputStatus] = [:]
 }

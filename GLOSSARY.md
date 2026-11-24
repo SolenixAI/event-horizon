@@ -55,17 +55,16 @@ _Avoid_: heartbeat, keep-alive
 
 ## Displays
 
-**Host output**:
-A physical or virtual display connected to the PC (such as a TV, desk monitor, or Mac-only virtual screen) that can be chosen as the target for streaming.
-_Avoid_: screen number, video adapter
+**Host output**: A physical or virtual display connected to the PC (such as a
+TV, desk monitor, or Mac-only virtual screen) that can be chosen as the target
+for streaming. _Avoid_: screen number, video adapter
 
-**Display mode**:
-The resolution and refresh rate (such as 1440p @ 120Hz or 4K @ 60Hz) configured on the active host output.
-_Avoid_: video resolution preset
+**Display mode**: The resolution and refresh rate (such as 1440p @ 120Hz or 4K @
+60Hz) configured on the active host output. _Avoid_: video resolution preset
 
-**Virtual screen**:
-An isolated Mac-sized display output running on the host that streams privately to the Mac app without turning on physical monitors in the room.
-_Avoid_: dummy plug, fake monitor
+**Virtual screen**: An isolated Mac-sized display output running on the host
+that streams privately to the Mac app without turning on physical monitors in
+the room. _Avoid_: dummy plug, fake monitor
 
 ## Input
 

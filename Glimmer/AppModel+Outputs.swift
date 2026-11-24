@@ -6,6 +6,16 @@
 
 import Foundation
 
+/// Status of host companion output queries for diagnostic UI and fallback handling.
+enum CompanionOutputStatus: Equatable, Sendable {
+    case idle
+    case loading
+    case ready(outputs: [HostOutput])
+    case companionUpdateRequired(hostName: String)
+    case unauthorized(hostName: String)
+    case unreachable(hostName: String)
+}
+
 extension AppModel {
 
     // MARK: - Defaults Keys
@@ -46,6 +56,14 @@ extension AppModel {
 
     // MARK: - Query Accessors
 
+    /// Whether the host companion requires an update to support display outputs.
+    func isCompanionUpdateRequired(for host: Host) -> Bool {
+        if case .companionUpdateRequired = companionOutputStatus[host.id] {
+            return true
+        }
+        return false
+    }
+
     /// Discovered outputs for this host, falling back to a default virtual display if none discovered yet.
     func outputs(for host: Host) -> [HostOutput] {
         let list = hostOutputs[host.id] ?? []
@@ -76,39 +94,57 @@ extension AppModel {
         guard let token = CompanionTokens.token(forHost: host.id),
               let address = host.manualAddress ?? host.localAddress
         else {
-            if activeHostOutputId[host.id] == nil {
-                activeHostOutputId[host.id] = loadPersistedOutputId(for: host.id) ?? "virtual"
-            }
-            if selectedHostMode[host.id] == nil {
-                selectedHostMode[host.id] = loadPersistedMode(for: host.id)
-            }
+            companionOutputStatus[host.id] = .unreachable(hostName: host.name)
+            fallbackActiveOutputAndMode(for: host)
             return
         }
+
+        companionOutputStatus[host.id] = .loading
 
         let companion = CompanionClient(
             address: address,
             pinned: CompanionTokens.fingerprint(forHost: host.id)
         )
 
-        guard let payload = await companion.outputs(token: token) else {
-            if activeHostOutputId[host.id] == nil {
-                activeHostOutputId[host.id] = loadPersistedOutputId(for: host.id) ?? "virtual"
-            }
-            if selectedHostMode[host.id] == nil {
-                selectedHostMode[host.id] = loadPersistedMode(for: host.id)
-            }
-            return
+        let result = await companion.outputsResult(token: token)
+        switch result {
+        case .success(let payload):
+            companionOutputStatus[host.id] = .ready(outputs: payload.outputs)
+            hostOutputs[host.id] = payload.outputs
+            activeHostOutputId[host.id] = payload.activeId
+            savePersistedOutputId(payload.activeId, for: host.id)
+            reconcileSelectedMode(for: host, payload: payload)
+
+        case .unsupportedApi:
+            companionOutputStatus[host.id] = .companionUpdateRequired(hostName: host.name)
+            fallbackActiveOutputAndMode(for: host)
+
+        case .unauthorized:
+            companionOutputStatus[host.id] = .unauthorized(hostName: host.name)
+            fallbackActiveOutputAndMode(for: host)
+
+        case .unreachable:
+            companionOutputStatus[host.id] = .unreachable(hostName: host.name)
+            fallbackActiveOutputAndMode(for: host)
         }
+    }
 
-        hostOutputs[host.id] = payload.outputs
-        activeHostOutputId[host.id] = payload.activeId
-        savePersistedOutputId(payload.activeId, for: host.id)
+    private func fallbackActiveOutputAndMode(for host: Host) {
+        if activeHostOutputId[host.id] == nil {
+            activeHostOutputId[host.id] = loadPersistedOutputId(for: host.id) ?? "virtual"
+        }
+        if selectedHostMode[host.id] == nil {
+            selectedHostMode[host.id] = loadPersistedMode(for: host.id)
+        }
+    }
 
-        // Reconcile selected display mode
+    private func reconcileSelectedMode(for host: Host, payload: OutputsPayload) {
         let active = payload.outputs.first(where: { $0.id == payload.activeId })
         if let savedMode = loadPersistedMode(for: host.id),
            let active,
-           active.modes.isEmpty || active.modes.contains(where: { $0.width == savedMode.width && $0.height == savedMode.height }) {
+           active.modes.isEmpty || active.modes.contains(where: {
+               $0.width == savedMode.width && $0.height == savedMode.height
+           }) {
             selectedHostMode[host.id] = savedMode
         } else if let active, let current = active.currentMode {
             selectedHostMode[host.id] = current

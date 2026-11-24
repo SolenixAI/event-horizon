@@ -25,6 +25,7 @@ private enum AboutLink {
 
 struct AboutPane: View {
     @Environment(AppModel.self) private var model
+    @State private var showCopiedConfirmation = false
 
     var body: some View {
         // First-party utility tone - see System Settings ▸ About, Disk
@@ -33,28 +34,37 @@ struct AboutPane: View {
         // exclamation marks, no comparisons to other products. The credo
         // is the one allowed line of soul.
         Form {
-            Section {
-                HStack(spacing: 18) {
-                    if let icon = NSImage(named: "AppIcon") {
-                        Image(nsImage: icon)
-                            .resizable()
-                            .frame(width: 96, height: 96)
-                            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-                            .shadow(color: .black.opacity(0.20), radius: 10, x: 0, y: 4)
-                    } else {
-                        Image(systemName: "moon.stars.fill")
-                            .font(.system(size: 64))
-                            .foregroundStyle(.tint)
-                            .frame(width: 96, height: 96)
-                    }
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Event Horizon")
-                            .font(.system(size: 28, weight: .bold))
-                            .tracking(-0.4)
-                        Text("Your other computer, as a Mac app.")
-                            .font(.title3)
-                            .foregroundStyle(.secondary)
-                        Text("Version \(versionString)")
+            appIdentitySection
+            licenseSection
+            acknowledgementsSection
+        }
+        .formStyle(.grouped)
+    }
+
+    private var appIdentitySection: some View {
+        Section {
+            HStack(spacing: 18) {
+                if let icon = NSImage(named: "AppIcon") {
+                    Image(nsImage: icon)
+                        .resizable()
+                        .frame(width: 96, height: 96)
+                        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                        .shadow(color: .black.opacity(0.20), radius: 10, x: 0, y: 4)
+                } else {
+                    Image(systemName: "moon.stars.fill")
+                        .font(.system(size: 64))
+                        .foregroundStyle(.tint)
+                        .frame(width: 96, height: 96)
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Event Horizon")
+                        .font(.system(size: 28, weight: .bold))
+                        .tracking(-0.4)
+                    Text("Your other computer, as a Mac app.")
+                        .font(.title3)
+                        .foregroundStyle(.secondary)
+                    HStack(spacing: 6) {
+                        Text("Version \(versionString) (\(BuildInfo.commit))")
                             .font(.footnote)
                             .foregroundStyle(.tertiary)
                             // Hidden reveal for the telemetry/tuning sections
@@ -67,80 +77,122 @@ struct AboutPane: View {
                             // can surface them. The Telemetry toggle lives inside
                             // those sections, so it can't gate its own reveal -
                             // hence this separate gesture-driven flag.
-                            .gesture(
+                            .highPriorityGesture(
                                 TapGesture()
                                     .modifiers(.option)
                                     .onEnded { model.showDiagnostics.toggle() }
                             )
-                            // Option-cursor hint that something lives here,
-                            // without spelling it out.
-                            .help(model.showDiagnostics
-                                  ? "Option-click to hide the developer tools"
-                                  : "")
-                        if let url = URL(string: AboutLink.solenix) {
-                            Link("Made by Solenix", destination: url)
-                                .font(.footnote.weight(.medium))
+                            .onTapGesture {
+                                copyDiagnosticDetails()
+                            }
+                            .help(
+                                model.showDiagnostics
+                                    ? "Option-click to hide developer tools. Click to copy build details."
+                                    : "Click to copy build details. Option-click to reveal developer tools."
+                            )
+
+                        Button(action: copyDiagnosticDetails) {
+                            Image(systemName: showCopiedConfirmation ? "checkmark" : "doc.on.doc")
+                                .font(.caption2)
+                                .foregroundStyle(showCopiedConfirmation ? .green : .secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .help(showCopiedConfirmation ? "Copied!" : "Copy build details to clipboard")
+
+                        if showCopiedConfirmation {
+                            Text("Copied!")
+                                .font(.caption2)
+                                .foregroundStyle(.green)
+                                .transition(.opacity)
                         }
                     }
-                    Spacer()
+                    Text("Built \(BuildInfo.date)")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                    if let url = URL(string: AboutLink.solenix) {
+                        Link("Made by Solenix", destination: url)
+                            .font(.footnote.weight(.medium))
+                    }
                 }
-                .padding(.vertical, 6)
+                Spacer()
             }
-            // Order: Support up top (the one ask), License in the middle (the
-            // legal fact), and the third-party credits at the bottom as a
-            // closing note of appreciation.
-            Section("License") {
-                Text("Event Horizon is free software under the GNU General Public License v3. "
-                    + "You may run, study, share, and modify it. There is no warranty.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                if let url = URL(string: AboutLink.license) {
-                    Link("GNU GPL v3", destination: url)
-                        .font(.footnote)
-                }
-            }
-            Section("Acknowledgements") {
-                Text("Event Horizon's stream engine is Glimmer by ugfugl.io, a native Swift client for Sunshine.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                if let url = URL(string: AboutLink.glimmer) {
-                    Link("github.com/Se7enbrc/glimmer", destination: url)
-                        .font(.footnote)
-                }
-                if let url = URL(string: AboutLink.donate) {
-                    Link("Sponsor Glimmer's author", destination: url)
-                        .font(.footnote)
-                }
-                Text("Built for Sunshine, the open-source game-streaming app that runs on "
-                    + "your PC. Event Horizon talks to it over the same RTSP-based protocol as Moonlight, "
-                    + "the client that inspired it, and the transport is ported from "
-                    + "moonlight-common-c, with respect.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                if let url = URL(string: AboutLink.sunshine) {
-                    Link("github.com/LizardByte/Sunshine", destination: url)
-                        .font(.footnote)
-                }
-                if let url = URL(string: AboutLink.moonlight) {
-                    Link("github.com/moonlight-stream", destination: url)
-                        .font(.footnote)
-                }
-                if let url = URL(string: AboutLink.credits) {
-                    Link("Credits", destination: url)
-                        .font(.footnote)
-                }
-            }
+            .padding(.vertical, 6)
         }
-        .formStyle(.grouped)
     }
 
-    /// "1.2.3 (45)" - short marketing version + build number, matching
-    /// what System Settings ▸ General ▸ About shows for first-party apps.
-    private var versionString: String {
-        let short = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "-"
-        if let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String, !build.isEmpty, build != short {
-            return "\(short) (\(build))"
+    // Order: Support up top (the one ask), License in the middle (the
+    // legal fact), and the third-party credits at the bottom as a
+    // closing note of appreciation.
+    private var licenseSection: some View {
+        Section("License") {
+            Text("Event Horizon is free software under the GNU General Public License v3. "
+                + "You may run, study, share, and modify it. There is no warranty.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+            if let url = URL(string: AboutLink.license) {
+                Link("GNU GPL v3", destination: url)
+                    .font(.footnote)
+            }
         }
-        return short
+    }
+
+    private var acknowledgementsSection: some View {
+        Section("Acknowledgements") {
+            Text("Event Horizon's stream engine is Glimmer by ugfugl.io, a native Swift client for Sunshine.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+            if let url = URL(string: AboutLink.glimmer) {
+                Link("github.com/Se7enbrc/glimmer", destination: url)
+                    .font(.footnote)
+            }
+            if let url = URL(string: AboutLink.donate) {
+                Link("Sponsor Glimmer's author", destination: url)
+                    .font(.footnote)
+            }
+            Text("Built for Sunshine, the open-source game-streaming app that runs on "
+                + "your PC. Event Horizon talks to it over the same RTSP-based protocol as Moonlight, "
+                + "the client that inspired it, and the transport is ported from "
+                + "moonlight-common-c, with respect.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+            if let url = URL(string: AboutLink.sunshine) {
+                Link("github.com/LizardByte/Sunshine", destination: url)
+                    .font(.footnote)
+            }
+            if let url = URL(string: AboutLink.moonlight) {
+                Link("github.com/moonlight-stream", destination: url)
+                    .font(.footnote)
+            }
+            if let url = URL(string: AboutLink.credits) {
+                Link("Credits", destination: url)
+                    .font(.footnote)
+            }
+        }
+    }
+
+    /// Diagnostic build details string copied to pasteboard.
+    private var diagnosticBuildDetails: String {
+        "Event Horizon \(versionString) (\(BuildInfo.commit), \(BuildInfo.date))"
+    }
+
+    /// Copies diagnostic build details to NSPasteboard.general and flashes feedback.
+    private func copyDiagnosticDetails() {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(diagnosticBuildDetails, forType: .string)
+        withAnimation(.easeInOut(duration: 0.15)) {
+            showCopiedConfirmation = true
+        }
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            withAnimation(.easeInOut(duration: 0.15)) {
+                showCopiedConfirmation = false
+            }
+        }
+    }
+
+    /// Short marketing version (e.g. "2026.11.08").
+    private var versionString: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "-"
     }
 }

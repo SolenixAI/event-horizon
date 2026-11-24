@@ -179,8 +179,7 @@ fn dual_monitor_with_tv_and_monitor() {
     .to_string();
 
     // With active connector set to HDMI-A-1 in stream-output
-    let payload =
-        parse_kscreen_outputs(&kscreen_json, Some("HDMI-A-1")).expect("parse succeeds");
+    let payload = parse_kscreen_outputs(&kscreen_json, Some("HDMI-A-1")).expect("parse succeeds");
 
     assert_eq!(payload.active_id, "HDMI-A-1");
     assert_eq!(payload.outputs.len(), 3);
@@ -578,7 +577,8 @@ fn serde_json_serialization_matches_spec() {
 
 #[test]
 fn select_output_request_deserialization() {
-    let json_str = r#"{"id": "HDMI-A-1", "mode": {"width": 3840, "height": 2160, "refresh": 60.0}}"#;
+    let json_str =
+        r#"{"id": "HDMI-A-1", "mode": {"width": 3840, "height": 2160, "refresh": 60.0}}"#;
     let req: SelectOutputRequest = serde_json::from_str(json_str).unwrap();
     assert_eq!(req.id, "HDMI-A-1");
     assert_eq!(
@@ -616,9 +616,7 @@ fn discover_outputs_with_stream_output_file() {
     };
 
     // Populate stream-output with "HDMI-A-1"
-    files
-        .write(&layout.stream_output(), "HDMI-A-1\n")
-        .unwrap();
+    files.write(&layout.stream_output(), "HDMI-A-1\n").unwrap();
 
     let kscreen_json = json!({
         "outputs": [

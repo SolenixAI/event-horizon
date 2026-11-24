@@ -455,7 +455,12 @@ async fn hello_tells_a_mac_this_pc_runs_the_companion() {
 
     assert_eq!(status, 200);
     assert_eq!(body["app"], "event-horizon-companion");
-    assert_eq!(body["v"], 1);
+    assert_eq!(body["v"], 2);
+    assert_eq!(
+        body["capabilities"],
+        serde_json::json!(["outputs", "virtual_screen", "hdr", "dynamic_fps"])
+    );
+    assert!(body["commit"].as_str().is_some());
 }
 
 #[tokio::test]

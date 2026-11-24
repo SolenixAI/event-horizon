@@ -293,15 +293,12 @@ fn restore_target_settings(target: &str, settings: &Value) -> Vec<String> {
         args.push(format!("output.{target}.priority.{priority}"));
     }
     for key in ["hdr", "wcg"] {
-        let enabled_val = settings
-            .get(key)
-            .and_then(Value::as_bool)
-            .or_else(|| {
-                settings
-                    .get(key)
-                    .and_then(|obj| obj.get("enabled"))
-                    .and_then(Value::as_bool)
-            });
+        let enabled_val = settings.get(key).and_then(Value::as_bool).or_else(|| {
+            settings
+                .get(key)
+                .and_then(|obj| obj.get("enabled"))
+                .and_then(Value::as_bool)
+        });
         if let Some(enabled) = enabled_val {
             let mode = if enabled { "enable" } else { "disable" };
             args.push(format!("output.{target}.{key}.{mode}"));
@@ -389,7 +386,8 @@ pub(crate) fn stream_screen_active(files: &dyn Files, layout: &Layout) -> bool {
 
 #[cfg(target_os = "linux")]
 pub(crate) fn virtual_screen_stream_active(files: &dyn Files, layout: &Layout) -> bool {
-    stream_screen_active(files, layout) && stream_screen_target(files, layout).as_deref() == Some(OUTPUT)
+    stream_screen_active(files, layout)
+        && stream_screen_target(files, layout).as_deref() == Some(OUTPUT)
 }
 
 #[cfg(target_os = "linux")]

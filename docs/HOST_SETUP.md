@@ -38,11 +38,19 @@ needs a virtual display that can.
 
 ## Linux: dynamic display selection and modes
 
-Event Horizon automatically detects all connected outputs (monitors, TVs, and virtual screens) on KDE Wayland via `kscreen-doctor`. You can switch target displays directly on the Home desk before launching or mid-session:
+Event Horizon automatically detects all connected outputs (monitors, TVs, and
+virtual screens) on KDE Wayland via `kscreen-doctor`. You can switch target
+displays directly on the Home desk before launching or mid-session:
 
-- **Virtual Screen**: Streams an isolated, Mac-sized virtual screen while physical screens stay off or in their default state.
-- **Physical Displays (TVs & Desk Monitors)**: Selecting a physical output directs Sunshine to capture that connector, sets it as primary on the host, and activates HDR if the panel supports it.
-- **Display Modes & Performance**: You can select the output's display mode directly from Event Horizon's desk menu. For 4K TVs, switching to 1440p (2560×1440) cuts PC GPU and encoder load by over 50% while your TV's hardware scaler displays a clean picture in the room.
+- **Virtual Screen**: Streams an isolated, Mac-sized virtual screen while
+  physical screens stay off or in their default state.
+- **Physical Displays (TVs & Desk Monitors)**: Selecting a physical output
+  directs Sunshine to capture that connector, sets it as primary on the host,
+  and activates HDR if the panel supports it.
+- **Display Modes & Performance**: You can select the output's display mode
+  directly from Event Horizon's desk menu. For 4K TVs, switching to 1440p
+  (2560×1440) cuts PC GPU and encoder load by over 50% while your TV's hardware
+  scaler displays a clean picture in the room.
 
 Sunshine captures the selected output automatically through KWin screencast.
 

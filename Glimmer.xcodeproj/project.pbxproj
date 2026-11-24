@@ -389,6 +389,7 @@
 		DEC0DE2026101000000001 /* CompanionTokensTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE2026101000000002 /* CompanionTokensTests.swift */; };
 		DEC0DE202611230000000005 /* HostOutputTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202611230000000006 /* HostOutputTests.swift */; };
 		DEC0DE202611240000000001 /* DynamicOutputsE2ETests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202611240000000002 /* DynamicOutputsE2ETests.swift */; };
+		DEC0DE202611240000000003 /* MockCompanionServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202611240000000004 /* MockCompanionServer.swift */; };
 		DEC0DE202609221400000007 /* StreamWindowFirstFrameTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202609221400000008 /* StreamWindowFirstFrameTests.swift */; };
 		DEC0DE202609221400000005 /* PasteTextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202609221400000006 /* PasteTextTests.swift */; };
 		DEC0DE2026092000000000D3 /* WakeOnLANTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE2026092000000000D4 /* WakeOnLANTests.swift */; };
@@ -880,6 +881,7 @@
 		DEC0DE2026101000000002 /* CompanionTokensTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CompanionTokensTests.swift"; sourceTree = "<group>"; };
 		DEC0DE202611230000000006 /* HostOutputTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HostOutputTests.swift"; sourceTree = "<group>"; };
 		DEC0DE202611240000000002 /* DynamicOutputsE2ETests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DynamicOutputsE2ETests.swift"; sourceTree = "<group>"; };
+		DEC0DE202611240000000004 /* MockCompanionServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MockCompanionServer.swift"; sourceTree = "<group>"; };
 		DEC0DE202609221400000008 /* StreamWindowFirstFrameTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StreamWindowFirstFrameTests.swift"; sourceTree = "<group>"; };
 		DEC0DE202609221400000006 /* PasteTextTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PasteTextTests.swift"; sourceTree = "<group>"; };
 		DEC0DE2026092000000000D4 /* WakeOnLANTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WakeOnLANTests.swift"; sourceTree = "<group>"; };
@@ -1408,6 +1410,7 @@
 				DEC0DE2026101000000002 /* CompanionTokensTests.swift */,
 				DEC0DE202611230000000006 /* HostOutputTests.swift */,
 				DEC0DE202611240000000002 /* DynamicOutputsE2ETests.swift */,
+				DEC0DE202611240000000004 /* MockCompanionServer.swift */,
 				DEC0DE202609221400000008 /* StreamWindowFirstFrameTests.swift */,
 				DEC0DE202609221400000006 /* PasteTextTests.swift */,
 				DEC0DE2026092000000000D4 /* WakeOnLANTests.swift */,
@@ -1981,6 +1984,7 @@
 				DEC0DE2026101000000001 /* CompanionTokensTests.swift in Sources */,
 				DEC0DE202611230000000005 /* HostOutputTests.swift in Sources */,
 				DEC0DE202611240000000001 /* DynamicOutputsE2ETests.swift in Sources */,
+				DEC0DE202611240000000003 /* MockCompanionServer.swift in Sources */,
 				DEC0DE202609221400000007 /* StreamWindowFirstFrameTests.swift in Sources */,
 				DEC0DE202609221400000005 /* PasteTextTests.swift in Sources */,
 				DEC0DE2026092000000000D3 /* WakeOnLANTests.swift in Sources */,

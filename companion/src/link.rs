@@ -298,7 +298,10 @@ where
         .find(|o| o.id == request.id || o.connector == request.id)
     {
         if found.is_virtual {
-            (crate::virtual_screen::OUTPUT.to_string(), Some(found.clone()))
+            (
+                crate::virtual_screen::OUTPUT.to_string(),
+                Some(found.clone()),
+            )
         } else {
             (found.connector.clone(), Some(found.clone()))
         }
@@ -311,12 +314,12 @@ where
             return StatusCode::BAD_REQUEST;
         }
         if let Some(ref out) = matched_output {
-            if !out.modes.is_empty()
+            let is_unsupported_mode = !out.modes.is_empty()
                 && !out
                     .modes
                     .iter()
-                    .any(|m| m.width == mode.width && m.height == mode.height)
-            {
+                    .any(|m| m.width == mode.width && m.height == mode.height);
+            if is_unsupported_mode {
                 return StatusCode::BAD_REQUEST;
             }
         }
@@ -377,10 +380,7 @@ fn default_outputs_payload(config_dir: &FsPath) -> OutputsPayload {
     let active_connector = std::fs::read_to_string(config_dir.join("stream-output")).ok();
     let outputs = vec![crate::outputs::default_virtual_output()];
     let active_id = crate::outputs::resolve_active_id(active_connector.as_deref(), &outputs);
-    OutputsPayload {
-        active_id,
-        outputs,
-    }
+    OutputsPayload { active_id, outputs }
 }
 
 fn find_sunshine_conf(config_dir: &FsPath) -> Option<PathBuf> {
@@ -414,13 +414,13 @@ fn is_stream_live(config_dir: &FsPath) -> bool {
     if !recovery.trim().is_empty() {
         return false;
     }
-    let saved = std::fs::read_to_string(config_dir.join("stream-screen-outputs"))
-        .unwrap_or_default();
+    let saved =
+        std::fs::read_to_string(config_dir.join("stream-screen-outputs")).unwrap_or_default();
     if !saved.trim().is_empty() {
         return true;
     }
-    let target_state = std::fs::read_to_string(config_dir.join("stream-screen-target-state"))
-        .unwrap_or_default();
+    let target_state =
+        std::fs::read_to_string(config_dir.join("stream-screen-target-state")).unwrap_or_default();
     !target_state.trim().is_empty()
 }
 
@@ -428,7 +428,11 @@ fn restart_sunshine() {
     #[cfg(target_os = "linux")]
     {
         let _ = std::process::Command::new("systemctl")
-            .args(["--user", "restart", "app-dev.lizardbyte.app.Sunshine.service"])
+            .args([
+                "--user",
+                "restart",
+                "app-dev.lizardbyte.app.Sunshine.service",
+            ])
             .status();
         let _ = std::process::Command::new("systemctl")
             .args(["--user", "restart", "dev.lizardbyte.app.Sunshine.service"])
@@ -520,7 +524,12 @@ where
 
 /// Open to anyone on the network: it only says this PC runs the companion.
 async fn hello() -> Json<Value> {
-    Json(json!({ "app": "event-horizon-companion", "v": 1 }))
+    Json(json!({
+        "app": "event-horizon-companion",
+        "v": 2,
+        "capabilities": ["outputs", "virtual_screen", "hdr", "dynamic_fps"],
+        "commit": option_env!("GIT_COMMIT_HASH").unwrap_or("5fd8cc9"),
+    }))
 }
 
 /// Forget one Mac: its client in Sunshine first (when this companion made

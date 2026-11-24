@@ -43,6 +43,13 @@ struct CompanionClient: Sendable {
         case forgotten, unreachable
     }
 
+    enum OutputsResult: Equatable, Sendable {
+        case success(OutputsPayload)
+        case unsupportedApi         // 404: Companion is v1, needs update
+        case unauthorized           // 401 / 403: Companion token mismatch
+        case unreachable            // Network down, timeout, or non-200
+    }
+
     let address: String
     private let trust: CompanionTrust
 
@@ -218,14 +225,35 @@ struct CompanionClient: Sendable {
     }
 
     /// Discovers connected outputs and current active output from the companion.
-    func outputs(token: String) async -> OutputsPayload? {
-        guard let url = url("/outputs") else { return nil }
+    func outputsResult(token: String) async -> OutputsResult {
+        guard let url = url("/outputs") else { return .unreachable }
         var request = URLRequest(url: url)
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         guard let (data, response) = try? await send(request, timeout: 5),
-              (response as? HTTPURLResponse)?.statusCode == 200
-        else { return nil }
-        return try? JSONDecoder().decode(OutputsPayload.self, from: data)
+              let http = response as? HTTPURLResponse
+        else {
+            return .unreachable
+        }
+        switch http.statusCode {
+        case 200:
+            if let payload = try? JSONDecoder().decode(OutputsPayload.self, from: data) {
+                return .success(payload)
+            }
+            return .unreachable
+        case 404:
+            return .unsupportedApi
+        case 401, 403:
+            return .unauthorized
+        default:
+            return .unreachable
+        }
+    }
+
+    func outputs(token: String) async -> OutputsPayload? {
+        if case .success(let payload) = await outputsResult(token: token) {
+            return payload
+        }
+        return nil
     }
 
     /// Selects an output device and optional display mode on the host PC.

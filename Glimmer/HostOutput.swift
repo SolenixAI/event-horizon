@@ -106,11 +106,6 @@ struct OutputsPayload: Codable, Equatable, Sendable {
         case activeId = "active_id"
         case outputs
     }
-
-    init(activeId: String, outputs: [HostOutput]) {
-        self.activeId = activeId
-        self.outputs = outputs
-    }
 }
 
 /// Request payload for selecting an output device and optional mode.

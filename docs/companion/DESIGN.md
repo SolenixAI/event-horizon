@@ -140,7 +140,8 @@ a fake, so it is an internal seam for tests, not an OS seam.
   without the Link running.
 - **Outputs.** `GET /outputs` returns the host's connected displays, EDID model
   names, and modes via KScreen. `POST /outputs/select` changes the active target
-  and mode, synchronizes Sunshine's `output_name`, and reloads Sunshine when idle.
+  and mode, synchronizes Sunshine's `output_name`, and reloads Sunshine when
+  idle.
 - **Protocol.** JSON over HTTPS: `GET /hello`, `POST /pair`,
   `GET /pair/{ticket}`, `POST /lease`, `DELETE /pair`, `GET /outputs`,
   `POST /outputs/select`. Versioned by the `v` TXT field and by `/hello`.

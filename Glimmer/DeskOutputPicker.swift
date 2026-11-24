@@ -4,6 +4,7 @@
 //  Dynamic host output device & display mode selector with liquid glass styling.
 //
 
+import AppKit
 import SwiftUI
 
 struct DeskOutputPicker: View {
@@ -74,6 +75,23 @@ struct DeskOutputPicker: View {
                                 }
                             }
                         }
+                    }
+                }
+            }
+            if model.isCompanionUpdateRequired(for: host) {
+                Divider()
+                Section("Diagnostics") {
+                    Button {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(
+                            Self.companionUpdateCommand,
+                            forType: .string
+                        )
+                    } label: {
+                        Label(
+                            "⚠️ Tower companion update required (v1 running, v2 needed for displays)",
+                            systemImage: "exclamationmark.triangle.fill"
+                        )
                     }
                 }
             }
@@ -159,7 +177,9 @@ struct DeskOutputPicker: View {
         }
 
         let targetMode = model.selectedHostMode[host.id]
-        let validMode = output.modes.contains(where: { $0.width == targetMode?.width && $0.height == targetMode?.height })
+        let validMode = output.modes.contains(where: {
+            $0.width == targetMode?.width && $0.height == targetMode?.height
+        })
             ? targetMode
             : (output.currentMode ?? output.modes.first)
 
@@ -236,4 +256,12 @@ struct DeskOutputPicker: View {
         }
         return mode.label
     }
+
+    private static let companionUpdateCommand = (
+        "cd ~/event-horizon/companion && "
+        + "git pull origin feature/dynamic-host-output-selector && "
+        + "cargo build --release && "
+        + "cp target/release/event-horizon-companion ~/.local/bin/ && "
+        + "systemctl --user restart event-horizon-companion.service"
+    )
 }
