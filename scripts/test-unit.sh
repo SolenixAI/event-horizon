@@ -49,19 +49,36 @@ if [[ "${VERBOSE:-0}" == "1" ]]; then
 fi
 
 echo "▶ Running focused tests: GlimmerTests/${TARGET}..."
-bash "${ROOT}/scripts/generate-build-info.sh"
+mkdir -p "${DERIVED}"
 
 rc=0
-xcodebuild test \
-	-project "${ROOT}/Glimmer.xcodeproj" \
-	-scheme Glimmer \
-	-configuration Debug \
-	-xcconfig "${STREAM_XCCONFIG}" \
-	CODE_SIGNING_ALLOWED=NO \
-	-derivedDataPath "${DERIVED}" \
-	-destination "platform=macOS,arch=${ARCH}" \
-	${QUIET_FLAG} \
-	-only-testing:"GlimmerTests/${TARGET}" || rc=$?
+if [[ "${VERBOSE:-0}" == "1" ]]; then
+	bash "${ROOT}/scripts/generate-build-info.sh"
+	xcodebuild test \
+		-project "${ROOT}/Glimmer.xcodeproj" \
+		-scheme Glimmer \
+		-configuration Debug \
+		-xcconfig "${STREAM_XCCONFIG}" \
+		CODE_SIGNING_ALLOWED=NO \
+		-derivedDataPath "${DERIVED}" \
+		-destination "platform=macOS,arch=${ARCH}" \
+		-only-testing:"GlimmerTests/${TARGET}" || rc=$?
+else
+	bash "${ROOT}/scripts/generate-build-info.sh" >/dev/null 2>&1 || true
+	TEST_LOG="${DERIVED}/test-unit-${SUITE}.log"
+	if ! xcodebuild test \
+		-project "${ROOT}/Glimmer.xcodeproj" \
+		-scheme Glimmer \
+		-configuration Debug \
+		-xcconfig "${STREAM_XCCONFIG}" \
+		CODE_SIGNING_ALLOWED=NO \
+		-derivedDataPath "${DERIVED}" \
+		-destination "platform=macOS,arch=${ARCH}" \
+		-quiet \
+		-only-testing:"GlimmerTests/${TARGET}" > "${TEST_LOG}" 2>&1; then
+		rc=$?
+	fi
+fi
 
 # Unregister debug bundle from LaunchServices so dev builds stay out of Spotlight
 /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister \
@@ -70,7 +87,15 @@ xcodebuild test \
 if [[ $rc -eq 0 ]]; then
 	echo "✓ GlimmerTests/${TARGET} passed."
 else
-	echo "✗ GlimmerTests/${TARGET} failed with exit code $rc." >&2
+	if [[ -n "${TEST_LOG:-}" && -f "${TEST_LOG}" ]]; then
+		echo "✗ GlimmerTests/${TARGET} failed with exit code $rc. Diagnostic slice:" >&2
+		echo "--------------------------------------------------------" >&2
+		grep -E -C 2 -i "(error:|fatal error:|BUILD FAILED|\*\*\* TEST FAILED \*\*\*|Undefined symbols)" "${TEST_LOG}" | head -n 40 >&2 || tail -n 25 "${TEST_LOG}" >&2
+		echo "--------------------------------------------------------" >&2
+		echo "Full output captured in: ${TEST_LOG}" >&2
+	else
+		echo "✗ GlimmerTests/${TARGET} failed with exit code $rc." >&2
+	fi
 fi
 
 exit $rc

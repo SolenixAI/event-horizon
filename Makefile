@@ -117,7 +117,9 @@ HELPER_TARGET := arm64-apple-macos26.0
         check-release-dmg dmg-background dist preflight \
         codesign-setup codesign-teardown local-signing-setup ensure-signing dev test \
         creds-init enable-telem disable-telem release-publish sparkle-keys \
-        guard-clean-tree release-notes-check brew-bump
+        guard-clean-tree release-notes-check brew-bump \
+        test-unit test-companion companion-lint \
+        app-compact test-compact companion-compact companion-lint-compact companion-test-compact
 
 # TIER 1 - "everything but publish": the full release pipeline at Release
 # (xcodebuild -> inside-out sign -> notarize -> staple),
@@ -182,6 +184,29 @@ app:
 # resolves identities from the login keychain and produces a password prompt
 # per nested bundle - the `sign` target re-signs --force --deep right after,
 # so xcodebuild's own signatures were pure prompt-noise.
+
+# Token-minimizing targets for developers and AI agents
+app-compact:
+	@bash scripts/run-quiet.sh $(DERIVED)/app-build.log \
+	  xcodebuild -project Glimmer.xcodeproj -scheme Glimmer -configuration $(CONFIG) \
+	    -xcconfig $(STREAM_XCCONFIG) CODE_SIGNING_ALLOWED=NO \
+	    -derivedDataPath $(DERIVED) -destination 'platform=macOS,arch=$(ARCH)' -quiet build
+
+test-compact:
+	@scripts/generate-build-info.sh
+	@xcodebuild test -project Glimmer.xcodeproj -scheme Glimmer -configuration Debug \
+	  -xcconfig $(STREAM_XCCONFIG) CODE_SIGNING_ALLOWED=NO \
+	  -derivedDataPath $(DERIVED) -destination 'platform=macOS,arch=$(ARCH)' -quiet \
+	  2>&1 | grep -v 'IDETestOperationsObserverDebug' || exit $$?
+
+companion-compact:
+	@cd companion && cargo check --message-format=short --quiet
+
+companion-lint-compact:
+	@cd companion && cargo fmt --check --quiet && cargo clippy --message-format=short --all-targets --quiet -- -D warnings
+
+companion-test-compact:
+	@cd companion && cargo test --quiet
 
 # Before every signing: put the signing keychain first in the search list and
 # unlock it from the creds file (sleep locks it), re-importing the .p12 if it was
