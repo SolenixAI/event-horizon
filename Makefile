@@ -559,6 +559,12 @@ verify:
 	@bash scripts/test-prepare-ci-signing.sh
 	@$(MAKE) test
 
+verify-push:
+	@echo "▶ Running comprehensive pre-push verification battery..."
+	@bash scripts/check-architecture.sh
+	@$(MAKE) companion-lint
+	@$(MAKE) verify
+
 # --- Auto-update publication (Sparkle) -------------------------------------
 
 # One-time: generate the EdDSA (ed25519) update-signing keypair with Sparkle's

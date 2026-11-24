@@ -37,6 +37,10 @@ pointers below.
 7. **Zero compiler warnings:** `SWIFT_TREAT_WARNINGS_AS_ERRORS = YES` and
    `GCC_TREAT_WARNINGS_AS_ERRORS = YES` are active. All code must compile with
    zero warnings.
+8. **Zero tolerance for CI failures:** When pushing a branch or PR, the agent
+   must actively monitor GitHub Actions status (`gh pr checks <PR>`) until all
+   checks pass green. Never declare a task complete or leave a PR unattended
+   with red or failing checks.
 
 ## Progressive disclosure pointers
 
