@@ -4,7 +4,7 @@ set -euo pipefail
 DMG="${1:?Usage: check-development-release-dmg.sh /path/to/Event-Horizon.dmg}"
 [[ -f "$DMG" ]] || { echo "ERR: disk image does not exist: $DMG" >&2; exit 1; }
 
-MOUNT="$(mktemp -d -t event-horizon-dev-release-check)"
+MOUNT="$(mktemp -d "${TMPDIR:-/tmp}/event-horizon-dev-release-check.XXXXXX")"
 ATTACHED=0
 cleanup() {
 	if [[ "$ATTACHED" = 1 ]]; then

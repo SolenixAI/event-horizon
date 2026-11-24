@@ -123,9 +123,8 @@ what you press. Blue is for what is live on the PC. The horizon light is
 atmosphere under the field and never a signal. The game covers are the only
 large fields of colour, and they come from the games, not from Event Horizon.
 
-The stream engine underneath is Glimmer, an open-source Swift engine. Glimmer
-is an engine credit only. It is not a look, and it is not a name on any
-surface.
+The stream engine underneath is Glimmer, an open-source Swift engine. Glimmer is
+an engine credit only. It is not a look, and it is not a name on any surface.
 
 **Key Characteristics:**
 
@@ -151,15 +150,15 @@ Two logo colours on a plain system window, with the macOS status colours.
 
 ### Secondary
 
-- **Horizon Blue**: the logo's cool ring (`Color.horizonBlue`). It marks what
-  is live on the PC: the Running label and its 7pt dot, the ring and name of the
+- **Horizon Blue**: the logo's cool ring (`Color.horizonBlue`). It marks what is
+  live on the PC: the Running label and its 7pt dot, the ring and name of the
   cover that is on screen, the soft halo behind the logo on the idle screen, and
-  the blue half of a cover's fallback gradient. On the field it also carries
-  the live connection: particles and a pulse (Space Backdrop), at full strength,
-  like the Running label. Blue means live, wherever it appears.
-  **Open decision:** on the dawn field, the Running label measures about 2.3:1,
-  below WCAG 4.5:1. It did the same on the old system window. A deeper live blue
-  for light appearance would fix it, but that changes the signal colour, so the
+  the blue half of a cover's fallback gradient. On the field it also carries the
+  live connection: particles and a pulse (Space Backdrop), at full strength,
+  like the Running label. Blue means live, wherever it appears. **Open
+  decision:** on the dawn field, the Running label measures about 2.3:1, below
+  WCAG 4.5:1. It did the same on the old system window. A deeper live blue for
+  light appearance would fix it, but that changes the signal colour, so the
   founder decides.
 
 ### Neutral
@@ -194,9 +193,9 @@ games' cover art.
 the field, at most 16% opacity at night and 20% at dawn. It is atmosphere, never
 a signal: it never marks a control and never marks a live state. Press gold and
 live blue stay at full strength. Against the field they measure at least 3:1,
-while the horizon light stays near 1.2:1. This rule covers field light only.
-Any new field light must stay under this bar. The live flow's particles and
-pulse are live marks, not field light, so they use full live blue.
+while the horizon light stays near 1.2:1. This rule covers field light only. Any
+new field light must stay under this bar. The live flow's particles and pulse
+are live marks, not field light, so they use full live blue.
 
 ## Typography
 
@@ -207,10 +206,10 @@ styles as Finder and System Settings, and it scales with the user's text size.
 
 ### Hierarchy
 
-- **PC name** (semibold, title2): the PC's name under the screen, on the
-  leading edge.
-- **Screen title** (semibold, title2, white): the idle face's line on the
-  screen ("Desktop", "<PC> is asleep", "Opening <game>…").
+- **PC name** (semibold, title2): the PC's name under the screen, on the leading
+  edge.
+- **Screen title** (semibold, title2, white): the idle face's line on the screen
+  ("Desktop", "<PC> is asleep", "Opening <game>…").
 - **Body** (regular, body, secondary): the spec line under the PC name. Facts
   are joined by " · ".
 - **Callout** (regular, callout): the screen's detail line ("Click to open your
@@ -222,8 +221,8 @@ styles as Finder and System Settings, and it scales with the user's text size.
 ### Named Rules
 
 **The System Voice Rule.** Use text styles, not point sizes. Fixed sizes are
-only for SF Symbol glyphs (the gear at 13pt, a fallback cover glyph at 30pt)
-and the empty pairing state's 26pt headline.
+only for SF Symbol glyphs (the gear at 13pt, a fallback cover glyph at 30pt) and
+the empty pairing state's 26pt headline.
 
 ## Layout
 
@@ -255,26 +254,24 @@ across from the window buttons. There is no toolbar, so full screen is all PC.
 **The One Width Rule.** The status row, the shelf and any row under the screen
 line up with the bezel's edges. Nothing under the screen is wider than it.
 
-**The Screen Takes the Room Rule.** When the window grows, the screen grows.
-The rows under it keep their natural height.
+**The Screen Takes the Room Rule.** When the window grows, the screen grows. The
+rows under it keep their natural height.
 
 ## Elevation & Depth
 
 The field behind Home is flat: it casts no shadow and has no raised layer. Its
 only light is the horizon, which is atmosphere. There is one raised object: the
-bezel around the PC's
-screen. It is regular Liquid Glass, 5pt wide, with a 1pt light catch on its top
-edge that fades out by its middle (60% white in light, 28% in dark). In light
-appearance it also casts a soft black shadow. In dark appearance it casts none,
-and the light catch alone lifts it.
+bezel around the PC's screen. It is regular Liquid Glass, 5pt wide, with a 1pt
+light catch on its top edge that fades out by its middle (60% white in light,
+28% in dark). In light appearance it also casts a soft black shadow. In dark
+appearance it casts none, and the light catch alone lifts it.
 
 Everything else is plain glass with no shadow: the shelf, the readiness chip,
 the gear and the banner. A cover gets a shadow only while the pointer is on it.
 
 ### Shadow Vocabulary
 
-- **Bezel lift** (black 18%, radius 18, y 10; light appearance only): the
-  bezel.
+- **Bezel lift** (black 18%, radius 18, y 10; light appearance only): the bezel.
 - **Cover lift** (black 35%, radius 10, y 6; hover only): a cover under the
   pointer, with a 1.03 scale.
 - **Logo halo** (Horizon Blue 35%, radius 24, no offset): the app icon on the
@@ -290,8 +287,8 @@ that lifts does so only in answer to the pointer.
 
 Every corner is continuous (a squircle). The radii nest: the 12pt screen sits
 5pt inside the 17pt bezel. When the PC grows to fill the window, the screen's
-corner goes to 0, and the window's own corner frames it. Covers are 2:3 with
-9pt corners. The shelf is 18pt. Inset rows (the banner, the permission row) are
+corner goes to 0, and the window's own corner frames it. Covers are 2:3 with 9pt
+corners. The shelf is 18pt. Inset rows (the banner, the permission row) are
 12pt. The readiness chip is a capsule, and the gear is a circle.
 
 Rings carry state: a 2pt ring on the bezel or on a cover. It is gold on hover
@@ -300,8 +297,8 @@ so its black stays separate from a dark bezel.
 
 ### Named Rules
 
-**The Concentric Rule.** Inner radius = outer radius − inset. The bezel's
-radius is the screen's radius plus its 5pt inset.
+**The Concentric Rule.** Inner radius = outer radius − inset. The bezel's radius
+is the screen's radius plus its 5pt inset.
 
 ## Components
 
@@ -309,8 +306,8 @@ radius is the screen's radius plus its 5pt inset.
 
 - **What it is:** a real `Button` that is the PC's screen. It is black, at the
   PC's aspect ratio, inside the glass bezel.
-- **Idle face:** the app icon (84pt) with its blue halo, a white title and a
-  60% white detail line, centred. While Event Horizon waits, a large progress
+- **Idle face:** the app icon (84pt) with its blue halo, a white title and a 60%
+  white detail line, centred. While Event Horizon waits, a large progress
   spinner takes the icon's place.
 - **Live:** the PC's stream sits exactly on the screen's frame, with 12pt
   corners, and keeps running while Home shows.
@@ -320,9 +317,8 @@ radius is the screen's radius plus its 5pt inset.
 
 ### Grow and Shrink (signature motion)
 
-- **Grow:** the stream surface moves from the screen's frame to the whole
-  window in 0.42s on a fast-out curve (0.2, 0.9, 0.25, 1). Then its corner goes
-  to 0.
+- **Grow:** the stream surface moves from the screen's frame to the whole window
+  in 0.42s on a fast-out curve (0.2, 0.9, 0.25, 1). Then its corner goes to 0.
 - **Shrink:** it moves back onto the desk in 0.38s on the same curve, with 12pt
   corners.
 - **Window buttons:** while the PC fills the window, close, minimise and zoom
@@ -349,8 +345,8 @@ radius is the screen's radius plus its 5pt inset.
   would truncate, the row drops it (`ViewThatFits`). The menu bar panel keeps
   the same control under Stream.
 - **Style:** a 13pt medium speaker symbol in secondary label, with no glass, no
-  ring and no shadow. It is a press target, but it is quiet, so it never competes
-  with the chip's glass or the bezel.
+  ring and no shadow. It is a press target, but it is quiet, so it never
+  competes with the chip's glass or the bezel.
 - **Popover:** a headline "Stream volume" (hidden from VoiceOver), then a mute
   button and a level slider in 16 steps. Mute is announced as "Mute stream" or
   "Unmute stream". The slider is "Level".
@@ -372,8 +368,8 @@ radius is the screen's radius plus its 5pt inset.
 - **On screen:** a 2pt blue ring and a blue name. The same source drives this
   and the Running label, so they always agree.
 - **Launching:** a progress spinner over the cover.
-- **No art yet:** a blue-to-gold gradient (55% and 45%) with the app's SF
-  Symbol in white.
+- **No art yet:** a blue-to-gold gradient (55% and 45%) with the app's SF Symbol
+  in white.
 
 ### Settings Button
 
@@ -416,11 +412,11 @@ radius is the screen's radius plus its 5pt inset.
   CALayers, with no main-thread frames. Density changes fade particles in and
   out over 0.6 s, and each particle keeps its phase, so the others never jump.
   The field, the stars, the horizon light and the grain are static layers
-  painted at the window's backing scale. The flow freezes when the window is
-  not key or the app is in the background, and while a stream fills the window.
-  It is hidden under Reduce Motion, and it resumes without a jump.
-- **Placement:** the flow stays in the margin beside the bezel. It never
-  crosses the status row, the readiness chip or the game shelf.
+  painted at the window's backing scale. The flow freezes when the window is not
+  key or the app is in the background, and while a stream fills the window. It
+  is hidden under Reduce Motion, and it resumes without a jump.
+- **Placement:** the flow stays in the margin beside the bezel. It never crosses
+  the status row, the readiness chip or the game shelf.
 - **Accessibility:** hidden from VoiceOver. The chip and the stream's stats
   already speak the same numbers, so the flow adds nothing for a screen reader.
 - **Contrast:** labels keep WCAG contrast on the field. Night labels measure at
@@ -432,17 +428,17 @@ radius is the screen's radius plus its 5pt inset.
 - **What it is:** the five-screen first run, in the main window and not in a
   sheet: Welcome, Find your PC, Pair your PC, Set up controls and alerts, and
   the PC's Ready screen. Each screen has one title (title2, bold), one short
-  body and one footer action. The find and pair screens are the pairing view
-  in its embedded form, so the pairing state survives the step change.
+  body and one footer action. The find and pair screens are the pairing view in
+  its embedded form, so the pairing state survives the step change.
 - **Progress:** five 3pt capsules above the title: the current step 30pt wide,
   the rest 16pt. Done and current steps are 85% white, the rest 18%. VoiceOver
   reads "Step n of 5".
-- **Explain first:** every system prompt sits behind a Mac-side explanation
-  with one button, "Continue". Discovery starts on Continue, so the Local
-  Network prompt follows the reason on screen. The PC's own Allow follows the
-  Mac's explanation, never comes first.
-- **One space:** onboarding and Home live in the same world, the space field.
-  It is a Schwarzschild black hole ray traced in 3D every frame
+- **Explain first:** every system prompt sits behind a Mac-side explanation with
+  one button, "Continue". Discovery starts on Continue, so the Local Network
+  prompt follows the reason on screen. The PC's own Allow follows the Mac's
+  explanation, never comes first.
+- **One space:** onboarding and Home live in the same world, the space field. It
+  is a Schwarzschild black hole ray traced in 3D every frame
   (`SpaceField.metal`, `SpaceFieldView`): photon paths are traced once per frame
   into a lensing map, each pixel reads its own, and an HDR image blooms at two
   scales before a filmic curve. The shadow, the photon ring and the disk's
@@ -481,25 +477,25 @@ radius is the screen's radius plus its 5pt inset.
 - **What it is:** one card per optional item: a 26pt symbol, the name in
   headline, the live state as a caption label, one sentence of reason, and one
   action. The states are Allowed, Waiting, Off, Needs approval and Not in this
-  build. "Continue" shows only while the choice is open, "Open Settings" once
-  it is refused, and nothing once it is settled.
-- **Not now:** a borderless line under the card, outside its glass, and never
-  on the explanation. Skipping replaces the card with one quiet sentence.
-- **Rail:** the cards read macOS on every appearance and each return to the
-  app, and nothing is stored. The same rail sits in Settings › General under
+  build. "Continue" shows only while the choice is open, "Open Settings" once it
+  is refused, and nothing once it is settled.
+- **Not now:** a borderless line under the card, outside its glass, and never on
+  the explanation. Skipping replaces the card with one quiet sentence.
+- **Rail:** the cards read macOS on every appearance and each return to the app,
+  and nothing is stored. The same rail sits in Settings › General under
   Permissions, so a grant later reads the same way. Settings also lists Open at
   login, which the pass does not offer; its only action is Open Login Items,
   shown when macOS waits for approval.
-- **Surface:** regular glass at 12pt corners, 14pt padding. It is a card, not
-  a raised object, so it has no shadow.
+- **Surface:** regular glass at 12pt corners, 14pt padding. It is a card, not a
+  raised object, so it has no shadow.
 
 ### Companion Keep-Awake Row
 
-- **What it is:** a quiet glass row above the game shelf, shown before the
-  first stream of a Mac that has no companion token, to a PC that runs the
-  companion. It has one sentence of reason, "Allow on <PC>" (prominent) and
-  "Stream without it" (borderless). A presence check reads the PC first. No
-  pairing request is sent before Allow.
+- **What it is:** a quiet glass row above the game shelf, shown before the first
+  stream of a Mac that has no companion token, to a PC that runs the companion.
+  It has one sentence of reason, "Allow on <PC>" (prominent) and "Stream without
+  it" (borderless). A presence check reads the PC first. No pairing request is
+  sent before Allow.
 - **Code:** after Allow, the row shows the code the PC is asked to match, and
   the Allow button is disabled until the PC answers. If the PC refuses, the row
   says so and offers "Try again".
@@ -533,8 +529,8 @@ radius is the screen's radius plus its 5pt inset.
 - **Don't** add a toolbar to the main window. Full screen is all PC.
 - **Don't** open the PC in a second window. The PC opens in this window.
 - **Don't** use a coloured glow, except the logo's own halo on the idle screen,
-  the horizon light on the field, and the live flow's particles and pulse,
-  which are live marks. The horizon light is never a signal.
+  the horizon light on the field, and the live flow's particles and pulse, which
+  are live marks. The horizon light is never a signal.
 - **Don't** redraw, recolour or reinterpret the app icon (the three-body
   figure-eight orbit).
 - **Don't** show "Glimmer" anywhere a person reads, except the engine credit.

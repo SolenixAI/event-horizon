@@ -11,7 +11,7 @@ xcrun stapler validate "$DMG"
 spctl --assess --type open --context context:primary-signature --verbose=4 "$DMG"
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
-MOUNT="$(mktemp -d -t event-horizon-release-check)"
+MOUNT="$(mktemp -d "${TMPDIR:-/tmp}/event-horizon-release-check.XXXXXX")"
 ATTACHED=0
 cleanup() {
   if [[ "$ATTACHED" = 1 ]]; then
