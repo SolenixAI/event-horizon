@@ -1,0 +1,73 @@
+name: "CodeQL"
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - '**/*.rs'
+      - '**/Cargo.*'
+      - '**/*.swift'
+      - '**/Package.*'
+      - '.github/workflows/codeql.yml'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - '**/*.rs'
+      - '**/Cargo.*'
+      - '**/*.swift'
+      - '**/Package.*'
+      - '.github/workflows/codeql.yml'
+  schedule:
+    - cron: '0 3 * * 0'
+
+concurrency:
+  group: codeql-${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  analyze:
+    name: CodeQL (${{ matrix.language }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: ${{ matrix.timeout }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: rust
+            os: ubuntu-latest
+            build-mode: none
+            timeout: 20
+          - language: swift
+            os: macos-14
+            build-mode: manual
+            timeout: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          trap-caching: false
+
+      - name: Build Swift Target
+        if: matrix.language == 'swift'
+        run: |
+          xcodebuild -project Glimmer.xcodeproj -scheme Glimmer -configuration Debug \
+            -xcconfig Glimmer/StreamLib.xcconfig CODE_SIGNING_ALLOWED=NO \
+            -derivedDataPath build.noindex -destination 'platform=macOS,arch=arm64' -quiet build
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
