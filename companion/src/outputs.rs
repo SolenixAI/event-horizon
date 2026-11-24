@@ -276,8 +276,62 @@ fn extract_current_mode(o: &Value, modes: &[DisplayMode]) -> Option<DisplayMode>
     None
 }
 
-/// Extracts EDID friendly name from vendor and model, falling back to connector name.
-fn parse_friendly_name(o: &Value, connector: &str) -> String {
+/// Decodes the 3-letter PNP manufacturer ID from EDID bytes 8..10.
+fn parse_edid_pnp_id(bytes: &[u8]) -> Option<String> {
+    if bytes.len() < 10 {
+        return None;
+    }
+    let raw = u16::from_be_bytes([bytes[8], bytes[9]]);
+    let c1 = ((raw >> 10) & 0x1F) as u8;
+    let c2 = ((raw >> 5) & 0x1F) as u8;
+    let c3 = (raw & 0x1F) as u8;
+    if (1..=26).contains(&c1) && (1..=26).contains(&c2) && (1..=26).contains(&c3) {
+        let chars = [b'A' + c1 - 1, b'A' + c2 - 1, b'A' + c3 - 1];
+        Some(String::from_utf8_lossy(&chars).into_owned())
+    } else {
+        None
+    }
+}
+
+/// Parses a display name from a standard 128-byte (or larger) EDID block.
+///
+/// Checks the EDID header (`00 FF FF FF FF FF FF 00`), inspects the 4 descriptor
+/// blocks (offsets 54, 72, 90, 108) for a Monitor Name descriptor (`00 00 00 FC`),
+/// and falls back to the 3-letter PNP manufacturer ID from bytes 8..10 if absent.
+pub fn parse_edid_display_name(bytes: &[u8]) -> Option<String> {
+    const EDID_HEADER: [u8; 8] = [0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00];
+    if bytes.len() < 128 || bytes[0..8] != EDID_HEADER {
+        return None;
+    }
+
+    for offset in [54usize, 72, 90, 108] {
+        let block = &bytes[offset..offset + 18];
+        if block[0..4] == [0x00, 0x00, 0x00, 0xFC] {
+            let raw_name = block[5..18]
+                .split(|&b| b == 0 || b == b'\n' || b == b'\r')
+                .next()
+                .unwrap_or(&[]);
+            if raw_name.is_ascii()
+                && let Ok(text) = std::str::from_utf8(raw_name)
+            {
+                let trimmed = text.trim();
+                if !trimmed.is_empty() {
+                    return Some(trimmed.to_string());
+                }
+            }
+        }
+    }
+
+    parse_edid_pnp_id(bytes)
+}
+
+/// Extracts EDID friendly name from vendor and model, falling back to EDID bytes
+/// and then the connector name.
+fn parse_friendly_name(
+    o: &Value,
+    connector: &str,
+    read_edid: &dyn Fn(&str) -> Option<Vec<u8>>,
+) -> String {
     let vendor = o
         .get("vendor")
         .and_then(Value::as_str)
@@ -311,7 +365,9 @@ fn parse_friendly_name(o: &Value, connector: &str) -> String {
         (false, false) => format!("{vendor} {model}"),
         (false, true) => vendor.to_string(),
         (true, false) => model.to_string(),
-        (true, true) => connector.to_string(),
+        (true, true) => read_edid(connector)
+            .and_then(|bytes| parse_edid_display_name(&bytes))
+            .unwrap_or_else(|| connector.to_string()),
     };
 
     let candidate = candidate.trim();
@@ -340,6 +396,15 @@ fn parse_hdr(o: &Value) -> bool {
 pub fn parse_kscreen_json(
     value: &Value,
     active_connector: Option<&str>,
+) -> Result<OutputsPayload, String> {
+    parse_kscreen_json_with_edid(value, active_connector, &|_| None)
+}
+
+/// Parses outputs from KScreen JSON `Value`, resolving missing display names via `read_edid`.
+pub fn parse_kscreen_json_with_edid(
+    value: &Value,
+    active_connector: Option<&str>,
+    read_edid: &dyn Fn(&str) -> Option<Vec<u8>>,
 ) -> Result<OutputsPayload, String> {
     let outputs_arr = match value.get("outputs") {
         Some(Value::Array(arr)) => arr.as_slice(),
@@ -386,7 +451,7 @@ pub fn parse_kscreen_json(
                 },
             ));
         } else {
-            let name = parse_friendly_name(o, connector);
+            let name = parse_friendly_name(o, connector, read_edid);
             let hdr_supported = parse_hdr(o);
             outputs_with_priority.push((
                 priority,
@@ -424,9 +489,18 @@ pub fn parse_kscreen_outputs(
     json_str: &str,
     active_connector: Option<&str>,
 ) -> Result<OutputsPayload, String> {
+    parse_kscreen_outputs_with_edid(json_str, active_connector, &|_| None)
+}
+
+/// Parses outputs from KScreen JSON string, resolving missing display names via `read_edid`.
+pub fn parse_kscreen_outputs_with_edid(
+    json_str: &str,
+    active_connector: Option<&str>,
+    read_edid: &dyn Fn(&str) -> Option<Vec<u8>>,
+) -> Result<OutputsPayload, String> {
     let value: Value =
         serde_json::from_str(json_str).map_err(|e| format!("Failed to parse KScreen JSON: {e}"))?;
-    parse_kscreen_json(&value, active_connector)
+    parse_kscreen_json_with_edid(&value, active_connector, read_edid)
 }
 
 /// Discovers connected displays using the `Commands` and `Files` ports.
@@ -435,7 +509,17 @@ pub fn discover_outputs(
     files: &dyn crate::linux_install::Files,
     layout: &crate::linux_install::Layout,
 ) -> Result<OutputsPayload, String> {
+    discover_outputs_with_edid(cmd, files, layout, &|_| None)
+}
+
+/// Discovers connected displays using `Commands`, `Files`, and an EDID byte lookup callback.
+pub fn discover_outputs_with_edid(
+    cmd: &dyn crate::linux_install::Commands,
+    files: &dyn crate::linux_install::Files,
+    layout: &crate::linux_install::Layout,
+    read_edid: &dyn Fn(&str) -> Option<Vec<u8>>,
+) -> Result<OutputsPayload, String> {
     let json_str = cmd.capture("kscreen-doctor", &["--json"])?;
     let active_connector = files.read(&layout.stream_output());
-    parse_kscreen_outputs(&json_str, active_connector.as_deref())
+    parse_kscreen_outputs_with_edid(&json_str, active_connector.as_deref(), read_edid)
 }

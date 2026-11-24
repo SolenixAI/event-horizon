@@ -4,7 +4,8 @@
 use event_horizon_companion::linux_install::{Commands, Files, Layout};
 use event_horizon_companion::outputs::{
     self, DisplayMode, HostOutput, OutputsPayload, SelectOutputRequest, VIRTUAL_ID, VIRTUAL_NAME,
-    discover_outputs, parse_kscreen_outputs, sort_and_deduplicate_modes,
+    discover_outputs, discover_outputs_with_edid, parse_edid_display_name, parse_kscreen_outputs,
+    sort_and_deduplicate_modes,
 };
 use serde_json::json;
 use std::collections::{HashMap, VecDeque};
@@ -641,4 +642,126 @@ fn discover_outputs_with_stream_output_file() {
     let payload = discover_outputs(&cmd, &files, &layout).expect("discovery succeeds");
     assert_eq!(payload.active_id, "HDMI-A-1");
     assert_eq!(payload.outputs.len(), 3); // DP-1, HDMI-A-1, virtual
+}
+
+// ---------------------------------------------------------------------------
+// 10. EDID Parsing and Sysfs Fallback
+// ---------------------------------------------------------------------------
+
+/// Builds a minimal 128-byte EDID block with the standard header, 3-letter PNP ID,
+/// and an optional Monitor Name descriptor (`0xFC`) placed at `descriptor_offset`.
+fn make_edid_fixture(pnp: [u8; 2], monitor_name: Option<(usize, &[u8; 13])>) -> Vec<u8> {
+    let mut edid = vec![0u8; 128];
+    edid[0..8].copy_from_slice(&[0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00]);
+    edid[8] = pnp[0];
+    edid[9] = pnp[1];
+    edid[18] = 0x01; // EDID version 1.4
+    edid[19] = 0x04;
+    if let Some((offset, name_bytes)) = monitor_name {
+        edid[offset..offset + 5].copy_from_slice(&[0x00, 0x00, 0x00, 0xFC, 0x00]);
+        edid[offset + 5..offset + 18].copy_from_slice(name_bytes);
+    }
+    edid
+}
+
+#[test]
+fn parse_edid_display_name_handles_real_monitors_and_invalid_inputs() {
+    // MSI G245CV (PNP: MSI = 0x36, 0x69), descriptor in slot 2 (offset 72)
+    let msi_edid = make_edid_fixture([0x36, 0x69], Some((72, b"MSI G245CV\n  ")));
+    assert_eq!(
+        parse_edid_display_name(&msi_edid),
+        Some("MSI G245CV".to_string())
+    );
+
+    // SAMSUNG TV (PNP: SAM = 0x4C, 0x2D), descriptor in slot 4 (offset 108) with NUL/CR/spaces
+    let samsung_edid = make_edid_fixture([0x4C, 0x2D], Some((108, b"SAMSUNG\r\n\0   ")));
+    assert_eq!(
+        parse_edid_display_name(&samsung_edid),
+        Some("SAMSUNG".to_string())
+    );
+
+    // Descriptor absent: falls back to 3-letter PNP manufacturer ID
+    let pnp_only_edid = make_edid_fixture([0x4C, 0x2D], None);
+    assert_eq!(
+        parse_edid_display_name(&pnp_only_edid),
+        Some("SAM".to_string())
+    );
+
+    // Empty, truncated, and corrupt headers return None
+    assert_eq!(parse_edid_display_name(&[]), None);
+    assert_eq!(parse_edid_display_name(&msi_edid[..127]), None);
+
+    let mut bad_header = msi_edid.clone();
+    bad_header[0] = 0xFF;
+    assert_eq!(parse_edid_display_name(&bad_header), None);
+}
+
+#[test]
+fn discover_outputs_uses_edid_names_when_kscreen_omits_vendor_and_model() {
+    let cmd = FakeCommands::default();
+    let files = FakeFiles::default();
+    let layout = Layout {
+        config_dir: PathBuf::from("/etc/event-horizon"),
+        home: PathBuf::from("/home/user"),
+        companion: PathBuf::from("/usr/bin/event-horizon-companion"),
+        path_dirs: vec![],
+        session_type: Some("wayland".to_string()),
+        desktop: Some("KDE".to_string()),
+    };
+
+    let kscreen_json = json!({
+        "outputs": [
+            {
+                "name": "DP-1",
+                "connected": true,
+                "enabled": true,
+                "size": { "width": 1920, "height": 1080 }
+            },
+            {
+                "name": "HDMI-A-1",
+                "connected": true,
+                "enabled": false,
+                "size": { "width": 3840, "height": 2160 }
+            },
+            {
+                "name": "DP-2",
+                "connected": true,
+                "enabled": false,
+                "size": { "width": 2560, "height": 1440 }
+            },
+            {
+                "name": "Virtual-sunshine-vmon",
+                "connected": true,
+                "enabled": false,
+                "size": { "width": 2560, "height": 1600 }
+            }
+        ]
+    })
+    .to_string();
+
+    cmd.capture_answers.lock().unwrap().push_back(kscreen_json);
+
+    let msi_edid = make_edid_fixture([0x36, 0x69], Some((54, b"MSI G245CV\n  ")));
+    let samsung_edid = make_edid_fixture([0x4C, 0x2D], Some((90, b"SAMSUNG\n     ")));
+
+    let payload = discover_outputs_with_edid(&cmd, &files, &layout, &|connector| match connector {
+        "DP-1" => Some(msi_edid.clone()),
+        "HDMI-A-1" => Some(samsung_edid.clone()),
+        _ => None,
+    })
+    .expect("discovery succeeds");
+
+    let dp1 = payload.outputs.iter().find(|o| o.id == "DP-1").unwrap();
+    assert_eq!(dp1.name, "MSI G245CV");
+
+    let hdmi = payload.outputs.iter().find(|o| o.id == "HDMI-A-1").unwrap();
+    assert_eq!(hdmi.name, "SAMSUNG");
+
+    // No EDID available: falls back to connector string
+    let dp2 = payload.outputs.iter().find(|o| o.id == "DP-2").unwrap();
+    assert_eq!(dp2.name, "DP-2");
+
+    // Virtual screen name remains unchanged
+    let virtual_out = payload.outputs.iter().find(|o| o.id == "virtual").unwrap();
+    assert_eq!(virtual_out.name, VIRTUAL_NAME);
 }
