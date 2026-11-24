@@ -175,6 +175,7 @@ extension AppModel {
             if let mode {
                 selectedHostMode[host.id] = mode
                 savePersistedMode(mode, for: host.id)
+                syncStreamFPS(for: mode)
             } else {
                 let out = hostOutputs[host.id]?.first(where: { $0.id == outputId })
                 if let current = out?.currentMode ?? out?.modes.first {
@@ -198,6 +199,7 @@ extension AppModel {
             if let mode {
                 selectedHostMode[host.id] = mode
                 savePersistedMode(mode, for: host.id)
+                syncStreamFPS(for: mode)
             } else {
                 let out = hostOutputs[host.id]?.first(where: { $0.id == outputId })
                 if let current = out?.currentMode ?? out?.modes.first {
@@ -208,9 +210,30 @@ extension AppModel {
         }
         return success
     }
+
+    private func syncStreamFPS(for mode: DisplayMode) {
+        let hz = StreamSizeBounds.clampFPS(Int(mode.refresh.rounded()))
+        if customFPS != hz {
+            customFPS = hz
+        }
+    }
 }
 
 extension HostOutput {
+    /// Curated resolution and refresh presets for the virtual screen.
+    static let virtualCuratedModes: [DisplayMode] = [
+        DisplayMode(width: 2560, height: 1600, refresh: 120.0),
+        DisplayMode(width: 2560, height: 1600, refresh: 90.0),
+        DisplayMode(width: 2560, height: 1600, refresh: 60.0),
+        DisplayMode(width: 2560, height: 1440, refresh: 120.0),
+        DisplayMode(width: 2560, height: 1440, refresh: 90.0),
+        DisplayMode(width: 2560, height: 1440, refresh: 60.0),
+        DisplayMode(width: 1920, height: 1200, refresh: 120.0),
+        DisplayMode(width: 1920, height: 1200, refresh: 60.0),
+        DisplayMode(width: 1920, height: 1080, refresh: 120.0),
+        DisplayMode(width: 1920, height: 1080, refresh: 60.0)
+    ]
+
     /// Default virtual screen fallback output when PC has not reported outputs.
     static let defaultVirtual = HostOutput(
         id: "virtual",
@@ -221,6 +244,6 @@ extension HostOutput {
         isVirtual: true,
         hdrSupported: false,
         currentMode: nil,
-        modes: []
+        modes: virtualCuratedModes
     )
 }

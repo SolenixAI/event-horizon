@@ -342,12 +342,38 @@ where
         }
     }
 
-    if !is_stream_live(&config_dir) {
+    let mut virtual_resolution_changed = false;
+    if target_connector == crate::virtual_screen::OUTPUT
+        && let Some(ref mode) = request.mode
+        && let Some(unit_path) = find_virtual_screen_unit(&config_dir)
+        && let Ok(before) = std::fs::read_to_string(&unit_path)
+    {
+        let size = crate::virtual_screen::Size {
+            width: mode.width,
+            height: mode.height,
+        };
+        if let Some(after) = crate::virtual_screen::with_resolution(&before, size) {
+            if let Err(e) = std::fs::write(&unit_path, after) {
+                eprintln!("select_output: could not write virtual screen unit: {e}");
+            } else {
+                virtual_resolution_changed = true;
+            }
+        }
+    }
+
+    if virtual_resolution_changed {
+        let _ = tokio::task::spawn_blocking(restart_virtual_screen).await;
+        tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+    }
+
+    if !is_stream_live(&config_dir) || virtual_resolution_changed {
         let _ = tokio::task::spawn_blocking(restart_sunshine).await;
         wait_for_sunshine_ready(link.host.sunshine()).await;
     }
 
-    if let Some(ref mode) = request.mode {
+    if let Some(ref mode) = request.mode
+        && target_connector != crate::virtual_screen::OUTPUT
+    {
         apply_output_mode(&target_connector, mode);
     }
 
@@ -431,6 +457,34 @@ async fn wait_for_sunshine_ready<S: SunshineApi>(sunshine: &S) {
             return;
         }
         tokio::time::sleep(std::time::Duration::from_millis(150)).await;
+    }
+}
+
+fn find_virtual_screen_unit(config_dir: &FsPath) -> Option<PathBuf> {
+    let test_path = config_dir.join(crate::virtual_screen::SCREEN_SERVICE);
+    if test_path.exists() {
+        return Some(test_path);
+    }
+    if let Some(home) = std::env::var_os("HOME").map(PathBuf::from) {
+        let unit_path = home
+            .join(".config/systemd/user")
+            .join(crate::virtual_screen::SCREEN_SERVICE);
+        if unit_path.exists() {
+            return Some(unit_path);
+        }
+    }
+    None
+}
+
+fn restart_virtual_screen() {
+    #[cfg(target_os = "linux")]
+    {
+        let _ = std::process::Command::new("systemctl")
+            .args(["--user", "daemon-reload"])
+            .status();
+        let _ = std::process::Command::new("systemctl")
+            .args(["--user", "restart", crate::virtual_screen::SCREEN_SERVICE])
+            .status();
     }
 }
 

@@ -139,6 +139,25 @@ import Testing
         // Verify request reached server with correct wire payload
         #expect(server.lastSelectRequest?.id == "HDMI-A-1")
         #expect(server.lastSelectRequest?.mode == qhd120)
+
+        // 4c. Virtual screen mode selection: 1440p @ 90Hz updates customFPS and persists
+        let savedFPS = UserDefaults.standard.object(forKey: "customFPS")
+        defer {
+            if let savedFPS {
+                UserDefaults.standard.set(savedFPS, forKey: "customFPS")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "customFPS")
+            }
+        }
+        let virtual90 = DisplayMode(width: 2560, height: 1440, refresh: 90.0)
+        let virtualSuccess = await model.selectOutput(host: host, outputId: "virtual", mode: virtual90)
+        #expect(virtualSuccess == true)
+        #expect(model.activeHostOutputId[host.id] == "virtual")
+        #expect(model.activeMode(for: host) == virtual90)
+        #expect(model.loadPersistedMode(for: host.id) == virtual90)
+        #expect(model.customFPS == 90)
+        #expect(server.lastSelectRequest?.id == "virtual")
+        #expect(server.lastSelectRequest?.mode == virtual90)
     }
 
     /// 5a. Mock network contract:
