@@ -138,9 +138,12 @@ a fake, so it is an internal seam for tests, not an OS seam.
   is removed and the answer is 502, so the Mac can try again. On the PC,
   `event-horizon-companion --list-macs` and `--unpair <mac id>` do the same
   without the Link running.
+- **Outputs.** `GET /outputs` returns the host's connected displays, EDID model
+  names, and modes via KScreen. `POST /outputs/select` changes the active target
+  and mode, synchronizes Sunshine's `output_name`, and reloads Sunshine when idle.
 - **Protocol.** JSON over HTTPS: `GET /hello`, `POST /pair`,
-  `GET /pair/{ticket}`, `POST /lease`, `DELETE /pair`. Versioned by the `v` TXT
-  field and by `/hello`. `GET /status` is the next slice.
+  `GET /pair/{ticket}`, `POST /lease`, `DELETE /pair`, `GET /outputs`,
+  `POST /outputs/select`. Versioned by the `v` TXT field and by `/hello`.
 
 ## Rules learned the hard way
 

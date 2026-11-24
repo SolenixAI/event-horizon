@@ -36,18 +36,15 @@ needs a virtual display that can.
 5. In Event Horizon, pick a resolution and refresh rate that exist in the config
    above.
 
-## Linux: use a mode your output already has
+## Linux: dynamic display selection and modes
 
-Sunshine's display-mode options are Windows-only; on Linux it captures the
-output as it is and does not change its mode. Pick a mode the output already
-offers, or add it to the display server:
+Event Horizon automatically detects all connected outputs (monitors, TVs, and virtual screens) on KDE Wayland via `kscreen-doctor`. You can switch target displays directly on the Home desk before launching or mid-session:
 
-- **X11**: the mode must exist in `xrandr`. Add any custom Mac mode with
-  `xrandr --newmode` plus `--addmode` (or a modeline in your X config), then
-  switch the output to it before you stream.
-- **Wayland**: set the mode in the compositor (KDE: Display Configuration or
-  `kscreen-doctor`). A virtual output that Sunshine streams through
-  `output_name` keeps its mode across sessions.
+- **Virtual Screen**: Streams an isolated, Mac-sized virtual screen while physical screens stay off or in their default state.
+- **Physical Displays (TVs & Desk Monitors)**: Selecting a physical output directs Sunshine to capture that connector, sets it as primary on the host, and activates HDR if the panel supports it.
+- **Display Modes & Performance**: You can select the output's display mode directly from Event Horizon's desk menu. For 4K TVs, switching to 1440p (2560×1440) cuts PC GPU and encoder load by over 50% while your TV's hardware scaler displays a clean picture in the room.
+
+Sunshine captures the selected output automatically through KWin screencast.
 
 ## The one rule
 

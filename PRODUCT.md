@@ -9,11 +9,12 @@ macos
 ## Users
 
 Mac owners with a Windows or Linux gaming PC at home. They want to harness their
-PC's full graphics and compute power—for high-refresh gaming and desktop work
-alike—directly from their Mac without technical friction.
+PC's full graphics and compute power for high-refresh gaming and desktop work
+alike directly from their Mac without technical friction. Two primary scenes:
+- on the couch or in bed with a MacBook on Wi-Fi (watching on the Mac or a TV in the room);
+- at a desk, with the Mac as the PC's screen.
 
 The project exists because existing solutions have critical flaws:
-
 - **Steam Remote Play:** Suffers from severe I/O latency, washed-out color
   grading, and erratic frame pacing on MacBooks over Wi-Fi.
 - **Moonlight, Sunshine, and raw Glimmer:** Provide capable low-level streaming
@@ -24,7 +25,7 @@ The project exists because existing solutions have critical flaws:
 
 Event Horizon bridges the gap between powerful streaming tech and everyday
 users. It provides an intuitive, first-class native Mac experience that
-anyone—or an AI agent helping them—can set up, use, and trust effortlessly.
+anyone or an AI agent helping them can set up, use, and trust effortlessly.
 
 ## Product Purpose
 
@@ -61,8 +62,9 @@ the remote PC with macOS conventions:
   running; Quit disconnects.
 - **All-in-one PC companion:** A single lightweight Rust companion program on
   the PC. Running it installs Sunshine underneath, creates the virtual display
-  matching the Mac's native aspect ratio and resolution, and pairs with the Mac
-  with a single "Allow" click.
+  matching the Mac's native aspect ratio and resolution, supports dynamic output
+  selection between virtual displays and physical room monitors/TVs (e.g. HDMI TV or desk monitor),
+  and pairs with the Mac with a single "Allow" click.
 - **Agent and human accessible:** Simple, deterministic setup that human users
   or autonomous AI agents can execute, verify, and maintain with single-command
   workflows.

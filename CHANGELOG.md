@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- **Dynamic Host Output Selection**: Choose which physical display (TV, desk monitor)
+  or private virtual screen to show and stream on the PC directly from the Home desk.
+- **Display Mode & Performance Tuning**: Pick supported resolutions and refresh rates
+  (such as 1440p @ 120Hz for 4K TVs) to optimize PC GPU rendering and network latency
+  from bed.
+- **Seamless Mid-Session Switching**: Dock to the desk with ⌘W to switch active outputs
+  with automatic stream reconnect.
+- **Generic HDR Support**: Dynamically detects HDR capabilities on any connected monitor
+  or TV rather than hardcoded connectors.
+
 ## 2026.11.08 - 2026-11-08
 
 - Uses the release date as the app version, so the version matches the date
