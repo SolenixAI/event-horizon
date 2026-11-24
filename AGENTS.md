@@ -25,7 +25,7 @@ pointers below.
 2. **Untrusted network inputs:** All wire packets (RTSP, ENet, RTP) and
    companion REST inputs are untrusted. Parse defensively at the boundary; never
    trap, force-unwrap (`!`), force-try (`try!`), or force-cast (`as!`). Enforced
-   mechanically by `scripts/check-architecture.sh`.
+   mechanically by SwiftLint and `scripts/check-architecture.sh`.
 3. **No URLSession in Stream:** Use `ControlTransport` (Network.framework mutual
    TLS) because the keychain locks on sleep.
 4. **Backend instantiation:** Construct `NativeBackend` only in
