@@ -6,4 +6,5 @@ rules, the PC companion. We did not write our own stream engine or wrap
 moonlight-qt, because Glimmer already streams with native macOS frameworks at
 the latency we want, and the product's value is the experience, not the
 transport. The cost is GPLv3 for the whole app, so the source is public and the
-Mac App Store is out; we sell the signed, updated build instead.
+Mac App Store is out; signed, auto-updating release builds are distributed
+freely on GitHub Releases and Homebrew Cask.

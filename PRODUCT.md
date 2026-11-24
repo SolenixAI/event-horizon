@@ -84,10 +84,11 @@ the remote PC with macOS conventions:
   separately. The PC companion downloads, configures, and supervises Sunshine as
   an automated service, abstracting low-level daemon and firewall details behind
   a seamless pairing handshake.
-- **Open-source flagship:** Event Horizon is free, open source (GPL-3) on
+- **Open-source flagship:** Event Horizon is free and open source (GPL-3) on
   GitHub. It serves as a community utility and a premier software engineering
-  showcase. Packaged, signed release builds are distributed via GitHub Releases
-  and Homebrew Cask, with potential future app packaging exploration.
+  showcase. Packaged, signed release builds are distributed free of charge via
+  GitHub Releases and Homebrew Cask, with potential future app packaging
+  exploration.
 - **Error capture and telemetry:** Anonymous error and crash reporting (PostHog)
   is off by default and opt-in through the Settings › General toggle. No
   personal data, keystrokes, or screen contents are ever transmitted.
