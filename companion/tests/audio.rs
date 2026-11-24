@@ -250,9 +250,20 @@ async fn start_companion(dir: &Path) -> (String, String) {
     (addr, identity.fingerprint)
 }
 
+fn test_crypto_provider() -> rustls::crypto::CryptoProvider {
+    #[cfg(target_os = "linux")]
+    {
+        rustls::crypto::aws_lc_rs::default_provider()
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        rustls::crypto::ring::default_provider()
+    }
+}
+
 async fn connect_tls(addr: &str, fingerprint: &str) -> TlsStream<tokio::net::TcpStream> {
-    let _ = rustls::crypto::ring::default_provider().install_default();
-    let provider = Arc::new(rustls::crypto::ring::default_provider());
+    let _ = test_crypto_provider().install_default();
+    let provider = Arc::new(test_crypto_provider());
     let config = rustls::ClientConfig::builder_with_provider(provider.clone())
         .with_safe_default_protocol_versions()
         .unwrap()
