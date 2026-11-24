@@ -13,8 +13,8 @@ pointers below.
   `make test-unit TEST=<TestSuiteName>`
 - Check lint and format: `pre-commit run --all-files`
 - Check architecture boundaries: `bash scripts/check-architecture.sh`
-- Check Rust companion:
-  `cd companion && cargo fmt --check && cargo clippy --all-targets -- -D warnings`
+- Check Rust companion: `make companion-lint`
+- Run companion test: `make test-companion TEST=<TestName>`
 
 ## Hard boundaries and invariants
 

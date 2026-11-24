@@ -89,9 +89,8 @@ the remote PC with macOS conventions:
   showcase. Packaged, signed release builds are distributed via GitHub Releases
   and Homebrew Cask, with potential future app packaging exploration.
 - **Error capture and telemetry:** Anonymous error and crash reporting (PostHog)
-  is enabled by default to identify bugs in the wild, with a clear one-click
-  opt-out toggle in Settings. No personal data, keystrokes, or screen contents
-  are ever transmitted.
+  is off by default and opt-in through the Settings › General toggle. No
+  personal data, keystrokes, or screen contents are ever transmitted.
 - **Hardened security:** Mutual TLS authentication, out-of-band PIN pairing with
   strict certificate pinning, and minimal XPC boundary for the optional root
   Wi-Fi helper (`awdl0` suppression).

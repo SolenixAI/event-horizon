@@ -22,9 +22,17 @@ if [[ $# -eq 0 ]]; then
 fi
 
 TARGET="$1"
-# Strip leading target/suite prefixes if supplied by user
+# Strip .swift extension and target prefixes if supplied by user or agent
+TARGET="${TARGET%.swift}"
 TARGET="${TARGET#GlimmerTests/}"
 TARGET="${TARGET#GlimmerTests.}"
+
+# Resolve bare stem (e.g. SdpCodec) to declared test suite (SdpCodecTests) if available
+if [[ ! "$TARGET" =~ "/" ]] && [[ ! "$TARGET" =~ Tests$ ]]; then
+	if [[ -f "${ROOT}/GlimmerTests/${TARGET}Tests.swift" ]]; then
+		TARGET="${TARGET}Tests"
+	fi
+fi
 
 echo "▶ Running focused tests: GlimmerTests/${TARGET}..."
 bash "${ROOT}/scripts/generate-build-info.sh"

@@ -77,8 +77,8 @@ pre-commit install --hook-type pre-push # `make test`, per push
 ```bash
 make app                      # compile-only check (Debug), zero warnings enforced
 make test                     # full unit test suite (1,244 tests)
-make test-unit TEST=SdpCodec  # targeted fast unit test suite
-scripts/test-unit.sh SdpCodec # same, direct script invocation
+make test-unit TEST=SdpCodecTests  # targeted fast unit test suite
+scripts/test-unit.sh SdpCodecTests # same, direct script invocation
 make verify                   # strict lint + unit tests: the gate
 make                          # Release build, installed to /Applications
 make open                     # same, then open it

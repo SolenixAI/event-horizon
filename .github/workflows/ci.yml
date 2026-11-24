@@ -141,6 +141,8 @@ jobs:
         run: |
           bash scripts/test-release-tools.sh
           bash scripts/test-prepare-ci-signing.sh
+          bash scripts/test-release-app-guard.sh
+          bash scripts/test-release-dmg-guard.sh
   ci-summary:
     # The one check the branch ruleset requires. It passes only when every job above
     # passed, so adding or renaming a job never leaves the ruleset stale.

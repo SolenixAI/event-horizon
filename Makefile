@@ -158,6 +158,14 @@ test-unit:
 	@test -n "$(TEST)" || { echo "Usage: make test-unit TEST=TestSuiteName" >&2; exit 2; }
 	@bash scripts/test-unit.sh "$(TEST)"
 
+test-companion:
+	@echo "▶ Running companion tests..."
+	@cd companion && cargo test $(TEST)
+
+companion-lint:
+	@echo "▶ Checking companion formatting and clippy..."
+	@cd companion && cargo fmt --check && cargo clippy --all-targets -- -D warnings
+
 app:
 	@echo "▶ Building Event Horizon.app ($(CONFIG))..."
 	@scripts/generate-build-info.sh

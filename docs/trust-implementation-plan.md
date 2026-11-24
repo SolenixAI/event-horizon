@@ -428,11 +428,11 @@ During exploration, the following prototypes settled open technical questions:
 
 ## Appendix D. Links and reading list
 
-1. Execution playbook at [playbooks/autopilot-full.md](file:///Users/jagercooper/.gemini/config/skills/poteto-mode/playbooks/autopilot-full.md).
-2. Architecture guide at [docs/ARCHITECTURE.md](file:///Users/jagercooper/GitHub/event-horizon/docs/ARCHITECTURE.md).
-3. Security threat model at [docs/SECURITY.md](file:///Users/jagercooper/GitHub/event-horizon/docs/SECURITY.md).
-4. Poteto mode workflow at [FULL_WORKFLOW.md](file:///Users/jagercooper/.gemini/config/skills/poteto-mode/FULL_WORKFLOW.md).
-5. Unslop guide at [unslop/SKILL.md](file:///Users/jagercooper/.gemini/config/skills/unslop/SKILL.md).
-6. Swarm verification at [swarm/SKILL.md](file:///Users/jagercooper/.gemini/config/skills/swarm/SKILL.md).
+1. Execution playbook at [playbooks/autopilot-full.md](~/.agents/skills/poteto-mode/playbooks/autopilot-full.md).
+2. Architecture guide at [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+3. Security threat model at [docs/SECURITY.md](docs/SECURITY.md).
+4. Poteto mode workflow at [FULL_WORKFLOW.md](~/.agents/skills/poteto-mode/FULL_WORKFLOW.md).
+5. Unslop guide at [unslop/SKILL.md](~/.agents/skills/unslop/SKILL.md).
+6. Swarm verification at [swarm/SKILL.md](~/.agents/skills/swarm/SKILL.md).
 
 <!-- prettier-ignore-end -->
