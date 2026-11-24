@@ -4,47 +4,47 @@
 
 use crate::host::spaced;
 use crate::ports::{Decision, Prompt};
+use futures_util::StreamExt;
 use std::collections::HashMap;
-use zbus::blocking::{Connection, Proxy};
-use zbus::zvariant::Value;
+use zbus::{Connection, Proxy, Variant};
 
 #[derive(Clone, Copy, Default)]
 pub struct Notification;
 
 impl Prompt for Notification {
     async fn ask_allow(&self, mac_name: &str, code: &str) -> Decision {
-        let (mac_name, code) = (mac_name.to_string(), code.to_string());
-        tokio::task::spawn_blocking(move || ask(&mac_name, &code).unwrap_or(Decision::Deny))
-            .await
-            .unwrap_or(Decision::Deny)
+        ask(mac_name, code).await.unwrap_or(Decision::Deny)
     }
 }
 
-fn ask(mac_name: &str, code: &str) -> zbus::Result<Decision> {
-    let connection = Connection::session()?;
+async fn ask(mac_name: &str, code: &str) -> zbus::Result<Decision> {
+    let connection = Connection::session().await?;
     let notifications = Proxy::new(
         &connection,
         "org.freedesktop.Notifications",
         "/org/freedesktop/Notifications",
         "org.freedesktop.Notifications",
-    )?;
-    let mut signals = notifications.receive_all_signals()?;
-    let mut hints: HashMap<&str, Value> = HashMap::new();
-    hints.insert("urgency", Value::U8(2)); // stays on screen until answered
-    let id: u32 = notifications.call(
-        "Notify",
-        &(
-            "Event Horizon",
-            0u32,
-            "video-display",
-            format!("Allow {mac_name} to use this PC?"),
-            format!("Check that your Mac shows {}.", spaced(code)),
-            vec!["allow", "Allow", "deny", "Deny"],
-            hints,
-            120_000i32,
-        ),
-    )?;
-    for message in &mut signals {
+    )
+    .await?;
+    let mut signals = notifications.receive_all_signals().await?;
+    let mut hints: HashMap<&str, Variant<'_>> = HashMap::new();
+    hints.insert("urgency", Variant::U8(2)); // stays on screen until answered
+    let id: u32 = notifications
+        .call(
+            "Notify",
+            &(
+                "Event Horizon",
+                0u32,
+                "video-display",
+                format!("Allow {mac_name} to use this PC?"),
+                format!("Check that your Mac shows {}.", spaced(code)),
+                vec!["allow", "Allow", "deny", "Deny"],
+                hints,
+                120_000i32,
+            ),
+        )
+        .await?;
+    while let Some(message) = signals.next().await {
         let Some(member) = message.header().member().map(|m| m.to_string()) else {
             continue;
         };

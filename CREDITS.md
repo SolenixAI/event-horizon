@@ -33,10 +33,10 @@ permission notices are preserved here, as the MIT license requires:
 
 ## Update framework
 
-- **[Sparkle 2.10.0](https://github.com/sparkle-project/Sparkle/tree/2.10.0)**
+- **[Sparkle 2.10.1](https://github.com/sparkle-project/Sparkle/tree/2.10.1)**
   is bundled for signed app updates. Its MIT license and bundled third-party
   notices are reproduced in
-  [`docs/licenses/Sparkle-2.10.0-LICENSE.txt`](docs/licenses/Sparkle-2.10.0-LICENSE.txt).
+  [`docs/licenses/Sparkle-2.10.1-LICENSE.txt`](docs/licenses/Sparkle-2.10.1-LICENSE.txt).
 
 ## Controller mappings
 

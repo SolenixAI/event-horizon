@@ -93,7 +93,7 @@ RELEASES_REPO   ?= SolenixAI/event-horizon
 export RELEASES_REPO
 # Which release `make brew-bump` dispatches the cask update for - the one being built by default.
 VERSION         ?= $(MARKETING_VERSION)
-SPARKLE_VERSION ?= 2.10.0
+SPARKLE_VERSION ?= 2.10.1
 export SPARKLE_VERSION
 
 # --- Privileged AWDL network helper (root LaunchDaemon) ---------------------

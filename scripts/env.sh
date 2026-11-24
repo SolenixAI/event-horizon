@@ -19,3 +19,5 @@ case ":$PATH:" in
     fi
     ;;
 esac
+
+:

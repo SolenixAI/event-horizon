@@ -10,8 +10,8 @@ updates:
     cooldown:
       default-days: 7
     groups:
-      minor-and-patch:
-        update-types: [minor, patch]
+      swift:
+        patterns: ["*"]
   - package-ecosystem: cargo
     directory: /companion
     schedule:
@@ -19,8 +19,8 @@ updates:
     cooldown:
       default-days: 7
     groups:
-      minor-and-patch:
-        update-types: [minor, patch]
+      cargo:
+        patterns: ["*"]
   - package-ecosystem: pre-commit
     directory: /
     schedule:
