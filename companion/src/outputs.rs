@@ -51,6 +51,71 @@ pub struct SelectOutputRequest {
     pub mode: Option<DisplayMode>,
 }
 
+/// Curated resolution and refresh presets for the virtual screen, merged with
+/// its current mode and any discovered modes, sorted and deduplicated.
+pub fn virtual_modes(
+    current_mode: Option<&DisplayMode>,
+    discovered: Vec<DisplayMode>,
+) -> Vec<DisplayMode> {
+    let mut modes = vec![
+        DisplayMode {
+            width: 2560,
+            height: 1600,
+            refresh: 120.0,
+        },
+        DisplayMode {
+            width: 2560,
+            height: 1600,
+            refresh: 90.0,
+        },
+        DisplayMode {
+            width: 2560,
+            height: 1600,
+            refresh: 60.0,
+        },
+        DisplayMode {
+            width: 2560,
+            height: 1440,
+            refresh: 120.0,
+        },
+        DisplayMode {
+            width: 2560,
+            height: 1440,
+            refresh: 90.0,
+        },
+        DisplayMode {
+            width: 2560,
+            height: 1440,
+            refresh: 60.0,
+        },
+        DisplayMode {
+            width: 1920,
+            height: 1200,
+            refresh: 120.0,
+        },
+        DisplayMode {
+            width: 1920,
+            height: 1200,
+            refresh: 60.0,
+        },
+        DisplayMode {
+            width: 1920,
+            height: 1080,
+            refresh: 120.0,
+        },
+        DisplayMode {
+            width: 1920,
+            height: 1080,
+            refresh: 60.0,
+        },
+    ];
+    modes.extend(discovered);
+    if let Some(current) = current_mode {
+        modes.push(current.clone());
+    }
+    sort_and_deduplicate_modes(modes)
+}
+
 /// Creates the default virtual screen output when missing from KScreen.
 pub fn default_virtual_output() -> HostOutput {
     HostOutput {
@@ -62,7 +127,7 @@ pub fn default_virtual_output() -> HostOutput {
         is_virtual: true,
         hdr_supported: false,
         current_mode: None,
-        modes: Vec::new(),
+        modes: virtual_modes(None, Vec::new()),
     }
 }
 
@@ -365,12 +430,13 @@ pub fn parse_kscreen_json(
             .and_then(Value::as_array)
             .map(|arr| arr.iter().filter_map(parse_mode).collect())
             .unwrap_or_default();
-        let modes = sort_and_deduplicate_modes(raw_modes);
-        let current_mode = extract_current_mode(o, &modes);
+        let sorted_raw = sort_and_deduplicate_modes(raw_modes);
+        let current_mode = extract_current_mode(o, &sorted_raw);
 
         let is_virtual = connector == VIRTUAL_CONNECTOR || connector == VIRTUAL_ID;
         if is_virtual {
             virtual_found = true;
+            let modes = virtual_modes(current_mode.as_ref(), sorted_raw);
             outputs_with_priority.push((
                 priority,
                 HostOutput {
@@ -386,6 +452,7 @@ pub fn parse_kscreen_json(
                 },
             ));
         } else {
+            let modes = sorted_raw;
             let name = parse_friendly_name(o, connector);
             let hdr_supported = parse_hdr(o);
             outputs_with_priority.push((

@@ -280,3 +280,46 @@ fn is_key(line: &str, key: &str) -> bool {
     line.split_once('=')
         .is_some_and(|(name, _)| name.trim() == key)
 }
+
+/// Rewrites `--resolution WxH` on the `ExecStart=` line of the virtual screen
+/// systemd unit when the requested `size` differs from the unit's current
+/// `--resolution`. Returns `None` if the unit already uses `size` or has no
+/// `--resolution` flag on `ExecStart=`.
+pub fn with_resolution(text: &str, size: Size) -> Option<String> {
+    let target = size.to_string();
+    let mut changed = false;
+    let mut out_lines = Vec::new();
+
+    for line in text.lines() {
+        if line.trim_start().starts_with("ExecStart=")
+            && let Some(flag_idx) = line.find("--resolution ")
+        {
+            let after_flag = &line[flag_idx + "--resolution ".len()..];
+            let trimmed_after = after_flag.trim_start();
+            let spaces = after_flag.len() - trimmed_after.len();
+            if let Some(current) = trimmed_after.split_whitespace().next()
+                && !current.is_empty()
+            {
+                if current == target {
+                    return None;
+                }
+                let prefix = &line[..flag_idx + "--resolution ".len() + spaces];
+                let suffix = &trimmed_after[current.len()..];
+                out_lines.push(format!("{prefix}{target}{suffix}"));
+                changed = true;
+                continue;
+            }
+        }
+        out_lines.push(line.to_string());
+    }
+
+    if !changed {
+        return None;
+    }
+
+    let mut result = out_lines.join("\n");
+    if text.ends_with('\n') {
+        result.push('\n');
+    }
+    Some(result)
+}

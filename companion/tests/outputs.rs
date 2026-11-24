@@ -4,7 +4,7 @@
 use event_horizon_companion::linux_install::{Commands, Files, Layout};
 use event_horizon_companion::outputs::{
     self, DisplayMode, HostOutput, OutputsPayload, SelectOutputRequest, VIRTUAL_ID, VIRTUAL_NAME,
-    discover_outputs, parse_kscreen_outputs, sort_and_deduplicate_modes,
+    discover_outputs, parse_kscreen_outputs, sort_and_deduplicate_modes, virtual_modes,
 };
 use serde_json::json;
 use std::collections::{HashMap, VecDeque};
@@ -134,7 +134,7 @@ fn single_monitor_parsed_correctly() {
     assert!(v.is_virtual);
     assert!(!v.hdr_supported);
     assert_eq!(v.current_mode, None);
-    assert!(v.modes.is_empty());
+    assert_eq!(v.modes.len(), 10);
 }
 
 // ---------------------------------------------------------------------------
@@ -236,7 +236,7 @@ fn headless_setup_returns_virtual_screen() {
     assert!(v.is_virtual);
     assert!(!v.hdr_supported);
     assert_eq!(v.current_mode, None);
-    assert!(v.modes.is_empty());
+    assert_eq!(v.modes.len(), 10);
 }
 
 #[test]
@@ -428,7 +428,7 @@ fn virtual_output_in_kscreen_is_mapped_and_not_duplicated() {
             refresh: 60.0,
         })
     );
-    assert_eq!(v.modes.len(), 1);
+    assert_eq!(v.modes.len(), 10);
 }
 
 // ---------------------------------------------------------------------------
@@ -641,4 +641,42 @@ fn discover_outputs_with_stream_output_file() {
     let payload = discover_outputs(&cmd, &files, &layout).expect("discovery succeeds");
     assert_eq!(payload.active_id, "HDMI-A-1");
     assert_eq!(payload.outputs.len(), 3); // DP-1, HDMI-A-1, virtual
+}
+
+#[test]
+fn virtual_modes_exposes_curated_presets_and_deduplicates_current_mode() {
+    let current = DisplayMode {
+        width: 2560,
+        height: 1600,
+        refresh: 60.0,
+    };
+    let modes = virtual_modes(Some(&current), vec![current.clone()]);
+    assert_eq!(modes.len(), 10);
+
+    let expected = vec![
+        (2560, 1600, 120.0),
+        (2560, 1600, 90.0),
+        (2560, 1600, 60.0),
+        (2560, 1440, 120.0),
+        (2560, 1440, 90.0),
+        (2560, 1440, 60.0),
+        (1920, 1200, 120.0),
+        (1920, 1200, 60.0),
+        (1920, 1080, 120.0),
+        (1920, 1080, 60.0),
+    ];
+    for (idx, (w, h, r)) in expected.into_iter().enumerate() {
+        assert_eq!(modes[idx].width, w);
+        assert_eq!(modes[idx].height, h);
+        assert_eq!(modes[idx].refresh, r);
+    }
+
+    let custom = DisplayMode {
+        width: 1470,
+        height: 956,
+        refresh: 60.0,
+    };
+    let with_custom = virtual_modes(Some(&custom), vec![]);
+    assert_eq!(with_custom.len(), 11);
+    assert!(with_custom.contains(&custom));
 }

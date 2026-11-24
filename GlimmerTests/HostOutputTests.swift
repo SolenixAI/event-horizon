@@ -288,4 +288,54 @@ struct HostOutputTests {
         await model.disconnect()
         #expect(!model.isStreaming)
     }
+
+    @Test @MainActor func defaultVirtualExposesCuratedModesAndPersistsSelection() async {
+        let virtual = HostOutput.defaultVirtual
+        #expect(virtual.modes.count == 10)
+        #expect(virtual.modes.contains(DisplayMode(width: 2560, height: 1600, refresh: 120.0)))
+        #expect(virtual.modes.contains(DisplayMode(width: 2560, height: 1600, refresh: 90.0)))
+        #expect(virtual.modes.contains(DisplayMode(width: 2560, height: 1600, refresh: 60.0)))
+        #expect(virtual.modes.contains(DisplayMode(width: 1920, height: 1080, refresh: 120.0)))
+
+        let hostId = "virtual-mode-persist-\(UUID().uuidString)"
+        let host = Host(
+            id: hostId,
+            name: "Virtual-Host",
+            customName: nil,
+            localAddress: nil,
+            manualAddress: nil,
+            apps: [],
+            lastConnected: nil,
+            serverCertPEM: nil,
+            appVersion: nil,
+            macAddress: nil
+        )
+        let savedPreset = UserDefaults.standard.string(forKey: "qualityPreset")
+        let savedFPS = UserDefaults.standard.object(forKey: "customFPS")
+        defer {
+            UserDefaults.standard.removeObject(forKey: AppModel.outputDefaultsKey(for: hostId))
+            UserDefaults.standard.removeObject(forKey: AppModel.modeDefaultsKey(for: hostId))
+            if let savedPreset {
+                UserDefaults.standard.set(savedPreset, forKey: "qualityPreset")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "qualityPreset")
+            }
+            if let savedFPS {
+                UserDefaults.standard.set(savedFPS, forKey: "customFPS")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "customFPS")
+            }
+        }
+
+        let model = AppModel()
+        let presetBefore = model.qualityPreset
+        let mode = DisplayMode(width: 2560, height: 1600, refresh: 90.0)
+        _ = await model.selectOutput(host: host, outputId: "virtual", mode: mode)
+
+        #expect(model.activeHostOutputId[hostId] == "virtual")
+        #expect(model.selectedHostMode[hostId] == mode)
+        #expect(model.loadPersistedMode(for: hostId) == mode)
+        #expect(model.customFPS == 90)
+        #expect(model.qualityPreset == presetBefore)
+    }
 }

@@ -4,7 +4,7 @@
 use event_horizon_companion::linux_install;
 use event_horizon_companion::virtual_screen::{
     DEFAULT_SIZE, Size, is_kde_wayland, placement_args, screen_size, session_from_manager,
-    unit_text, with_setting,
+    unit_text, with_resolution, with_setting,
 };
 use serde_json::json;
 use std::path::Path;
@@ -92,4 +92,53 @@ fn the_unit_quotes_a_path_that_has_a_space() {
     assert!(text.contains(&format!(
         "ExecStart=\"/opt/Krfb Tools/krfb-virtualmonitor\" --resolution 2560x1600 --name sunshine-vmon --port 5905 --password {password}"
     )));
+}
+
+#[test]
+fn with_resolution_rewrites_exec_start_and_preserves_other_lines() {
+    let unit = unit_text(
+        Path::new("/opt/Krfb Tools/krfb-virtualmonitor"),
+        Path::new("/home/friend/.local/bin/event-horizon-companion"),
+        DEFAULT_SIZE,
+        "secret123",
+    );
+
+    let updated = with_resolution(
+        &unit,
+        Size {
+            width: 1920,
+            height: 1080,
+        },
+    )
+    .expect("resolution should update");
+
+    assert!(updated.contains(
+        "ExecStart=\"/opt/Krfb Tools/krfb-virtualmonitor\" --resolution 1920x1080 --name sunshine-vmon --port 5905 --password secret123"
+    ));
+    assert!(updated.contains(
+        "ExecStartPost=-/home/friend/.local/bin/event-horizon-companion place-virtual-screen"
+    ));
+    assert!(updated.ends_with('\n'));
+}
+
+#[test]
+fn with_resolution_returns_none_when_unchanged_or_missing() {
+    let unit = unit_text(
+        Path::new("/usr/bin/krfb-virtualmonitor"),
+        Path::new("/usr/bin/event-horizon-companion"),
+        DEFAULT_SIZE,
+        "pw",
+    );
+
+    assert_eq!(with_resolution(&unit, DEFAULT_SIZE), None);
+    assert_eq!(
+        with_resolution(
+            "[Service]\nExecStart=/usr/bin/krfb-virtualmonitor --name sunshine-vmon\n",
+            Size {
+                width: 1920,
+                height: 1080
+            }
+        ),
+        None
+    );
 }
