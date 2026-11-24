@@ -7,37 +7,128 @@ on:
     branches: [main]
   pull_request:
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 # Every job only reads the code; no job needs write access.
 permissions:
   contents: read
+  pull-requests: read
 jobs:
+  changes:
+    # Evaluate changed paths early to skip unaffected parts of the matrix and pipeline.
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      swift: ${{ steps.filter.outputs.swift }}
+      rust: ${{ steps.filter.outputs.rust }}
+      windows-e2e: ${{ steps.filter.outputs.windows-e2e }}
+      scripts: ${{ steps.filter.outputs.scripts }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: filter
+        with:
+          filters: |
+            swift:
+              - 'Glimmer/**'
+              - 'GlimmerTests/**'
+              - 'LoginHelper/**'
+              - 'helper/**'
+              - 'Glimmer.xcodeproj/**'
+              - 'Glimmer-Bridging-Header.h'
+              - '.swiftlint.yml'
+              - 'Makefile'
+              - 'scripts/test-unit.sh'
+              - '.github/workflows/ci.yml'
+            rust:
+              - 'companion/**'
+              - 'Makefile'
+              - '.github/workflows/ci.yml'
+            windows-e2e:
+              - 'companion/**'
+              - '.github/workflows/ci.yml'
+            scripts:
+              - 'scripts/**'
+              - '.github/workflows/ci.yml'
   test:
     runs-on: xcode-27
     timeout-minutes: 45
+    needs: [changes]
+    if: github.event_name == 'push' || needs.changes.outputs.swift == 'true'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Resolve Xcode version
+        id: xcode
+        run: |
+          XCODE_VERSION=$(xcodebuild -version | head -n 1 | awk '{print $2}')
+          echo "version=${XCODE_VERSION}" >> "$GITHUB_OUTPUT"
       # The Metal shaders compile with the Metal Toolchain, which the image does not ship.
-      - name: Install the Metal Toolchain
-        run: xcodebuild -downloadComponent MetalToolchain
+      - name: Cache Apple Metal Toolchain
+        id: cache-metal
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/Library/Caches/MetalToolchain
+          key:
+            metal-toolchain-${{ runner.os }}-xcode-${{
+            steps.xcode.outputs.version }}
+          restore-keys: |
+            metal-toolchain-${{ runner.os }}-xcode-
+            metal-toolchain-${{ runner.os }}-
+      - name: Install Metal Toolchain
+        run: |
+          if [ "${{ steps.cache-metal.outputs.cache-hit }}" = "true" ]; then
+            echo "Cache hit for Metal Toolchain. Locating exported bundle..."
+            BUNDLE=$(find ~/Library/Caches/MetalToolchain -maxdepth 2 \( -name "*.exportedBundle" -o -name "*.dmg" -o -name "*.bundle" \) | head -n 1)
+            if [ -n "$BUNDLE" ]; then
+              echo "Importing Metal Toolchain from: $BUNDLE"
+              xcodebuild -importComponent MetalToolchain -importPath "$BUNDLE"
+            else
+              echo "Bundle not found despite cache hit; falling back to download and export..."
+              mkdir -p ~/Library/Caches/MetalToolchain
+              xcodebuild -downloadComponent MetalToolchain -exportPath ~/Library/Caches/MetalToolchain
+            fi
+          else
+            echo "Cache miss for Metal Toolchain. Downloading and exporting..."
+            mkdir -p ~/Library/Caches/MetalToolchain
+            xcodebuild -downloadComponent MetalToolchain -exportPath ~/Library/Caches/MetalToolchain
+          fi
       - name: Build and test
         run: make test
   lint:
-    # Run strict SwiftLint on every PR. The hosted macOS image does not ship
-    # SwiftLint, so Homebrew installs it.
+    # Run strict SwiftLint on every PR with Swift changes. The hosted macOS image does not ship
+    # SwiftLint, so we cache or curl the portable binary directly to avoid 90s brew update.
     runs-on: macos-latest
     timeout-minutes: 10
+    needs: [changes]
+    if: github.event_name == 'push' || needs.changes.outputs.swift == 'true'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Strict SwiftLint
+      - name: Cache SwiftLint binary
+        id: cache-swiftlint
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/bin/swiftlint
+          key: swiftlint-macos-${{ runner.os }}-0.65.1
+      - name: Install SwiftLint
         run: |
-          brew install swiftlint
-          swiftlint lint --strict
+          mkdir -p "$HOME/bin"
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+          if [ ! -x "$HOME/bin/swiftlint" ]; then
+            echo "Downloading portable SwiftLint binary..."
+            curl -sSL "https://github.com/realm/SwiftLint/releases/download/0.65.1/portable_swiftlint.zip" -o /tmp/portable_swiftlint.zip
+            unzip -q /tmp/portable_swiftlint.zip -d "$HOME/bin"
+            chmod +x "$HOME/bin/swiftlint"
+            rm -f /tmp/portable_swiftlint.zip
+          fi
+          "$HOME/bin/swiftlint" version
+      - name: Strict SwiftLint
+        run: swiftlint lint --strict
   pre-commit:
     # Run formatting, yaml, markdown, json, and repository file checks on Ubuntu.
     runs-on: ubuntu-latest
@@ -67,6 +158,12 @@ jobs:
         os: [windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
+    needs: [changes]
+    if: github.event_name == 'push' || needs.changes.outputs.rust == 'true'
+    env:
+      RUSTC_WRAPPER: sccache
+      SCCACHE_GHA_ENABLED: "true"
+      CARGO_INCREMENTAL: "0"
     defaults:
       run:
         working-directory: companion
@@ -74,14 +171,21 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Configure Windows MSVC debug info for sccache
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          echo "CFLAGS=/Z7" >> "$GITHUB_ENV"
+          echo "CXXFLAGS=/Z7" >> "$GITHUB_ENV"
+      - name: Set up sccache
+        uses: mozilla-actions/sccache-action@1d7521cd68a3b4e73bfaf7b2838ef7db23c8bde4 # v0.0.8
+      - name: Cache Cargo registry and git index
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
-            ~/.cargo/bin/
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            companion/target/
           key: cargo-${{ matrix.os }}-${{ hashFiles('companion/Cargo.lock') }}
           restore-keys: |
             cargo-${{ matrix.os }}-
@@ -96,25 +200,36 @@ jobs:
     # companion, then the companion answers and its Sunshine login works.
     runs-on: windows-latest
     timeout-minutes: 30
+    needs: [changes]
+    if: >-
+      github.event_name == 'push' || needs.changes.outputs.windows-e2e == 'true'
+      || contains(github.event.pull_request.labels.*.name, 'run-windows-e2e')
     defaults:
       run:
         shell: pwsh
         working-directory: companion
+    env:
+      RUSTC_WRAPPER: sccache
+      SCCACHE_GHA_ENABLED: "true"
+      CARGO_INCREMENTAL: "0"
+      CFLAGS: "/Z7"
+      CXXFLAGS: "/Z7"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      - name: Set up sccache
+        uses: mozilla-actions/sccache-action@1d7521cd68a3b4e73bfaf7b2838ef7db23c8bde4 # v0.0.8
+      - name: Cache Cargo registry and git index
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
-            ~/.cargo/bin/
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            companion/target/
-          key: cargo-windows-release-${{ hashFiles('companion/Cargo.lock') }}
+          key: cargo-windows-${{ hashFiles('companion/Cargo.lock') }}
           restore-keys: |
-            cargo-windows-release-
+            cargo-windows-
       - name: Build
         run: cargo build --release
       - name: Install (as a person would, by running the companion's installer)
@@ -158,7 +273,12 @@ jobs:
           if (-not $run.'Event Horizon') { throw 'no Run entry' }
   architecture:
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 5
+    needs: [changes]
+    if: >-
+      github.event_name == 'push' || needs.changes.outputs.swift == 'true' ||
+      needs.changes.outputs.rust == 'true' || needs.changes.outputs.scripts ==
+      'true'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -172,23 +292,51 @@ jobs:
           bash scripts/test-release-app-guard.sh
           bash scripts/test-release-dmg-guard.sh
   ci-summary:
-    # The one check the branch ruleset requires. It passes only when every job above
-    # passed, so adding or renaming a job never leaves the ruleset stale.
+    # Aggregate gate for branch protection: single required check.
+    # Passes when every job succeeded or was cleanly skipped.
+    # Fails if any job failed or was cancelled.
     if: always()
     needs:
-      [
-        test,
-        lint,
-        pre-commit,
-        companion,
-        companion-install-windows,
-        architecture,
-      ]
+      - changes
+      - test
+      - lint
+      - pre-commit
+      - companion
+      - companion-install-windows
+      - architecture
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
-      - name: Every job passed
-        if:
-          ${{ contains(needs.*.result, 'failure') || contains(needs.*.result,
-          'cancelled') || contains(needs.*.result, 'skipped') }}
-        run: exit 1
+      - name: Check aggregate status
+        env:
+          RESULTS: ${{ toJSON(needs.*.result) }}
+        run: |
+          python3 -c '
+          import json, os, sys
+
+          raw = os.environ.get("RESULTS", "{}")
+          try:
+              results = json.loads(raw)
+          except Exception as e:
+              print(f"Error decoding results JSON: {e}", file=sys.stderr)
+              sys.exit(1)
+
+          print("Job execution results:")
+          print(json.dumps(results, indent=2))
+
+          statuses = list(results.values()) if isinstance(results, dict) else results
+
+          # Fail if any job is failure or cancelled
+          failed_jobs = [s for s in statuses if s in ("failure", "cancelled")]
+          if failed_jobs:
+              print(f"\n❌ Gate check failed: {len(failed_jobs)} job(s) failed or were cancelled.", file=sys.stderr)
+              sys.exit(1)
+
+          # Explicitly allow only success and skipped
+          disallowed = [s for s in statuses if s not in ("success", "skipped")]
+          if disallowed:
+              print(f"\n❌ Gate check failed: unexpected job status encountered: {disallowed}", file=sys.stderr)
+              sys.exit(1)
+
+          print("\n✅ Aggregate gate passed: all jobs succeeded or were skipped.")
+          '
