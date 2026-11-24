@@ -55,6 +55,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASES_REPO: SolenixAI/event-horizon
         run: make release-publish
+      - name: Trigger Homebrew Cask Update
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          TAG: ${{ steps.vars.outputs.TAG || github.ref_name }}
+        run: |
+          echo "▶ Dispatching cask update to SolenixAI/homebrew-tap for $TAG..."
+          gh api repos/SolenixAI/homebrew-tap/dispatches \
+            -f event_type="app-release" \
+            -f client_payload[version]="$TAG" || echo "Note: Tap dispatch skipped (requires HOMEBREW_TAP_TOKEN)"
 
   notarized-release-disabled:
     if:
