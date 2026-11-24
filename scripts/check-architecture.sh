@@ -28,3 +28,14 @@ if [[ "$(printf '%s\n' "$NATIVE_CONSTRUCTORS" | sed '/^$/d' | wc -l | tr -d ' ')
 fi
 
 echo "Swift streaming backend construction is at the app composition point."
+
+# Control transport in the streaming engine must use ControlTransport (Network.framework
+# mutual TLS), deliberately not URLSession (the keychain locks on sleep).
+URLSESSION_USES="$(grep -R -nE --include='*.swift' 'URLSession\.(shared|init|[a-zA-Z]+)' "$ROOT/Glimmer/Stream" || true)"
+if [[ -n "$URLSESSION_USES" ]]; then
+	echo "Architecture violation: Glimmer/Stream must use ControlTransport, not URLSession." >&2
+	printf '%s\n' "$URLSESSION_USES" >&2
+	exit 1
+fi
+
+echo "Swift stream transport uses Network.framework ControlTransport."
