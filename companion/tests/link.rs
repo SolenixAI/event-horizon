@@ -585,3 +585,180 @@ async fn the_lease_carries_the_macs_usage_stats_choice() {
     );
     assert!(!link::any_mac_shares_stats(&macs));
 }
+
+#[tokio::test]
+async fn outputs_endpoints_require_valid_token() {
+    let dir = tempfile::tempdir().unwrap();
+    let companion = start(Decision::Allow, dir.path()).await;
+
+    // GET /outputs without token
+    let (status, _) = send(&companion, "GET", "/outputs", None, None).await;
+    assert_eq!(status, 401);
+
+    // GET /outputs with invalid token
+    let (status, _) = send(&companion, "GET", "/outputs", Some("invalid-token"), None).await;
+    assert_eq!(status, 401);
+
+    // POST /outputs/select without token
+    let (status, _) = send(
+        &companion,
+        "POST",
+        "/outputs/select",
+        None,
+        Some(json!({ "id": "virtual" })),
+    )
+    .await;
+    assert_eq!(status, 401);
+
+    // Pair a Mac
+    let (_, body) = pair(&companion).await;
+    let token = body["token"].as_str().unwrap().to_string();
+
+    // GET /outputs with valid token returns default virtual screen
+    let (status, body) = send(&companion, "GET", "/outputs", Some(&token), None).await;
+    assert_eq!(status, 200);
+    assert_eq!(body["active_id"], "virtual");
+    let outputs = body["outputs"].as_array().expect("outputs array");
+    assert_eq!(outputs.len(), 1);
+    assert_eq!(outputs[0]["id"], "virtual");
+    assert_eq!(outputs[0]["is_virtual"], true);
+}
+
+#[tokio::test]
+async fn outputs_select_and_discovery_with_kscreen_and_sunshine_sync() {
+    let dir = tempfile::tempdir().unwrap();
+
+    // Prepare an existing sunshine.conf
+    let sunshine_conf = dir.path().join("sunshine.conf");
+    std::fs::write(
+        &sunshine_conf,
+        "capture = kwin\noutput_name = Virtual-sunshine-vmon\nencoder = nvenc\n",
+    )
+    .unwrap();
+
+    // Prepare kscreen.json fixture in companion directory
+    let kscreen_json = json!({
+        "outputs": [
+            {
+                "name": "DP-1",
+                "connected": true,
+                "enabled": true,
+                "priority": 1,
+                "vendor": "Dell",
+                "model": "U2720Q",
+                "hdr": false,
+                "modes": [
+                    { "id": "m1", "size": { "width": 3840, "height": 2160 }, "refreshRate": 60.0 },
+                    { "id": "m2", "size": { "width": 2560, "height": 1440 }, "refreshRate": 60.0 }
+                ]
+            },
+            {
+                "name": "HDMI-A-1",
+                "connected": true,
+                "enabled": false,
+                "priority": 2,
+                "vendor": "LG",
+                "model": "OLED TV",
+                "hdr": true,
+                "modes": [
+                    { "id": "tv1", "size": { "width": 3840, "height": 2160 }, "refreshRate": 120.0 },
+                    { "id": "tv2", "size": { "width": 1920, "height": 1080 }, "refreshRate": 120.0 }
+                ]
+            }
+        ]
+    });
+    std::fs::write(dir.path().join("kscreen.json"), kscreen_json.to_string()).unwrap();
+
+    let companion = start(Decision::Allow, dir.path()).await;
+    let (_, body) = pair(&companion).await;
+    let token = body["token"].as_str().unwrap().to_string();
+
+    // 1. Initial GET /outputs shows discovered outputs, active is "virtual"
+    let (status, body) = send(&companion, "GET", "/outputs", Some(&token), None).await;
+    assert_eq!(status, 200);
+    assert_eq!(body["active_id"], "virtual");
+    let outputs = body["outputs"].as_array().expect("outputs array");
+    assert_eq!(outputs.len(), 3); // DP-1, HDMI-A-1, virtual
+    let tv = outputs
+        .iter()
+        .find(|o| o["id"] == "HDMI-A-1")
+        .expect("HDMI-A-1 exists");
+    assert_eq!(tv["name"], "LG OLED TV");
+    assert_eq!(tv["hdr_supported"], true);
+
+    // 2. Reject invalid output selection
+    let (status, _) = send(
+        &companion,
+        "POST",
+        "/outputs/select",
+        Some(&token),
+        Some(json!({ "id": "non-existent" })),
+    )
+    .await;
+    assert_eq!(status, 400);
+
+    // 3. Reject invalid mode selection for existing output
+    let (status, _) = send(
+        &companion,
+        "POST",
+        "/outputs/select",
+        Some(&token),
+        Some(json!({
+            "id": "HDMI-A-1",
+            "mode": { "width": 1234, "height": 5678, "refresh": 60.0 }
+        })),
+    )
+    .await;
+    assert_eq!(status, 400);
+
+    // 4. Select physical TV output HDMI-A-1 with valid mode
+    let (status, _) = send(
+        &companion,
+        "POST",
+        "/outputs/select",
+        Some(&token),
+        Some(json!({
+            "id": "HDMI-A-1",
+            "mode": { "width": 3840, "height": 2160, "refresh": 120.0 }
+        })),
+    )
+    .await;
+    assert_eq!(status, 200);
+
+    // Verify stream-output file was written
+    let stream_output = std::fs::read_to_string(dir.path().join("stream-output")).unwrap();
+    assert_eq!(stream_output.trim(), "HDMI-A-1");
+
+    // Verify sunshine.conf was updated with output_name = HDMI-A-1 while preserving other settings
+    let conf = std::fs::read_to_string(&sunshine_conf).unwrap();
+    assert!(conf.contains("output_name = HDMI-A-1"));
+    assert!(conf.contains("capture = kwin"));
+    assert!(conf.contains("encoder = nvenc"));
+
+    // 5. Subsequent GET /outputs reflects active_id == "HDMI-A-1"
+    let (status, body) = send(&companion, "GET", "/outputs", Some(&token), None).await;
+    assert_eq!(status, 200);
+    assert_eq!(body["active_id"], "HDMI-A-1");
+
+    // 6. Select "virtual" resets to virtual screen connector
+    let (status, _) = send(
+        &companion,
+        "POST",
+        "/outputs/select",
+        Some(&token),
+        Some(json!({ "id": "virtual" })),
+    )
+    .await;
+    assert_eq!(status, 200);
+
+    let stream_output = std::fs::read_to_string(dir.path().join("stream-output")).unwrap();
+    assert_eq!(stream_output.trim(), "Virtual-sunshine-vmon");
+
+    let conf = std::fs::read_to_string(&sunshine_conf).unwrap();
+    assert!(conf.contains("output_name = Virtual-sunshine-vmon"));
+
+    // GET /outputs reflects active_id == "virtual"
+    let (status, body) = send(&companion, "GET", "/outputs", Some(&token), None).await;
+    assert_eq!(status, 200);
+    assert_eq!(body["active_id"], "virtual");
+}

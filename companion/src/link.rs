@@ -14,6 +14,7 @@
 //! every Mac paired (a Mac must never pair twice: see DESIGN.md).
 
 use crate::host::{Host, PairOutcome, PairRequest, new_code};
+use crate::outputs::{DisplayMode, OutputsPayload, SelectOutputRequest};
 use crate::ports::{Awake, Decision, Prompt, SunshineApi, SunshineError};
 use crate::tls::TlsListener;
 use axum::extract::{Path, State};
@@ -32,6 +33,15 @@ struct Link<S, P, A: Awake> {
     macs: PathBuf,
     /// Pairing requests the Mac has not collected the answer to yet.
     asks: Mutex<HashMap<String, Ask>>,
+}
+
+impl<S, P, A: Awake> Link<S, P, A> {
+    fn config_dir(&self) -> PathBuf {
+        self.macs
+            .parent()
+            .map(FsPath::to_path_buf)
+            .unwrap_or_else(|| PathBuf::from("."))
+    }
 }
 
 struct Ask {
@@ -63,6 +73,8 @@ pub async fn serve<S, P, A>(
         .route("/pair/waiting", get(waiting::<S, P, A>))
         .route("/pair/waiting/{mac_id}", post(decide::<S, P, A>))
         .route("/lease", post(lease::<S, P, A>))
+        .route("/outputs", get(get_outputs::<S, P, A>))
+        .route("/outputs/select", post(select_output::<S, P, A>))
         .with_state(link);
     let _ = axum::serve(TlsListener::new(listener, tls), app).await;
 }
@@ -238,6 +250,254 @@ where
     }
     link.host.lease(&mac_id).await;
     StatusCode::NO_CONTENT
+}
+
+/// Discovers connected outputs and current active output for the paired Mac.
+async fn get_outputs<S, P, A>(
+    State(link): State<Arc<Link<S, P, A>>>,
+    headers: HeaderMap,
+) -> Result<(StatusCode, Json<OutputsPayload>), StatusCode>
+where
+    S: SunshineApi + 'static,
+    P: Prompt + 'static,
+    A: Awake + 'static,
+{
+    if paired_mac(&link.macs, &headers).is_none() {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+    let config_dir = link.config_dir();
+    let payload = discover_host_outputs(&config_dir);
+    Ok((StatusCode::OK, Json(payload)))
+}
+
+/// Selects an output device and optionally configures its display mode.
+async fn select_output<S, P, A>(
+    State(link): State<Arc<Link<S, P, A>>>,
+    headers: HeaderMap,
+    Json(request): Json<SelectOutputRequest>,
+) -> StatusCode
+where
+    S: SunshineApi + 'static,
+    P: Prompt + 'static,
+    A: Awake + 'static,
+{
+    if paired_mac(&link.macs, &headers).is_none() {
+        return StatusCode::UNAUTHORIZED;
+    }
+
+    let config_dir = link.config_dir();
+    let payload = discover_host_outputs(&config_dir);
+
+    let (target_connector, matched_output) = if request.id == crate::outputs::VIRTUAL_ID
+        || request.id == crate::virtual_screen::OUTPUT
+    {
+        (crate::virtual_screen::OUTPUT.to_string(), None)
+    } else if let Some(found) = payload
+        .outputs
+        .iter()
+        .find(|o| o.id == request.id || o.connector == request.id)
+    {
+        if found.is_virtual {
+            (crate::virtual_screen::OUTPUT.to_string(), Some(found.clone()))
+        } else {
+            (found.connector.clone(), Some(found.clone()))
+        }
+    } else {
+        return StatusCode::BAD_REQUEST;
+    };
+
+    if let Some(ref mode) = request.mode {
+        if mode.width == 0 || mode.height == 0 {
+            return StatusCode::BAD_REQUEST;
+        }
+        if let Some(ref out) = matched_output {
+            if !out.modes.is_empty()
+                && !out
+                    .modes
+                    .iter()
+                    .any(|m| m.width == mode.width && m.height == mode.height)
+            {
+                return StatusCode::BAD_REQUEST;
+            }
+        }
+    }
+
+    let stream_output_path = config_dir.join("stream-output");
+    if let Err(e) = std::fs::write(&stream_output_path, format!("{target_connector}\n")) {
+        eprintln!("select_output: could not write stream-output: {e}");
+        return StatusCode::INTERNAL_SERVER_ERROR;
+    }
+
+    if let Some(sunshine_conf_path) = find_sunshine_conf(&config_dir) {
+        let before = std::fs::read_to_string(&sunshine_conf_path).unwrap_or_default();
+        let after = crate::virtual_screen::with_setting(&before, "output_name", &target_connector);
+        if let Some(parent) = sunshine_conf_path.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        if let Err(e) = std::fs::write(&sunshine_conf_path, after) {
+            eprintln!("select_output: could not write sunshine.conf: {e}");
+        }
+    }
+
+    if !is_stream_live(&config_dir) {
+        restart_sunshine();
+    }
+
+    if let Some(ref mode) = request.mode {
+        apply_output_mode(&target_connector, mode);
+    }
+
+    StatusCode::OK
+}
+
+fn discover_host_outputs(config_dir: &FsPath) -> OutputsPayload {
+    let kscreen_fixture = config_dir.join("kscreen.json");
+    if let Ok(json_str) = std::fs::read_to_string(&kscreen_fixture) {
+        let active_connector = std::fs::read_to_string(config_dir.join("stream-output")).ok();
+        if let Ok(payload) =
+            crate::outputs::parse_kscreen_outputs(&json_str, active_connector.as_deref())
+        {
+            return payload;
+        }
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        crate::os::linux::discover_outputs(config_dir)
+            .unwrap_or_else(|_| default_outputs_payload(config_dir))
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    {
+        default_outputs_payload(config_dir)
+    }
+}
+
+fn default_outputs_payload(config_dir: &FsPath) -> OutputsPayload {
+    let active_connector = std::fs::read_to_string(config_dir.join("stream-output")).ok();
+    let outputs = vec![crate::outputs::default_virtual_output()];
+    let active_id = crate::outputs::resolve_active_id(active_connector.as_deref(), &outputs);
+    OutputsPayload {
+        active_id,
+        outputs,
+    }
+}
+
+fn find_sunshine_conf(config_dir: &FsPath) -> Option<PathBuf> {
+    let test_path = config_dir.join("sunshine.conf");
+    if test_path.exists() {
+        return Some(test_path);
+    }
+    if let Some(custom) = std::env::var_os("EVENT_HORIZON_SUNSHINE_CONF") {
+        let p = PathBuf::from(custom);
+        if p.exists() || p.parent().is_some_and(|parent| parent.is_dir()) {
+            return Some(p);
+        }
+    }
+    if let Some(home) = std::env::var_os("HOME").map(PathBuf::from) {
+        let flatpak_conf =
+            home.join(".var/app/dev.lizardbyte.app.Sunshine/config/sunshine/sunshine.conf");
+        if flatpak_conf.exists() || flatpak_conf.parent().is_some_and(|parent| parent.is_dir()) {
+            return Some(flatpak_conf);
+        }
+        let native_conf = home.join(".config/sunshine/sunshine.conf");
+        if native_conf.exists() || native_conf.parent().is_some_and(|parent| parent.is_dir()) {
+            return Some(native_conf);
+        }
+    }
+    Some(test_path)
+}
+
+fn is_stream_live(config_dir: &FsPath) -> bool {
+    let recovery = std::fs::read_to_string(config_dir.join("stream-screen-recovery-required"))
+        .unwrap_or_default();
+    if !recovery.trim().is_empty() {
+        return false;
+    }
+    let saved = std::fs::read_to_string(config_dir.join("stream-screen-outputs"))
+        .unwrap_or_default();
+    if !saved.trim().is_empty() {
+        return true;
+    }
+    let target_state = std::fs::read_to_string(config_dir.join("stream-screen-target-state"))
+        .unwrap_or_default();
+    !target_state.trim().is_empty()
+}
+
+fn restart_sunshine() {
+    #[cfg(target_os = "linux")]
+    {
+        let _ = std::process::Command::new("systemctl")
+            .args(["--user", "restart", "app-dev.lizardbyte.app.Sunshine.service"])
+            .status();
+        let _ = std::process::Command::new("systemctl")
+            .args(["--user", "restart", "dev.lizardbyte.app.Sunshine.service"])
+            .status();
+    }
+}
+
+fn apply_output_mode(connector: &str, mode: &DisplayMode) {
+    #[cfg(target_os = "linux")]
+    {
+        let mode_arg = if let Ok(output) = std::process::Command::new("kscreen-doctor")
+            .arg("--json")
+            .output()
+        {
+            if let Ok(json) = serde_json::from_slice::<Value>(&output.stdout) {
+                find_mode_id_or_string(&json, connector, mode)
+            } else {
+                format!("output.{connector}.mode.{}x{}", mode.width, mode.height)
+            }
+        } else {
+            format!("output.{connector}.mode.{}x{}", mode.width, mode.height)
+        };
+
+        let _ = std::process::Command::new("kscreen-doctor")
+            .arg(&mode_arg)
+            .status();
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        let _ = (connector, mode);
+    }
+}
+
+#[cfg(target_os = "linux")]
+fn find_mode_id_or_string(json: &Value, connector: &str, mode: &DisplayMode) -> String {
+    if let Some(outputs) = json.get("outputs").and_then(Value::as_array) {
+        if let Some(output) = outputs
+            .iter()
+            .find(|o| o.get("name").and_then(Value::as_str) == Some(connector))
+        {
+            if let Some(modes) = output.get("modes").and_then(Value::as_array) {
+                for m in modes {
+                    let w = m
+                        .get("size")
+                        .and_then(|s| s.get("width"))
+                        .and_then(Value::as_u64)
+                        .or_else(|| m.get("width").and_then(Value::as_u64))
+                        .unwrap_or(0) as u32;
+                    let h = m
+                        .get("size")
+                        .and_then(|s| s.get("height"))
+                        .and_then(Value::as_u64)
+                        .or_else(|| m.get("height").and_then(Value::as_u64))
+                        .unwrap_or(0) as u32;
+                    let r = m
+                        .get("refreshRate")
+                        .and_then(Value::as_f64)
+                        .or_else(|| m.get("refresh_rate").and_then(Value::as_f64))
+                        .unwrap_or(60.0);
+                    if w == mode.width && h == mode.height && (r - mode.refresh).abs() < 1.0 {
+                        if let Some(id) = m.get("id").and_then(Value::as_str) {
+                            return format!("output.{connector}.mode.{id}");
+                        }
+                    }
+                }
+            }
+        }
+    }
+    format!("output.{connector}.mode.{}x{}", mode.width, mode.height)
 }
 
 /// The Mac removes its own pairing: its record here, and its client in Sunshine.
