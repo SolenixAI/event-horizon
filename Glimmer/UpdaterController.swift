@@ -26,6 +26,8 @@ final class UpdaterController {
         controller = SPUStandardUpdaterController(
             startingUpdater: true, updaterDelegate: streamAwareAlerts, userDriverDelegate: streamAwareAlerts)
         streamAwareAlerts.observeAvailability(of: controller.updater)
+        // Check for updates on launch so users are immediately notified of new releases.
+        controller.updater.checkForUpdatesInBackground()
     }
 
     var updater: SPUUpdater { controller.updater }

@@ -12,7 +12,7 @@ import Security
 /// The companion's Link on one PC: `GET /hello`, `POST /pair`, `GET /pair/{ticket}`,
 /// `POST /lease` and `DELETE /pair`.
 struct CompanionClient: Sendable {
-    static let port = 47970
+    nonisolated(unsafe) static var port = 47970
     /// The Mac renews well inside the companion's 90 s lease.
     static let leaseInterval: Duration = .seconds(30)
 
