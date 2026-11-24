@@ -170,6 +170,9 @@ companion-lint:
 	@echo "▶ Checking companion formatting and clippy..."
 	@cd companion && cargo fmt --check && cargo clippy --all-targets -- -D warnings
 
+deploy-companion:
+	@bash scripts/update-tower-companion.sh --deploy
+
 app:
 	@echo "▶ Building Event Horizon.app ($(CONFIG))..."
 	@scripts/generate-build-info.sh

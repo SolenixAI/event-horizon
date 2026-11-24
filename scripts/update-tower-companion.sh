@@ -31,6 +31,7 @@ Default mode (no arguments):
 
 Options:
   -c, --check, -v, --verify   Probe https://<host>:<port>/outputs and verify the companion update.
+  -d, --deploy, --auto        Automatically sync source, build, install and restart companion on Tower via Tailscale.
   -s, --ssh [USER@HOST]       Execute the update command remotely via SSH.
       --host <HOST>           Target companion IP or hostname (default: $DEFAULT_HOST or \$COMPANION_HOST).
       --port <PORT>           Target companion port (default: $DEFAULT_PORT or \$COMPANION_PORT).
@@ -55,6 +56,10 @@ while [[ $# -gt 0 ]]; do
 		;;
 	-c | --check | -v | --verify)
 		MODE="verify"
+		shift
+		;;
+	-d | --deploy | --auto)
+		MODE="deploy"
 		shift
 		;;
 	-s | --ssh)
@@ -331,12 +336,31 @@ run_ssh_update() {
 	verify_companion
 }
 
+deploy_tower_companion() {
+	local target="${SSH_TARGET:-${COMPANION_SSH_TARGET:-root@100.101.89.91}}"
+	local repo_root
+	repo_root="$(cd "$(dirname "$0")/.." && pwd)"
+
+	echo "▶ Deploying companion to Tower PC ($target)..."
+	ssh -o BatchMode=yes -o ConnectTimeout=5 "$target" "mkdir -p /var/home/zephyr/event-horizon"
+	rsync -avz --delete --exclude 'target' "${repo_root}/companion/" "${target}:/var/home/zephyr/event-horizon/companion/"
+	ssh "$target" "chown -R zephyr:zephyr /var/home/zephyr/event-horizon"
+	ssh "$target" "su - zephyr -c 'cd ~/event-horizon/companion && /home/linuxbrew/.linuxbrew/bin/cargo build --release'"
+	ssh "$target" "XDG_RUNTIME_DIR=/run/user/1001 su - zephyr -c 'XDG_RUNTIME_DIR=/run/user/1001 systemctl --user stop event-horizon-companion.service' && install -m 755 -o zephyr -g zephyr /var/home/zephyr/event-horizon/companion/target/release/event-horizon-companion /var/home/zephyr/.local/bin/event-horizon-companion && XDG_RUNTIME_DIR=/run/user/1001 su - zephyr -c 'XDG_RUNTIME_DIR=/run/user/1001 systemctl --user start event-horizon-companion.service'"
+	echo "✓ Tower companion updated and restarted."
+	sleep 2
+	verify_companion
+}
+
 case "$MODE" in
 instructions)
 	print_instructions
 	;;
 verify)
 	verify_companion
+	;;
+deploy)
+	deploy_tower_companion
 	;;
 ssh)
 	run_ssh_update

@@ -165,6 +165,21 @@ struct DeskOutputPicker: View {
     // MARK: - Actions & Reconnect
 
     private func selectOutput(_ output: HostOutput) async {
+        let targetMode = model.selectedHostMode[host.id]
+        let validMode = output.modes.contains(where: {
+            $0.width == targetMode?.width && $0.height == targetMode?.height
+        })
+            ? targetMode
+            : (output.currentMode ?? output.modes.first)
+        await switchHostOutput(outputId: output.id, mode: validMode)
+    }
+
+    private func selectMode(_ mode: DisplayMode) async {
+        guard let active = activeOutput else { return }
+        await switchHostOutput(outputId: active.id, mode: mode)
+    }
+
+    private func switchHostOutput(outputId: String, mode: DisplayMode?) async {
         guard !isSwitching else { return }
         isSwitching = true
         defer { isSwitching = false }
@@ -176,41 +191,12 @@ struct DeskOutputPicker: View {
             await model.disconnect()
         }
 
-        let targetMode = model.selectedHostMode[host.id]
-        let validMode = output.modes.contains(where: {
-            $0.width == targetMode?.width && $0.height == targetMode?.height
-        })
-            ? targetMode
-            : (output.currentMode ?? output.modes.first)
-
-        _ = await model.selectOutput(host: host, outputId: output.id, mode: validMode)
+        _ = await model.selectOutput(host: host, outputId: outputId, mode: mode)
+        model.nativeStreamError = nil
 
         if wasStreaming {
-            try? await Task.sleep(nanoseconds: 350_000_000)
-            if let targetApp {
-                model.requestStream(app: targetApp, on: host, resume: .anyApp)
-            } else {
-                model.openDesk(host)
-            }
-        }
-    }
-
-    private func selectMode(_ mode: DisplayMode) async {
-        guard !isSwitching, let active = activeOutput else { return }
-        isSwitching = true
-        defer { isSwitching = false }
-
-        let wasStreaming = model.isStreaming
-        let targetApp = model.lastLaunchAttempt?.app ?? model.deskTarget(of: host)
-
-        if wasStreaming {
-            await model.disconnect()
-        }
-
-        _ = await model.selectOutput(host: host, outputId: active.id, mode: mode)
-
-        if wasStreaming {
-            try? await Task.sleep(nanoseconds: 350_000_000)
+            try? await Task.sleep(nanoseconds: 500_000_000)
+            model.nativeStreamError = nil
             if let targetApp {
                 model.requestStream(app: targetApp, on: host, resume: .anyApp)
             } else {
@@ -257,11 +243,5 @@ struct DeskOutputPicker: View {
         return mode.label
     }
 
-    private static let companionUpdateCommand = (
-        "cd ~/event-horizon/companion && "
-        + "git pull origin feature/dynamic-host-output-selector && "
-        + "cargo build --release && "
-        + "cp target/release/event-horizon-companion ~/.local/bin/ && "
-        + "systemctl --user restart event-horizon-companion.service"
-    )
+    private static let companionUpdateCommand = "make deploy-companion"
 }

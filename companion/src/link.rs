@@ -343,7 +343,8 @@ where
     }
 
     if !is_stream_live(&config_dir) {
-        restart_sunshine();
+        let _ = tokio::task::spawn_blocking(restart_sunshine).await;
+        wait_for_sunshine_ready(link.host.sunshine()).await;
     }
 
     if let Some(ref mode) = request.mode {
@@ -424,19 +425,32 @@ fn is_stream_live(config_dir: &FsPath) -> bool {
     !target_state.trim().is_empty()
 }
 
+async fn wait_for_sunshine_ready<S: SunshineApi>(sunshine: &S) {
+    for _ in 0..50 {
+        if sunshine.apps().await.is_ok() {
+            return;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(150)).await;
+    }
+}
+
 fn restart_sunshine() {
     #[cfg(target_os = "linux")]
     {
-        let _ = std::process::Command::new("systemctl")
+        let primary = std::process::Command::new("systemctl")
             .args([
                 "--user",
                 "restart",
                 "app-dev.lizardbyte.app.Sunshine.service",
             ])
-            .status();
-        let _ = std::process::Command::new("systemctl")
-            .args(["--user", "restart", "dev.lizardbyte.app.Sunshine.service"])
-            .status();
+            .status()
+            .map(|s| s.success())
+            .unwrap_or(false);
+        if !primary {
+            let _ = std::process::Command::new("systemctl")
+                .args(["--user", "restart", "dev.lizardbyte.app.Sunshine.service"])
+                .status();
+        }
     }
 }
 

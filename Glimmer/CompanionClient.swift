@@ -213,7 +213,7 @@ struct CompanionClient: Sendable {
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        let response = try? await send(request, timeout: 10).1
+        let response = try? await send(request, timeout: 20).1
         return Self.forgetOutcome(statusCode: (response as? HTTPURLResponse)?.statusCode)
     }
 
@@ -266,7 +266,7 @@ struct CompanionClient: Sendable {
         let payload = SelectOutputRequest(id: id, mode: mode)
         guard let body = try? JSONEncoder().encode(payload) else { return false }
         request.httpBody = body
-        let response = try? await send(request, timeout: 10).1
+        let response = try? await send(request, timeout: 20).1
         return (response as? HTTPURLResponse)?.statusCode == 200
     }
 
