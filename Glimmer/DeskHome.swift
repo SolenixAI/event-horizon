@@ -101,6 +101,7 @@ struct DeskHome: View {
         .task(id: model.selectedHost?.id) {
             guard let host = model.selectedHost else { return }
             await model.ensureCoverArt(for: host)
+            await model.refreshOutputs(for: host)
         }
     }
 }
@@ -273,6 +274,9 @@ private struct DeskStatus: View {
             statusRow(withVolume: false)
         }
         .hostContextMenu(host)
+        .task(id: host.id) {
+            await model.refreshOutputs(for: host)
+        }
     }
 
     private func statusRow(withVolume: Bool) -> some View {
@@ -288,6 +292,7 @@ private struct DeskStatus: View {
                 RunningLabel(name: running)
             }
             Spacer(minLength: 12)
+            DeskOutputPicker(host: host)
             if withVolume { StreamVolumeButton() }
             ReadinessChip()
         }

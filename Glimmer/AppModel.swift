@@ -595,4 +595,9 @@ final class AppModel {
 
     /// Why the last wake attempt failed, alongside `wakeFailedHostID`.
     var wakeFailureReason: WakeFailureReason?
+
+    // Host output selection (discovered displays, active output, and selected mode keyed by host.id)
+    var hostOutputs: [String: [HostOutput]] = [:]
+    var activeHostOutputId: [String: String] = [:]
+    var selectedHostMode: [String: DisplayMode] = [:]
 }

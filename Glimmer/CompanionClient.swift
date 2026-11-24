@@ -217,6 +217,31 @@ struct CompanionClient: Sendable {
         }
     }
 
+    /// Discovers connected outputs and current active output from the companion.
+    func outputs(token: String) async -> OutputsPayload? {
+        guard let url = url("/outputs") else { return nil }
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        guard let (data, response) = try? await send(request, timeout: 5),
+              (response as? HTTPURLResponse)?.statusCode == 200
+        else { return nil }
+        return try? JSONDecoder().decode(OutputsPayload.self, from: data)
+    }
+
+    /// Selects an output device and optional display mode on the host PC.
+    func selectOutput(token: String, id: String, mode: DisplayMode?) async -> Bool {
+        guard let url = url("/outputs/select") else { return false }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let payload = SelectOutputRequest(id: id, mode: mode)
+        guard let body = try? JSONEncoder().encode(payload) else { return false }
+        request.httpBody = body
+        let response = try? await send(request, timeout: 10).1
+        return (response as? HTTPURLResponse)?.statusCode == 200
+    }
+
     /// Whether a certificate with this fingerprint may serve the Link. Before
     /// a pin exists any certificate may; after, only the pinned one.
     static func trusts(_ observed: String, pinned: String?) -> Bool {
