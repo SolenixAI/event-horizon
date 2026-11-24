@@ -11,3 +11,5 @@ case ":$PATH:" in
   *":$HOME/.cargo/bin:"*) ;;
   *) [ -d "$HOME/.cargo/bin" ] && export PATH="$HOME/.cargo/bin:$PATH" ;;
 esac
+
+:
