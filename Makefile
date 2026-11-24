@@ -91,7 +91,7 @@ BUILD_NUMBER    := $(shell sed -n 's/^CURRENT_PROJECT_VERSION = \(.*\)/\1/p' Gli
 # Repository that hosts the Sparkle appcast and release assets.
 RELEASES_REPO   ?= SolenixAI/event-horizon
 export RELEASES_REPO
-# Which release `make brew-bump` points the cask at - the one being built by default.
+# Which release `make brew-bump` dispatches the cask update for - the one being built by default.
 VERSION         ?= $(MARKETING_VERSION)
 SPARKLE_VERSION ?= 2.10.0
 export SPARKLE_VERSION
@@ -596,12 +596,9 @@ release-publish-dev: release-notes-check dist-dev
 release-notes-check:
 	@scripts/changelog.py --version "$(MARKETING_VERSION)" --changelog CHANGELOG.md >/dev/null
 
-# Point Casks/event-horizon.rb at a published release: download its DMG, checksum
-# it, and write version + sha256 into the file. This updates only the local cask;
-# commit it on a branch and open a pull request. Run after `release-publish`, or
-# by hand to recover or point at an older tag with `make brew-bump VERSION=...`.
-# An unchanged cask writes nothing. Remove its `disable!` stanza only after the
-# replacement artifact passes the release checks.
+# Trigger Homebrew cask update in SolenixAI/homebrew-tap via repository_dispatch
+# for a published release. Run after `release-publish`, or by hand to update
+# the tap with `make brew-bump VERSION=...`.
 brew-bump:
 	@scripts/homebrew-bump.sh "$(VERSION)"
 
