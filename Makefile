@@ -154,6 +154,10 @@ test:
 	  rc=$$?; /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister \
 	  -u "$(DERIVED)/Build/Products/Debug/Event Horizon.app" 2>/dev/null; exit $$rc
 
+test-unit:
+	@test -n "$(TEST)" || { echo "Usage: make test-unit TEST=TestSuiteName" >&2; exit 2; }
+	@bash scripts/test-unit.sh "$(TEST)"
+
 app:
 	@echo "▶ Building Event Horizon.app ($(CONFIG))..."
 	@scripts/generate-build-info.sh
