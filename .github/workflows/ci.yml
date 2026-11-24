@@ -38,6 +38,27 @@ jobs:
         run: |
           brew install swiftlint
           swiftlint lint --strict
+  pre-commit:
+    # Run formatting, yaml, markdown, json, and repository file checks on Ubuntu.
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/pre-commit
+          key:
+            pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml')
+            }}
+      - name: Install pre-commit
+        run: pip install pre-commit
+      - name: Run pre-commit checks
+        run: SKIP=swiftlint,trufflehog pre-commit run --all-files
   companion:
     # The PC companion: its core and both OS adapters, on the PCs it runs on.
     strategy:
@@ -53,6 +74,19 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            companion/target/
+          key: cargo-${{ matrix.os }}-${{ hashFiles('companion/Cargo.lock') }}
+          restore-keys: |
+            cargo-${{ matrix.os }}-
+      - name: Format
+        run: cargo fmt --check
       - name: Lint
         run: cargo clippy --all-targets -- -D warnings
       - name: Test
@@ -70,6 +104,17 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            companion/target/
+          key: cargo-windows-release-${{ hashFiles('companion/Cargo.lock') }}
+          restore-keys: |
+            cargo-windows-release-
       - name: Build
         run: cargo build --release
       - name: Install (as a person would, by running the companion's installer)
@@ -124,11 +169,21 @@ jobs:
         run: |
           bash scripts/test-release-tools.sh
           bash scripts/test-prepare-ci-signing.sh
+          bash scripts/test-release-app-guard.sh
+          bash scripts/test-release-dmg-guard.sh
   ci-summary:
     # The one check the branch ruleset requires. It passes only when every job above
     # passed, so adding or renaming a job never leaves the ruleset stale.
     if: always()
-    needs: [test, lint, companion, companion-install-windows, architecture]
+    needs:
+      [
+        test,
+        lint,
+        pre-commit,
+        companion,
+        companion-install-windows,
+        architecture,
+      ]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:

@@ -28,3 +28,24 @@ if [[ "$(printf '%s\n' "$NATIVE_CONSTRUCTORS" | sed '/^$/d' | wc -l | tr -d ' ')
 fi
 
 echo "Swift streaming backend construction is at the app composition point."
+
+# Control transport in the streaming engine must use ControlTransport (Network.framework
+# mutual TLS), deliberately not URLSession (the keychain locks on sleep).
+URLSESSION_USES="$(grep -R -nE --include='*.swift' 'URLSession(\.[a-zA-Z]+|[[:space:]]*\()' "$ROOT/Glimmer/Stream" | grep -vE ':[0-9]+:[[:space:]]*//' || true)"
+if [[ -n "$URLSESSION_USES" ]]; then
+	echo "Architecture violation: Glimmer/Stream must use ControlTransport, not URLSession." >&2
+	printf '%s\n' "$URLSESSION_USES" >&2
+	exit 1
+fi
+
+echo "Swift stream transport uses Network.framework ControlTransport."
+
+# Streaming engine parses untrusted wire data. It must never use `as!` or `try!`.
+FORCE_TRAPS="$(grep -R -nE --include='*.swift' '(\bas!\b|\btry!\b)' "$ROOT/Glimmer/Stream" | grep -vE ':[0-9]+:[[:space:]]*//' || true)"
+if [[ -n "$FORCE_TRAPS" ]]; then
+	echo "Architecture violation: Glimmer/Stream must never force-cast (as!) or force-try (try!)." >&2
+	printf '%s\n' "$FORCE_TRAPS" >&2
+	exit 1
+fi
+
+echo "Swift stream engine avoids force-casts and force-traps."
