@@ -68,6 +68,7 @@
 		C17ADE100000000000000009 /* CompanionClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17ADE10000000000000000A /* CompanionClient.swift */; };
 		DEC0DE2026101000000003 /* CompanionTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE2026101000000004 /* CompanionTokens.swift */; };
 		DEC0DE202611230000000001 /* HostOutput.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202611230000000002 /* HostOutput.swift */; };
+		DEC0DE202611240000000011 /* HostAudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202611240000000012 /* HostAudio.swift */; };
 		DEC0DE202611230000000003 /* AppModel+Outputs.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202611230000000004 /* AppModel+Outputs.swift */; };
 		DEC0DE202611230000000007 /* DeskOutputPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202611230000000008 /* DeskOutputPicker.swift */; };
 		A100016A /* ContentViewSubviews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100016B /* ContentViewSubviews.swift */; };
@@ -388,6 +389,7 @@
 		DEC0DE2026100900000001 /* CompanionClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE2026100900000002 /* CompanionClientTests.swift */; };
 		DEC0DE2026101000000001 /* CompanionTokensTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE2026101000000002 /* CompanionTokensTests.swift */; };
 		DEC0DE202611230000000005 /* HostOutputTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202611230000000006 /* HostOutputTests.swift */; };
+		DEC0DE202611240000000015 /* HostAudioTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202611240000000016 /* HostAudioTests.swift */; };
 		DEC0DE202611240000000001 /* DynamicOutputsE2ETests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202611240000000002 /* DynamicOutputsE2ETests.swift */; };
 		DEC0DE202611240000000003 /* MockCompanionServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202611240000000004 /* MockCompanionServer.swift */; };
 		DEC0DE202609221400000007 /* StreamWindowFirstFrameTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC0DE202609221400000008 /* StreamWindowFirstFrameTests.swift */; };
@@ -550,6 +552,7 @@
 		C17ADE10000000000000000A /* CompanionClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionClient.swift; sourceTree = "<group>"; };
 		DEC0DE2026101000000004 /* CompanionTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionTokens.swift; sourceTree = "<group>"; };
 		DEC0DE202611230000000002 /* HostOutput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostOutput.swift; sourceTree = "<group>"; };
+		DEC0DE202611240000000012 /* HostAudio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostAudio.swift; sourceTree = "<group>"; };
 		DEC0DE202611230000000004 /* AppModel+Outputs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppModel+Outputs.swift"; sourceTree = "<group>"; };
 		DEC0DE202611230000000008 /* DeskOutputPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeskOutputPicker.swift; sourceTree = "<group>"; };
 		A100016B /* ContentViewSubviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentViewSubviews.swift; sourceTree = "<group>"; };
@@ -880,6 +883,7 @@
 		DEC0DE2026100900000002 /* CompanionClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CompanionClientTests.swift"; sourceTree = "<group>"; };
 		DEC0DE2026101000000002 /* CompanionTokensTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CompanionTokensTests.swift"; sourceTree = "<group>"; };
 		DEC0DE202611230000000006 /* HostOutputTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HostOutputTests.swift"; sourceTree = "<group>"; };
+		DEC0DE202611240000000016 /* HostAudioTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HostAudioTests.swift"; sourceTree = "<group>"; };
 		DEC0DE202611240000000002 /* DynamicOutputsE2ETests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DynamicOutputsE2ETests.swift"; sourceTree = "<group>"; };
 		DEC0DE202611240000000004 /* MockCompanionServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MockCompanionServer.swift"; sourceTree = "<group>"; };
 		DEC0DE202609221400000008 /* StreamWindowFirstFrameTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StreamWindowFirstFrameTests.swift"; sourceTree = "<group>"; };
@@ -1045,6 +1049,7 @@
 				C17ADE10000000000000000A /* CompanionClient.swift */,
 				DEC0DE2026101000000004 /* CompanionTokens.swift */,
 				DEC0DE202611230000000002 /* HostOutput.swift */,
+				DEC0DE202611240000000012 /* HostAudio.swift */,
 				DEC0DE202611230000000004 /* AppModel+Outputs.swift */,
 				DEC0DE202611230000000008 /* DeskOutputPicker.swift */,
 				A100016B /* ContentViewSubviews.swift */,
@@ -1409,6 +1414,7 @@
 				DEC0DE2026100900000002 /* CompanionClientTests.swift */,
 				DEC0DE2026101000000002 /* CompanionTokensTests.swift */,
 				DEC0DE202611230000000006 /* HostOutputTests.swift */,
+				DEC0DE202611240000000016 /* HostAudioTests.swift */,
 				DEC0DE202611240000000002 /* DynamicOutputsE2ETests.swift */,
 				DEC0DE202611240000000004 /* MockCompanionServer.swift */,
 				DEC0DE202609221400000008 /* StreamWindowFirstFrameTests.swift */,
@@ -1629,6 +1635,7 @@
 				C17ADE100000000000000009 /* CompanionClient.swift in Sources */,
 				DEC0DE2026101000000003 /* CompanionTokens.swift in Sources */,
 				DEC0DE202611230000000001 /* HostOutput.swift in Sources */,
+				DEC0DE202611240000000011 /* HostAudio.swift in Sources */,
 				DEC0DE202611230000000003 /* AppModel+Outputs.swift in Sources */,
 				DEC0DE202611230000000007 /* DeskOutputPicker.swift in Sources */,
 				A100016A /* ContentViewSubviews.swift in Sources */,
@@ -1983,6 +1990,7 @@
 				DEC0DE2026100900000001 /* CompanionClientTests.swift in Sources */,
 				DEC0DE2026101000000001 /* CompanionTokensTests.swift in Sources */,
 				DEC0DE202611230000000005 /* HostOutputTests.swift in Sources */,
+				DEC0DE202611240000000015 /* HostAudioTests.swift in Sources */,
 				DEC0DE202611240000000001 /* DynamicOutputsE2ETests.swift in Sources */,
 				DEC0DE202611240000000003 /* MockCompanionServer.swift in Sources */,
 				DEC0DE202609221400000007 /* StreamWindowFirstFrameTests.swift in Sources */,

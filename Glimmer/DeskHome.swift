@@ -293,7 +293,7 @@ private struct DeskStatus: View {
             }
             Spacer(minLength: 12)
             DeskOutputPicker(host: host)
-            if withVolume { StreamVolumeButton() }
+            if withVolume { StreamVolumeButton(host: host) }
             ReadinessChip()
         }
     }
