@@ -482,36 +482,36 @@ fn apply_output_mode(connector: &str, mode: &DisplayMode) {
 
 #[cfg(target_os = "linux")]
 fn find_mode_id_or_string(json: &Value, connector: &str, mode: &DisplayMode) -> String {
-    if let Some(outputs) = json.get("outputs").and_then(Value::as_array) {
-        if let Some(output) = outputs
+    if let Some(outputs) = json.get("outputs").and_then(Value::as_array)
+        && let Some(output) = outputs
             .iter()
             .find(|o| o.get("name").and_then(Value::as_str) == Some(connector))
-        {
-            if let Some(modes) = output.get("modes").and_then(Value::as_array) {
-                for m in modes {
-                    let w = m
-                        .get("size")
-                        .and_then(|s| s.get("width"))
-                        .and_then(Value::as_u64)
-                        .or_else(|| m.get("width").and_then(Value::as_u64))
-                        .unwrap_or(0) as u32;
-                    let h = m
-                        .get("size")
-                        .and_then(|s| s.get("height"))
-                        .and_then(Value::as_u64)
-                        .or_else(|| m.get("height").and_then(Value::as_u64))
-                        .unwrap_or(0) as u32;
-                    let r = m
-                        .get("refreshRate")
-                        .and_then(Value::as_f64)
-                        .or_else(|| m.get("refresh_rate").and_then(Value::as_f64))
-                        .unwrap_or(60.0);
-                    if w == mode.width && h == mode.height && (r - mode.refresh).abs() < 1.0 {
-                        if let Some(id) = m.get("id").and_then(Value::as_str) {
-                            return format!("output.{connector}.mode.{id}");
-                        }
-                    }
-                }
+        && let Some(modes) = output.get("modes").and_then(Value::as_array)
+    {
+        for m in modes {
+            let w = m
+                .get("size")
+                .and_then(|s| s.get("width"))
+                .and_then(Value::as_u64)
+                .or_else(|| m.get("width").and_then(Value::as_u64))
+                .unwrap_or(0) as u32;
+            let h = m
+                .get("size")
+                .and_then(|s| s.get("height"))
+                .and_then(Value::as_u64)
+                .or_else(|| m.get("height").and_then(Value::as_u64))
+                .unwrap_or(0) as u32;
+            let r = m
+                .get("refreshRate")
+                .and_then(Value::as_f64)
+                .or_else(|| m.get("refresh_rate").and_then(Value::as_f64))
+                .unwrap_or(60.0);
+            if w == mode.width
+                && h == mode.height
+                && (r - mode.refresh).abs() < 1.0
+                && let Some(id) = m.get("id").and_then(Value::as_str)
+            {
+                return format!("output.{connector}.mode.{id}");
             }
         }
     }
