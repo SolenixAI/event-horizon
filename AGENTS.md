@@ -15,6 +15,8 @@ pointers below.
 - Check architecture boundaries: `bash scripts/check-architecture.sh`
 - Check Rust companion: `make companion-lint`
 - Run companion test: `make test-companion TEST=<TestName>`
+- Environment: `source scripts/env.sh` (Makefile prepends toolchain PATH
+  automatically)
 
 ## Hard boundaries and invariants
 
@@ -22,7 +24,8 @@ pointers below.
    AWDL helper (`helper/`).
 2. **Untrusted network inputs:** All wire packets (RTSP, ENet, RTP) and
    companion REST inputs are untrusted. Parse defensively at the boundary; never
-   trap, force-unwrap (`!`), or force-cast (`as!`).
+   trap, force-unwrap (`!`), force-try (`try!`), or force-cast (`as!`). Enforced
+   mechanically by `scripts/check-architecture.sh`.
 3. **No URLSession in Stream:** Use `ControlTransport` (Network.framework mutual
    TLS) because the keychain locks on sleep.
 4. **Backend instantiation:** Construct `NativeBackend` only in

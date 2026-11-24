@@ -9,6 +9,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+source "${ROOT}/scripts/env.sh" 2>/dev/null || true
 DERIVED="${ROOT}/build.noindex"
 STREAM_XCCONFIG="${ROOT}/Glimmer/StreamLib.xcconfig"
 
@@ -34,6 +35,19 @@ if [[ ! "$TARGET" =~ "/" ]] && [[ ! "$TARGET" =~ Tests$ ]]; then
 	fi
 fi
 
+# Verify the suite file exists to prevent Xcode's silent zero-test pass quirk
+SUITE="${TARGET%%/*}"
+if [[ ! -f "${ROOT}/GlimmerTests/${SUITE}.swift" ]]; then
+	echo "Error: Test suite file GlimmerTests/${SUITE}.swift not found." >&2
+	exit 1
+fi
+
+ARCH="$(uname -m)"
+QUIET_FLAG="-quiet"
+if [[ "${VERBOSE:-0}" == "1" ]]; then
+	QUIET_FLAG=""
+fi
+
 echo "▶ Running focused tests: GlimmerTests/${TARGET}..."
 bash "${ROOT}/scripts/generate-build-info.sh"
 
@@ -45,7 +59,8 @@ xcodebuild test \
 	-xcconfig "${STREAM_XCCONFIG}" \
 	CODE_SIGNING_ALLOWED=NO \
 	-derivedDataPath "${DERIVED}" \
-	-destination 'platform=macOS' \
+	-destination "platform=macOS,arch=${ARCH}" \
+	${QUIET_FLAG} \
 	-only-testing:"GlimmerTests/${TARGET}" || rc=$?
 
 # Unregister debug bundle from LaunchServices so dev builds stay out of Spotlight

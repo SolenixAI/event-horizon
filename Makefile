@@ -39,6 +39,10 @@
 #   make enable-telem      Turn the app's opt-in telemetry exporter on.
 #   make disable-telem     Turn the app's opt-in telemetry exporter off.
 
+export PATH := /opt/homebrew/bin:$(HOME)/.cargo/bin:$(PATH)
+ARCH ?= $(shell uname -m)
+QUIET_FLAG = $(if $(filter 1,$(VERBOSE)),,-quiet)
+
 GLIMMER_APP_DST ?= /Applications/Event Horizon.app
 CONFIG          ?= Debug
 # .noindex: Spotlight skips it, so searching "Event Horizon" finds only /Applications.
@@ -150,7 +154,7 @@ test:
 	@scripts/generate-build-info.sh
 	xcodebuild test -project Glimmer.xcodeproj -scheme Glimmer -configuration Debug \
 	  -xcconfig $(STREAM_XCCONFIG) \
-	  CODE_SIGNING_ALLOWED=NO -derivedDataPath $(DERIVED) -destination 'platform=macOS'; \
+	  CODE_SIGNING_ALLOWED=NO -derivedDataPath $(DERIVED) -destination 'platform=macOS,arch=$(ARCH)' $(QUIET_FLAG); \
 	  rc=$$?; /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister \
 	  -u "$(DERIVED)/Build/Products/Debug/Event Horizon.app" 2>/dev/null; exit $$rc
 
@@ -172,7 +176,7 @@ app:
 	xcodebuild -project Glimmer.xcodeproj -scheme Glimmer -configuration $(CONFIG) \
 		-xcconfig $(STREAM_XCCONFIG) \
 		CODE_SIGNING_ALLOWED=NO \
-		-derivedDataPath $(DERIVED) -destination 'platform=macOS' build
+		-derivedDataPath $(DERIVED) -destination 'platform=macOS,arch=$(ARCH)' $(QUIET_FLAG) build
 # CODE_SIGNING_ALLOWED=NO: signing is owned EXCLUSIVELY by the `sign` target
 # (keychain-pinned, prompt-free). Xcode's Automatic signing during the build
 # resolves identities from the login keychain and produces a password prompt
