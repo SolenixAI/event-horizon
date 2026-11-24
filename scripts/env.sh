@@ -4,12 +4,20 @@
 
 case ":$PATH:" in
   *":/opt/homebrew/bin:"*) ;;
-  *) [ -d "/opt/homebrew/bin" ] && export PATH="/opt/homebrew/bin:$PATH" ;;
+  *)
+    if [ -d "/opt/homebrew/bin" ]; then
+      export PATH="/opt/homebrew/bin:$PATH"
+    fi
+    ;;
 esac
 
 case ":$PATH:" in
   *":$HOME/.cargo/bin:"*) ;;
-  *) [ -d "$HOME/.cargo/bin" ] && export PATH="$HOME/.cargo/bin:$PATH" ;;
+  *)
+    if [ -d "$HOME/.cargo/bin" ]; then
+      export PATH="$HOME/.cargo/bin:$PATH"
+    fi
+    ;;
 esac
 
 :

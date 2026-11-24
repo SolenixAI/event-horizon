@@ -51,7 +51,7 @@ opt_in_rules:
   - overridden_super_call
   - prohibited_super_call
   - fatal_error_message
-  - force_unwrapping # warning only, see below
+  - force_unwrapping
 
 # Line length: `--strict` fails anything past 140, and long log lines wrap
 # instead of disabling the rule. The error level only matters without it.
@@ -148,13 +148,8 @@ type_name:
     warning: 50
     error: 60
 
-# Force-unwrapping is a warning, not an error. Some places (OpenGL-style
-# boilerplate, known-good cached lookups) it's the right call.
-force_unwrapping:
-  severity: warning
+force_unwrapping: error
 
-force_cast:
-  severity: warning
+force_cast: error
 
-force_try:
-  severity: warning
+force_try: error

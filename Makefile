@@ -91,7 +91,7 @@ BUILD_NUMBER    := $(shell sed -n 's/^CURRENT_PROJECT_VERSION = \(.*\)/\1/p' Gli
 # Repository that hosts the Sparkle appcast and release assets.
 RELEASES_REPO   ?= SolenixAI/event-horizon
 export RELEASES_REPO
-# Which release `make brew-bump` points the cask at - the one being built by default.
+# Which release `make brew-bump` dispatches the cask update for - the one being built by default.
 VERSION         ?= $(MARKETING_VERSION)
 SPARKLE_VERSION ?= 2.10.1
 export SPARKLE_VERSION
@@ -117,7 +117,9 @@ HELPER_TARGET := arm64-apple-macos26.0
         check-release-dmg dmg-background dist preflight \
         codesign-setup codesign-teardown local-signing-setup ensure-signing dev test \
         creds-init enable-telem disable-telem release-publish sparkle-keys \
-        guard-clean-tree release-notes-check brew-bump
+        guard-clean-tree release-notes-check brew-bump \
+        test-unit test-companion companion-lint \
+        app-compact test-compact companion-compact companion-lint-compact companion-test-compact
 
 # TIER 1 - "everything but publish": the full release pipeline at Release
 # (xcodebuild -> inside-out sign -> notarize -> staple),
@@ -182,6 +184,29 @@ app:
 # resolves identities from the login keychain and produces a password prompt
 # per nested bundle - the `sign` target re-signs --force --deep right after,
 # so xcodebuild's own signatures were pure prompt-noise.
+
+# Token-minimizing targets for developers and AI agents
+app-compact:
+	@bash scripts/run-quiet.sh $(DERIVED)/app-build.log \
+	  xcodebuild -project Glimmer.xcodeproj -scheme Glimmer -configuration $(CONFIG) \
+	    -xcconfig $(STREAM_XCCONFIG) CODE_SIGNING_ALLOWED=NO \
+	    -derivedDataPath $(DERIVED) -destination 'platform=macOS,arch=$(ARCH)' -quiet build
+
+test-compact:
+	@scripts/generate-build-info.sh
+	@xcodebuild test -project Glimmer.xcodeproj -scheme Glimmer -configuration Debug \
+	  -xcconfig $(STREAM_XCCONFIG) CODE_SIGNING_ALLOWED=NO \
+	  -derivedDataPath $(DERIVED) -destination 'platform=macOS,arch=$(ARCH)' -quiet \
+	  2>&1 | grep -v 'IDETestOperationsObserverDebug' || exit $$?
+
+companion-compact:
+	@cd companion && cargo check --message-format=short --quiet
+
+companion-lint-compact:
+	@cd companion && cargo fmt --check --quiet && cargo clippy --message-format=short --all-targets --quiet -- -D warnings
+
+companion-test-compact:
+	@cd companion && cargo test --quiet
 
 # Before every signing: put the signing keychain first in the search list and
 # unlock it from the creds file (sleep locks it), re-importing the .p12 if it was
@@ -596,12 +621,9 @@ release-publish-dev: release-notes-check dist-dev
 release-notes-check:
 	@scripts/changelog.py --version "$(MARKETING_VERSION)" --changelog CHANGELOG.md >/dev/null
 
-# Point Casks/event-horizon.rb at a published release: download its DMG, checksum
-# it, and write version + sha256 into the file. This updates only the local cask;
-# commit it on a branch and open a pull request. Run after `release-publish`, or
-# by hand to recover or point at an older tag with `make brew-bump VERSION=...`.
-# An unchanged cask writes nothing. Remove its `disable!` stanza only after the
-# replacement artifact passes the release checks.
+# Trigger Homebrew cask update in SolenixAI/homebrew-tap via repository_dispatch
+# for a published release. Run after `release-publish`, or by hand to update
+# the tap with `make brew-bump VERSION=...`.
 brew-bump:
 	@scripts/homebrew-bump.sh "$(VERSION)"
 
