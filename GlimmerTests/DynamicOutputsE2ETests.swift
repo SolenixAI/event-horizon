@@ -15,7 +15,7 @@ import Testing
 
 // MARK: - Test Suite
 
-@Suite struct DynamicOutputsE2ETests {
+@Suite(.serialized) struct DynamicOutputsE2ETests {
 
     static let rustSerdeWireJson = """
     {
