@@ -399,6 +399,7 @@ version = "0.1.4"
 dependencies = [
  "axum",
  "chrono",
+ "futures-util",
  "getrandom 0.4.3",
  "image",
  "mdns-sd",
