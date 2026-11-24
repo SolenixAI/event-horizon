@@ -46,9 +46,15 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
         with:
           python-version: "3.12"
+      - uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
+        with:
+          path: ~/.cache/pre-commit
+          key:
+            pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml')
+            }}
       - name: Install pre-commit
         run: pip install pre-commit
       - name: Run pre-commit checks
@@ -68,6 +74,17 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            companion/target/
+          key: cargo-${{ matrix.os }}-${{ hashFiles('companion/Cargo.lock') }}
+          restore-keys: |
+            cargo-${{ matrix.os }}-
       - name: Format
         run: cargo fmt --check
       - name: Lint
@@ -87,6 +104,17 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            companion/target/
+          key: cargo-windows-release-${{ hashFiles('companion/Cargo.lock') }}
+          restore-keys: |
+            cargo-windows-release-
       - name: Build
         run: cargo build --release
       - name: Install (as a person would, by running the companion's installer)
