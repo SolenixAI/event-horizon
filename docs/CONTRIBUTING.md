@@ -75,23 +75,36 @@ pre-commit install --hook-type pre-push # `make test`, per push
 ## Build
 
 ```bash
-make app        # compile-only check (Debug), no signing
-make test       # unit tests
-make verify     # strict lint + unit tests: the gate
-make            # Release build, installed to /Applications (notarized when credentials are configured)
-make open       # same, then open it
+make app                      # compile-only check (Debug), zero warnings enforced
+make test                     # full unit test suite (1,244 tests)
+make test-unit TEST=SdpCodecTests  # targeted fast unit test suite
+scripts/test-unit.sh SdpCodecTests # same, direct script invocation
+make verify                   # strict lint + unit tests: the gate
+make                          # Release build, installed to /Applications
+make open                     # same, then open it
 ```
 
-One suite, after `make test` has run once:
+To run a single test suite quickly during development:
 
 ```bash
-xcodebuild test -project Glimmer.xcodeproj -scheme Glimmer -configuration Debug \
-    -xcconfig Glimmer/StreamLib.xcconfig CODE_SIGNING_ALLOWED=NO -derivedDataPath build \
-    -destination 'platform=macOS' -only-testing:GlimmerTests/DatagramBatchTests
+bash scripts/test-unit.sh SdpCodecTests
+# or
+make test-unit TEST=SdpCodecTests
 ```
 
-`make verify` does not fail on compiler warnings, so read the build log: it must
-have none.
+Compiler warnings are treated as fatal errors
+(`SWIFT_TREAT_WARNINGS_AS_ERRORS = YES` and
+`GCC_TREAT_WARNINGS_AS_ERRORS = YES`). All targets must build with zero
+warnings.
+
+To check and format the Rust PC companion:
+
+```bash
+cd companion
+cargo fmt --check
+cargo clippy --all-targets -- -D warnings
+cargo test
+```
 
 Never run the publishing or keychain targets (`dist`, `release-publish`,
 `brew-bump`, `sparkle-keys`, `creds-init`, `setup-notary`, `codesign-setup`,

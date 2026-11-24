@@ -123,14 +123,16 @@ repos:
   #   pre-commit install --hook-type pre-push
   - repo: local
     hooks:
-      - id: make-test
-        name: make test (unit tests)
-        description: Run the GlimmerTests suite via xcodebuild before pushing.
+      - id: verify-push
+        name:
+          make verify-push (strict architecture, lint, companion, guards, and
+          unit tests)
+        description: Run full verification battery via make before pushing.
         # Git exports GIT_DIR and friends into hooks; SwiftPM's own git checkouts
         # (Sparkle) would then run against this repository and fail.
         entry:
           env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE -u GIT_PREFIX make
-          test
+          verify-push
         language: system
         pass_filenames: false
         always_run: true
