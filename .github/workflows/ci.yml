@@ -66,9 +66,15 @@ jobs:
         run: |
           XCODE_VERSION=$(xcodebuild -version | head -n 1 | awk '{print $2}')
           echo "version=${XCODE_VERSION}" >> "$GITHUB_OUTPUT"
-      # The Metal shaders compile with the Metal Toolchain, which the image does not ship.
+          if xcrun metal -v >/dev/null 2>&1; then
+            echo "metal_installed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "metal_installed=false" >> "$GITHUB_OUTPUT"
+          fi
+      # The Metal shaders compile with the Metal Toolchain, which the image may not ship.
       - name: Cache Apple Metal Toolchain
         id: cache-metal
+        if: steps.xcode.outputs.metal_installed != 'true'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/Library/Caches/MetalToolchain
@@ -79,13 +85,14 @@ jobs:
             metal-toolchain-${{ runner.os }}-xcode-
             metal-toolchain-${{ runner.os }}-
       - name: Install Metal Toolchain
+        if: steps.xcode.outputs.metal_installed != 'true'
         run: |
           if [ "${{ steps.cache-metal.outputs.cache-hit }}" = "true" ]; then
             echo "Cache hit for Metal Toolchain. Locating exported bundle..."
             BUNDLE=$(find ~/Library/Caches/MetalToolchain -maxdepth 2 \( -name "*.exportedBundle" -o -name "*.dmg" -o -name "*.bundle" \) | head -n 1)
             if [ -n "$BUNDLE" ]; then
               echo "Importing Metal Toolchain from: $BUNDLE"
-              xcodebuild -importComponent MetalToolchain -importPath "$BUNDLE"
+              xcodebuild -importComponent MetalToolchain -importPath "$BUNDLE" || xcrun metal -v >/dev/null 2>&1
             else
               echo "Bundle not found despite cache hit; falling back to download and export..."
               mkdir -p ~/Library/Caches/MetalToolchain
