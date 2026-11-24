@@ -590,4 +590,6 @@ final class AppModel {
     var activeHostOutputId: [String: String] = [:]
     var selectedHostMode: [String: DisplayMode] = [:]
     var companionOutputStatus: [String: CompanionOutputStatus] = [:]
+    var hostAudioDevices: [String: [HostAudioDevice]] = [:]
+    var activeHostAudioId: [String: String] = [:]
 }

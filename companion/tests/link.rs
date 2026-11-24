@@ -458,7 +458,7 @@ async fn hello_tells_a_mac_this_pc_runs_the_companion() {
     assert_eq!(body["v"], 2);
     assert_eq!(
         body["capabilities"],
-        serde_json::json!(["outputs", "virtual_screen", "hdr", "dynamic_fps"])
+        serde_json::json!(["outputs", "audio", "virtual_screen", "hdr", "dynamic_fps"])
     );
     assert!(body["commit"].as_str().is_some());
 }

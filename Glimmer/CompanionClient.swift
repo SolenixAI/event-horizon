@@ -270,6 +270,30 @@ struct CompanionClient: Sendable {
         return (response as? HTTPURLResponse)?.statusCode == 200
     }
 
+    /// Discovers audio output sinks and the current default sink on the host PC.
+    func audioDevices(token: String) async -> AudioPayload? {
+        guard let url = url("/audio") else { return nil }
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        guard let (data, response) = try? await send(request, timeout: 5),
+              (response as? HTTPURLResponse)?.statusCode == 200
+        else { return nil }
+        return try? JSONDecoder().decode(AudioPayload.self, from: data)
+    }
+
+    /// Selects the active default audio output sink on the host PC.
+    func selectAudioDevice(token: String, id: String) async -> Bool {
+        guard let url = url("/audio/select") else { return false }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        guard let body = try? JSONEncoder().encode(SelectAudioRequest(id: id)) else { return false }
+        request.httpBody = body
+        let response = try? await send(request, timeout: 10).1
+        return (response as? HTTPURLResponse)?.statusCode == 200
+    }
+
     /// Whether a certificate with this fingerprint may serve the Link. Before
     /// a pin exists any certificate may; after, only the pinned one.
     static func trusts(_ observed: String, pinned: String?) -> Bool {

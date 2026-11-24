@@ -66,3 +66,58 @@ extension AppModel {
         _ = AudioObjectSetPropertyData(device, &addr, 0, nil, size, &level)
     }
 }
+
+extension AppModel {
+    func audioDevices(for host: Host) -> [HostAudioDevice] {
+        hostAudioDevices[host.id] ?? []
+    }
+
+    func activeAudioDevice(for host: Host) -> HostAudioDevice? {
+        let devices = audioDevices(for: host)
+        let activeId = activeHostAudioId[host.id]
+        return devices.first(where: { $0.id == activeId })
+            ?? devices.first(where: { $0.isDefault })
+            ?? devices.first
+    }
+
+    func refreshAudioDevices(for host: Host) async {
+        guard let token = CompanionTokens.token(forHost: host.id),
+              let address = host.manualAddress ?? host.localAddress
+        else { return }
+
+        let companion = CompanionClient(
+            address: address,
+            pinned: CompanionTokens.fingerprint(forHost: host.id)
+        )
+        guard let payload = await companion.audioDevices(token: token) else { return }
+        hostAudioDevices[host.id] = payload.devices
+        activeHostAudioId[host.id] = payload.activeId
+    }
+
+    @discardableResult
+    func selectAudioDevice(host: Host, deviceId: String) async -> Bool {
+        guard let token = CompanionTokens.token(forHost: host.id),
+              let address = host.manualAddress ?? host.localAddress
+        else { return false }
+
+        let companion = CompanionClient(
+            address: address,
+            pinned: CompanionTokens.fingerprint(forHost: host.id)
+        )
+        let ok = await companion.selectAudioDevice(token: token, id: deviceId)
+        if ok {
+            activeHostAudioId[host.id] = deviceId
+            if let existing = hostAudioDevices[host.id] {
+                hostAudioDevices[host.id] = existing.map {
+                    HostAudioDevice(
+                        id: $0.id,
+                        name: $0.name,
+                        isVirtual: $0.isVirtual,
+                        isDefault: $0.id == deviceId
+                    )
+                }
+            }
+        }
+        return ok
+    }
+}

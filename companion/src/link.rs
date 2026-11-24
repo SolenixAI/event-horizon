@@ -13,6 +13,7 @@
 //! Tokens are stored as SHA-256 hashes in one JSON file, so a restart keeps
 //! every Mac paired (a Mac must never pair twice: see DESIGN.md).
 
+use crate::audio::{AudioPayload, SelectAudioRequest};
 use crate::host::{Host, PairOutcome, PairRequest, new_code};
 use crate::outputs::{DisplayMode, OutputsPayload, SelectOutputRequest};
 use crate::ports::{Awake, Decision, Prompt, SunshineApi, SunshineError};
@@ -75,6 +76,8 @@ pub async fn serve<S, P, A>(
         .route("/lease", post(lease::<S, P, A>))
         .route("/outputs", get(get_outputs::<S, P, A>))
         .route("/outputs/select", post(select_output::<S, P, A>))
+        .route("/audio", get(get_audio::<S, P, A>))
+        .route("/audio/select", post(select_audio::<S, P, A>))
         .with_state(link);
     let _ = axum::serve(TlsListener::new(listener, tls), app).await;
 }
@@ -268,6 +271,97 @@ where
     let config_dir = link.config_dir();
     let payload = discover_host_outputs(&config_dir);
     Ok((StatusCode::OK, Json(payload)))
+}
+
+/// Discovers available audio output devices and current default sink for the paired Mac.
+async fn get_audio<S, P, A>(
+    State(link): State<Arc<Link<S, P, A>>>,
+    headers: HeaderMap,
+) -> Result<(StatusCode, Json<AudioPayload>), StatusCode>
+where
+    S: SunshineApi + 'static,
+    P: Prompt + 'static,
+    A: Awake + 'static,
+{
+    if paired_mac(&link.macs, &headers).is_none() {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+    let config_dir = link.config_dir();
+    let payload = discover_host_audio(&config_dir);
+    Ok((StatusCode::OK, Json(payload)))
+}
+
+/// Selects an audio output device on the host PC, moves active sink-inputs, and updates `audio_sink` in `sunshine.conf`.
+async fn select_audio<S, P, A>(
+    State(link): State<Arc<Link<S, P, A>>>,
+    headers: HeaderMap,
+    Json(request): Json<SelectAudioRequest>,
+) -> StatusCode
+where
+    S: SunshineApi + 'static,
+    P: Prompt + 'static,
+    A: Awake + 'static,
+{
+    if paired_mac(&link.macs, &headers).is_none() {
+        return StatusCode::UNAUTHORIZED;
+    }
+
+    let sink_id = request.id.trim().to_string();
+    if sink_id.is_empty() {
+        return StatusCode::BAD_REQUEST;
+    }
+
+    let config_dir = link.config_dir();
+    let fixture_sinks = config_dir.join("pactl-sinks.txt");
+    if fixture_sinks.exists() {
+        let _ = std::fs::write(
+            config_dir.join("pactl-default-sink.txt"),
+            format!("{sink_id}\n"),
+        );
+    }
+
+    if let Some(sunshine_conf_path) = find_sunshine_conf(&config_dir) {
+        let before = std::fs::read_to_string(&sunshine_conf_path).unwrap_or_default();
+        let after = crate::virtual_screen::with_setting(&before, "audio_sink", &sink_id);
+        if let Some(parent) = sunshine_conf_path.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        if let Err(e) = std::fs::write(&sunshine_conf_path, after) {
+            eprintln!("select_audio: could not write sunshine.conf: {e}");
+        }
+    }
+
+    #[cfg(target_os = "linux")]
+    if !fixture_sinks.exists() {
+        let id_for_task = sink_id.clone();
+        let _ = tokio::task::spawn_blocking(move || {
+            if let Err(e) = crate::os::linux::select_audio_sink(&id_for_task) {
+                eprintln!("select_audio: {e}");
+            }
+        })
+        .await;
+    }
+
+    StatusCode::OK
+}
+
+fn discover_host_audio(config_dir: &FsPath) -> AudioPayload {
+    let fixture_sinks = config_dir.join("pactl-sinks.txt");
+    if let Ok(sinks) = std::fs::read_to_string(&fixture_sinks) {
+        let default_sink =
+            std::fs::read_to_string(config_dir.join("pactl-default-sink.txt")).unwrap_or_default();
+        return crate::audio::parse_pactl_sinks(&sinks, &default_sink);
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        crate::os::linux::discover_audio().unwrap_or_else(|_| crate::audio::empty_audio_payload())
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    {
+        crate::audio::empty_audio_payload()
+    }
 }
 
 /// Selects an output device and optionally configures its display mode.
@@ -541,7 +635,7 @@ async fn hello() -> Json<Value> {
     Json(json!({
         "app": "event-horizon-companion",
         "v": 2,
-        "capabilities": ["outputs", "virtual_screen", "hdr", "dynamic_fps"],
+        "capabilities": ["outputs", "audio", "virtual_screen", "hdr", "dynamic_fps"],
         "commit": option_env!("GIT_COMMIT_HASH").unwrap_or("5fd8cc9"),
     }))
 }

@@ -8,6 +8,7 @@ import SwiftUI
 
 /// Home's speaker control in the status row: a glass circle that opens the level.
 struct StreamVolumeButton: View {
+    var host: Host?
     @Environment(AppModel.self) private var model
     @State private var isOpen = false
 
@@ -36,10 +37,63 @@ struct StreamVolumeButton: View {
                     .font(.headline)
                     .accessibilityHidden(true)
                 StreamVolumeSlider()
+                if let host {
+                    pcAudioSection(for: host)
+                }
             }
             .padding(14)
-            .frame(width: 260)
+            .frame(width: 280)
+            .task(id: isOpen) {
+                if isOpen, let host {
+                    await model.refreshAudioDevices(for: host)
+                }
+            }
         }
+    }
+
+    @ViewBuilder
+    private func pcAudioSection(for host: Host) -> some View {
+        let devices = model.audioDevices(for: host)
+        if !devices.isEmpty {
+            Divider()
+                .padding(.vertical, 2)
+            Text("PC Audio Output")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(devices) { device in
+                    pcAudioRow(device: device, host: host)
+                }
+            }
+        }
+    }
+
+    private func pcAudioRow(device: HostAudioDevice, host: Host) -> some View {
+        let isActive = device.id == model.activeAudioDevice(for: host)?.id
+        return Button {
+            Task { _ = await model.selectAudioDevice(host: host, deviceId: device.id) }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: device.isVirtual ? "laptopcomputer" : "speaker.wave.2")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 14)
+                Text(device.name)
+                    .font(.callout)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                Spacer(minLength: 4)
+                if isActive {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(Color.horizonBlue)
+                }
+            }
+            .padding(.vertical, 4)
+            .padding(.horizontal, 6)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 }
 
