@@ -302,7 +302,7 @@ fn write_sunshine_conf(files: &dyn Files, layout: &Layout) -> Result<(), String>
     let mut after = virtual_screen::with_setting(
         &before,
         "output_name",
-        display::configured_stream_output(files, layout),
+        &display::configured_stream_output(files, layout),
     );
     after = virtual_screen::with_setting(&after, "capture", "kwin");
     let existing = virtual_screen::setting(&after, "global_prep_cmd").map(str::to_string);

@@ -12,7 +12,7 @@ import Security
 /// The companion's Link on one PC: `GET /hello`, `POST /pair`, `GET /pair/{ticket}`,
 /// `POST /lease` and `DELETE /pair`.
 struct CompanionClient: Sendable {
-    static let port = 47970
+    nonisolated(unsafe) static var port = 47970
     /// The Mac renews well inside the companion's 90 s lease.
     static let leaseInterval: Duration = .seconds(30)
 
@@ -41,6 +41,13 @@ struct CompanionClient: Sendable {
 
     enum ForgetOutcome: Equatable, Sendable {
         case forgotten, unreachable
+    }
+
+    enum OutputsResult: Equatable, Sendable {
+        case success(OutputsPayload)
+        case unsupportedApi         // 404: Companion is v1, needs update
+        case unauthorized           // 401 / 403: Companion token mismatch
+        case unreachable            // Network down, timeout, or non-200
     }
 
     let address: String
@@ -206,7 +213,7 @@ struct CompanionClient: Sendable {
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        let response = try? await send(request, timeout: 10).1
+        let response = try? await send(request, timeout: 20).1
         return Self.forgetOutcome(statusCode: (response as? HTTPURLResponse)?.statusCode)
     }
 
@@ -215,6 +222,52 @@ struct CompanionClient: Sendable {
         case 204, 401: .forgotten
         default: .unreachable
         }
+    }
+
+    /// Discovers connected outputs and current active output from the companion.
+    func outputsResult(token: String) async -> OutputsResult {
+        guard let url = url("/outputs") else { return .unreachable }
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        guard let (data, response) = try? await send(request, timeout: 5),
+              let http = response as? HTTPURLResponse
+        else {
+            return .unreachable
+        }
+        switch http.statusCode {
+        case 200:
+            if let payload = try? JSONDecoder().decode(OutputsPayload.self, from: data) {
+                return .success(payload)
+            }
+            return .unreachable
+        case 404:
+            return .unsupportedApi
+        case 401, 403:
+            return .unauthorized
+        default:
+            return .unreachable
+        }
+    }
+
+    func outputs(token: String) async -> OutputsPayload? {
+        if case .success(let payload) = await outputsResult(token: token) {
+            return payload
+        }
+        return nil
+    }
+
+    /// Selects an output device and optional display mode on the host PC.
+    func selectOutput(token: String, id: String, mode: DisplayMode?) async -> Bool {
+        guard let url = url("/outputs/select") else { return false }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let payload = SelectOutputRequest(id: id, mode: mode)
+        guard let body = try? JSONEncoder().encode(payload) else { return false }
+        request.httpBody = body
+        let response = try? await send(request, timeout: 20).1
+        return (response as? HTTPURLResponse)?.statusCode == 200
     }
 
     /// Whether a certificate with this fingerprint may serve the Link. Before

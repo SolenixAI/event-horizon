@@ -62,7 +62,7 @@ pub fn stream_screen(
             }
         }
         let target = configured_stream_output(files, layout);
-        let snapshot = screen_for_stream(cmd, target)?;
+        let snapshot = screen_for_stream(cmd, &target)?;
         let recovery_state = serde_json::json!({
             "target": target,
             "restore": snapshot.restore.clone(),
@@ -95,15 +95,16 @@ pub fn stream_screen(
             }
             return Err(error);
         }
-        if target == HDR_OUTPUT
-            && let Err(error) = cmd.run("kscreen-doctor", &["output.HDMI-A-1.hdr.enable"])
-        {
-            return match recover_stream_screen(cmd, files, layout) {
-                Ok(()) => Err(error),
-                Err(restore_error) => Err(format!(
-                    "{error}; display restoration failed: {restore_error}"
-                )),
-            };
+        if snapshot.hdr_supported {
+            let enable_hdr = format!("output.{target}.hdr.enable");
+            if let Err(error) = cmd.run("kscreen-doctor", &[&enable_hdr]) {
+                return match recover_stream_screen(cmd, files, layout) {
+                    Ok(()) => Err(error),
+                    Err(restore_error) => Err(format!(
+                        "{error}; display restoration failed: {restore_error}"
+                    )),
+                };
+            }
         }
         return Ok(());
     }
@@ -292,7 +293,13 @@ fn restore_target_settings(target: &str, settings: &Value) -> Vec<String> {
         args.push(format!("output.{target}.priority.{priority}"));
     }
     for key in ["hdr", "wcg"] {
-        if let Some(enabled) = settings.get(key).and_then(Value::as_bool) {
+        let enabled_val = settings.get(key).and_then(Value::as_bool).or_else(|| {
+            settings
+                .get(key)
+                .and_then(|obj| obj.get("enabled"))
+                .and_then(Value::as_bool)
+        });
+        if let Some(enabled) = enabled_val {
             let mode = if enabled { "enable" } else { "disable" };
             args.push(format!("output.{target}.{key}.{mode}"));
         }
@@ -313,7 +320,7 @@ fn saved_stream_state(saved: &str) -> Option<SavedStreamState> {
     }
     if let Ok(value) = serde_json::from_str::<Value>(saved) {
         let target = value["target"].as_str()?;
-        if ![OUTPUT, HDR_OUTPUT].contains(&target) {
+        if !valid_output_name(target) {
             return None;
         }
         let restore = saved_output_names(&value["restore"], target)?;
@@ -379,11 +386,12 @@ pub(crate) fn stream_screen_active(files: &dyn Files, layout: &Layout) -> bool {
 
 #[cfg(target_os = "linux")]
 pub(crate) fn virtual_screen_stream_active(files: &dyn Files, layout: &Layout) -> bool {
-    stream_screen_active(files, layout) && stream_screen_target(files, layout) == Some(OUTPUT)
+    stream_screen_active(files, layout)
+        && stream_screen_target(files, layout).as_deref() == Some(OUTPUT)
 }
 
 #[cfg(target_os = "linux")]
-fn stream_screen_target(files: &dyn Files, layout: &Layout) -> Option<&'static str> {
+fn stream_screen_target(files: &dyn Files, layout: &Layout) -> Option<String> {
     let saved = files
         .read(&layout.stream_screen_saved())
         .unwrap_or_default();
@@ -391,17 +399,13 @@ fn stream_screen_target(files: &dyn Files, layout: &Layout) -> Option<&'static s
         let recovery = files.read(&layout.stream_screen_target_state())?;
         recovery_stream_state(&recovery)
     })?;
-    match state.target.as_str() {
-        OUTPUT => Some(OUTPUT),
-        HDR_OUTPUT => Some(HDR_OUTPUT),
-        _ => None,
-    }
+    Some(state.target)
 }
 
 fn recovery_stream_state(saved: &str) -> Option<SavedStreamState> {
     let value = serde_json::from_str::<Value>(saved).ok()?;
     let target = value["target"].as_str()?;
-    if ![OUTPUT, HDR_OUTPUT].contains(&target) {
+    if !valid_output_name(target) {
         return None;
     }
     let restore = saved_output_names(&value["restore"], target)?;
@@ -446,15 +450,14 @@ fn is_target_settings(value: &Value) -> bool {
     })
 }
 
-pub(super) fn configured_stream_output(files: &dyn Files, layout: &Layout) -> &'static str {
-    if files
-        .read(&layout.stream_output())
-        .is_some_and(|output| output.trim() == HDR_OUTPUT)
-    {
-        HDR_OUTPUT
-    } else {
-        OUTPUT
+pub(crate) fn configured_stream_output(files: &dyn Files, layout: &Layout) -> String {
+    if let Some(output) = files.read(&layout.stream_output()) {
+        let trimmed = output.trim();
+        if !trimmed.is_empty() && trimmed != "virtual" && valid_output_name(trimmed) {
+            return trimmed.to_string();
+        }
     }
+    OUTPUT.to_string()
 }
 
 /// Confirms the stream target is connected before changing screens.
@@ -462,6 +465,20 @@ pub(super) fn configured_stream_output(files: &dyn Files, layout: &Layout) -> &'
 struct StreamScreenSnapshot {
     restore: Vec<String>,
     target_settings: Value,
+    hdr_supported: bool,
+}
+
+fn parse_target_hdr(o: &Value) -> bool {
+    o.get("hdr")
+        .and_then(Value::as_bool)
+        .or_else(|| {
+            o.get("hdr")
+                .and_then(|h| h.get("supported"))
+                .and_then(Value::as_bool)
+        })
+        .or_else(|| o.get("hdrSupported").and_then(Value::as_bool))
+        .or_else(|| o.get("hdr_supported").and_then(Value::as_bool))
+        .unwrap_or(false)
 }
 
 fn screen_for_stream(cmd: &dyn Commands, target: &str) -> Result<StreamScreenSnapshot, String> {
@@ -484,6 +501,7 @@ fn screen_for_stream(cmd: &dyn Commands, target: &str) -> Result<StreamScreenSna
                     target_settings.insert(key.to_string(), value.clone());
                 }
             }
+            let hdr_supported = target == HDR_OUTPUT || parse_target_hdr(target_output);
             return Ok(StreamScreenSnapshot {
                 restore: outputs
                     .iter()
@@ -491,6 +509,7 @@ fn screen_for_stream(cmd: &dyn Commands, target: &str) -> Result<StreamScreenSna
                     .filter_map(|o| o["name"].as_str().map(str::to_string))
                     .collect(),
                 target_settings: Value::Object(target_settings),
+                hdr_supported,
             });
         }
         if target != OUTPUT {

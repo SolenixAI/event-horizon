@@ -535,6 +535,11 @@ extension AppModel {
         PinnedCertStore.delete(forHostID: host.id)
         defaults.removeObject(forKey: "glimmer.lastConnected.\(host.id)")
         HostCodecPreference.forget(hostID: host.id)
+        defaults.removeObject(forKey: Self.outputDefaultsKey(for: host.id))
+        defaults.removeObject(forKey: Self.modeDefaultsKey(for: host.id))
+        hostOutputs.removeValue(forKey: host.id)
+        activeHostOutputId.removeValue(forKey: host.id)
+        selectedHostMode.removeValue(forKey: host.id)
         if defaults.string(forKey: "glimmer.selectedHostID") == host.id {
             defaults.removeObject(forKey: "glimmer.selectedHostID")
         }

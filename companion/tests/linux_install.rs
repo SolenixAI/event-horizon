@@ -794,6 +794,82 @@ fn a_configured_hdr_stream_uses_hdmi_and_restores_the_desktop() {
 }
 
 #[test]
+fn a_configured_custom_output_stream_is_idempotent_and_activates_hdr_when_supported() {
+    let (cmd, files) = pc();
+    let layout = kde_layout();
+    let custom_output = "DP-2";
+    files.put(layout.stream_output(), custom_output);
+
+    let kscreen_before = json!({
+        "outputs": [
+            { "name": "DP-1", "enabled": true, "connected": true, "priority": 1 },
+            { "name": "DP-2", "enabled": false, "connected": true, "priority": 2, "hdr": true }
+        ]
+    })
+    .to_string();
+
+    let kscreen_streaming = json!({
+        "outputs": [
+            { "name": "DP-1", "enabled": false, "connected": true, "priority": 1 },
+            { "name": "DP-2", "enabled": true, "connected": true, "priority": 2, "hdr": true }
+        ]
+    })
+    .to_string();
+
+    cmd.kscreen
+        .lock()
+        .unwrap()
+        .extend([kscreen_before, kscreen_streaming]);
+
+    // Turn stream screen on: enables DP-2, disables DP-1, enables HDR
+    linux_install::stream_screen(&cmd, &files, &layout, true).unwrap();
+
+    assert!(ran(
+        &cmd.log,
+        "run kscreen-doctor output.DP-2.enable output.DP-2.priority.1 output.DP-1.disable"
+    ));
+    assert!(ran(&cmd.log, "run kscreen-doctor output.DP-2.hdr.enable"));
+    assert_eq!(
+        files
+            .read(&saved_outputs(&layout))
+            .and_then(|saved| serde_json::from_str::<serde_json::Value>(&saved).ok()),
+        Some(json!({"target": custom_output, "restore": ["DP-1"]}))
+    );
+
+    let log_len_before = cmd.log.lock().unwrap().len();
+
+    // Idempotency: calling stream_screen on again does not re-run commands
+    linux_install::stream_screen(&cmd, &files, &layout, true).unwrap();
+    assert_eq!(cmd.log.lock().unwrap().len(), log_len_before);
+
+    // Turn stream screen off: restores DP-1
+    linux_install::stream_screen(&cmd, &files, &layout, false).unwrap();
+    assert!(ran(
+        &cmd.log,
+        "run kscreen-doctor output.DP-1.enable output.DP-1.priority.1 output.DP-2.disable"
+    ));
+    assert_eq!(files.read(&saved_outputs(&layout)).as_deref(), Some(""));
+
+    let runs_before = log_of(&cmd.log)
+        .into_iter()
+        .filter(|l| l.starts_with("run kscreen-doctor output."))
+        .count();
+
+    // Idempotency: calling stream_screen off again when off does not change output states
+    cmd.kscreen
+        .lock()
+        .unwrap()
+        .push_back(kscreen_answer(1920, 1.0, true));
+    linux_install::stream_screen(&cmd, &files, &layout, false).unwrap();
+
+    let runs_after = log_of(&cmd.log)
+        .into_iter()
+        .filter(|l| l.starts_with("run kscreen-doctor output."))
+        .count();
+    assert_eq!(runs_before, runs_after);
+}
+
+#[test]
 fn a_disconnected_hdr_output_does_not_turn_off_the_desktop() {
     let (cmd, files) = pc();
     let layout = kde_layout();
